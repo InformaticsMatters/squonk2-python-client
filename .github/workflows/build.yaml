@@ -42,8 +42,8 @@ jobs:
     - name: Test
       run: |
         pyroma .
-        pylint dm_api
-        mypy dm_api --install-types --non-interactive
+        pylint src
+        mypy src --install-types --non-interactive
     - name: Build
       run: |
         python -m build --sdist --wheel --outdir dist/
