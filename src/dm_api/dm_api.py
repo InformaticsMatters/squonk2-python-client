@@ -5,6 +5,8 @@ import json
 import logging
 import os
 from typing import Any, Dict, List, Optional, Union
+from urllib3.exceptions import InsecureRequestWarning
+from urllib3 import disable_warnings
 
 from wrapt import synchronized
 import requests
@@ -28,14 +30,20 @@ class DmApi:
     # The default DM API is extracted from the environment,
     # otherwise it can be set using 'set_api_url()'
     _dm_api_url: str = os.environ.get('SQUONK_API_URL', '')
+    _verify_ssl_cert: bool = True
 
     @classmethod
     @synchronized
-    def set_api_url(cls, url: str) -> None:
+    def set_api_url(cls, url: str, verify_ssl_cert: bool = True) -> None:
         """Replaces the class API URL value.
         """
         assert url
         DmApi._dm_api_url = url
+        DmApi._verify_ssl_cert = verify_ssl_cert
+
+        # Disable the 'InsecureRequestWarning'?
+        if not verify_ssl_cert:
+            disable_warnings(InsecureRequestWarning)
 
     @classmethod
     @synchronized
@@ -96,7 +104,8 @@ class DmApi:
         url: str = DmApi._dm_api_url + f'/application/{_DM_JOB_APPLICATION_ID}'
 
         try:
-            resp = requests.get(url, headers=headers, timeout=timeout_s)
+            resp = requests.get(url, headers=headers, timeout=timeout_s,
+                                verify=DmApi._verify_ssl_cert)
         except:
             _LOGGER.exception('Exception getting Job application info')
             return None
@@ -128,7 +137,8 @@ class DmApi:
 
         resp: Optional[requests.Response] = None
         try:
-            resp = requests.get(url, headers=headers, timeout=timeout_s)
+            resp = requests.get(url, headers=headers, timeout=timeout_s,
+                                verify=DmApi._verify_ssl_cert)
         except:
             _LOGGER.exception('Exception on ping')
 
@@ -164,7 +174,8 @@ class DmApi:
                                 headers=headers,
                                 data=data,
                                 files=files,
-                                timeout=timeout_s)
+                                timeout=timeout_s,
+                                verify=DmApi._verify_ssl_cert)
         except:
             _LOGGER.exception('Exception putting file %s -> %s (project_id=%s)',
                               project_file, project_path, project_id)
@@ -231,7 +242,8 @@ class DmApi:
                     requests.get(url,
                                  headers=headers,
                                  params=params,
-                                 timeout=4)
+                                 timeout=4,
+                                 verify=DmApi._verify_ssl_cert)
             except:
                 msg: str = 'Exception getting files'
                 _LOGGER.exception(msg)
@@ -328,7 +340,8 @@ class DmApi:
                 requests.post(url,
                               headers=headers,
                               data=data,
-                              timeout=timeout_s)
+                              timeout=timeout_s,
+                              verify=DmApi._verify_ssl_cert)
         except:
             msg: str = 'Exception starting instance'
             _LOGGER.exception(msg)
