@@ -1,4 +1,5 @@
 [messages control]
 disable = bare-except,
           too-many-arguments,
+          too-many-branches,
           too-many-locals

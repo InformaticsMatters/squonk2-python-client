@@ -14,6 +14,7 @@ The following utilities are available: -
 
 - ``DmApi.get_access_token()``
 - ``DmApi.set_api_url()``
+- ``DmApi.ping()``
 - ``DmApi.put_project_files()``
 - ``DmApi.post_job_instance()``
 
@@ -29,13 +30,17 @@ Once installed you can use the available classes to upload files to a project
 (as an example)::
 
     >>> from dm_api.dm_api import DmApi
+    >>> rv = DmApi.ping(token)
+    >>> assert rv.success
     >>> project_id = 'project-12345678-1234-1234-1234-123456781234'
-    >>> result = DmApi.put_project_files(token, project_id, 'data.sdf')
+    >>> rv = DmApi.put_project_files(token, project_id, 'data.sdf')
+    >>> assert rv.success
 
 And start Jobs in a Data Manager Project::
 
     >>> spec = {"collection": "im-test", "job": "nop", "version": "1.0.0"}
     >>> rv = DmApi.post_job_instance(token, project_id, 'My Job', specification=spec)
+    >>> assert rv.success
 
 If you do not have a token the method ``DmApi.get_access_token()`` will
 return one from an appropriate keycloak instance. Every API method will need
@@ -44,7 +49,7 @@ an access token.
 The DM API URL is obtained using the environment variable ``SQUONK_API_URL``.
 If you haven't set this variable you can set the URL using a class method::
 
-    >>> DmApi.set_api_url('https://example/com/data-manager-api')
+    >>> DmApi.set_api_url('https://example.com/data-manager-api')
 
 .. _PyPI: https://pypi.org/project/im-data-manager-api
 
