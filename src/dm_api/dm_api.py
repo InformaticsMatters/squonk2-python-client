@@ -377,7 +377,7 @@ class DmApi:
                      instance_id: str,
                      timeout_s: int = 4)\
             -> DmApiRv:
-        """Gets information about an instance.
+        """Gets information about an Application/Job instance.
         """
         assert access_token
         assert instance_id
@@ -391,5 +391,29 @@ class DmApi:
         if not resp or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get instance [{resp}]'})
+
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def delete_instance(cls,
+                        access_token: str,
+                        instance_id: str,
+                        timeout_s: int = 4)\
+            -> DmApiRv:
+        """Deletes an Application/Job instance.
+        """
+        assert access_token
+        assert instance_id
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        resp = DmApi._request('DELETE', f'/instance/{instance_id}',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to delete instance [{resp}]'})
 
         return DmApiRv(success=True, msg=resp.json())
