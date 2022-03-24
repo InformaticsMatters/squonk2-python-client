@@ -17,6 +17,7 @@ The following utilities are available: -
 - ``DmApi.ping()``
 - ``DmApi.put_project_files()``
 - ``DmApi.post_job_instance()``
+- ``DmApi.get_instance()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
 
