@@ -1,4 +1,4 @@
-"""Python utilities to simplify calls to the parts of the Data Manager API.
+"""Python utilities to simplify calls to some parts of the Data Manager API.
 """
 from collections import namedtuple
 import json
@@ -13,8 +13,8 @@ import requests
 
 # The return value from our public methods.
 # 'success' (a boolean) is True if the call was successful, False otherwise.
-# The 'msg' (a string used on failure) will provide a potentially useful
-# error message.
+# The 'msg' (an optional dictionary) will provide a potentially useful
+# error message or API-specific response content on success.
 DmApiRv: namedtuple = namedtuple('DmApiRv', 'success msg')
 
 # The Job instance Application ID - a 'well known' identity.
@@ -33,9 +33,53 @@ class DmApi:
     _verify_ssl_cert: bool = True
 
     @classmethod
+    def _request(cls,
+                 method: str,
+                 endpoint: str,
+                 access_token: str,
+                 headers: Optional[Dict[str, Any]] = None,
+                 data: Optional[Dict[str, Any]] = None,
+                 files: Optional[Dict[str, Any]] = None,
+                 params: Optional[Dict[str, Any]] = None,
+                 timeout: int = 4)\
+            -> Optional[requests.Response]:
+        """Sends a request to the DM API endpoint.
+        """
+        assert method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+        assert endpoint
+        assert access_token
+
+        url: str = DmApi._dm_api_url + endpoint
+
+        # Adds the access token to the headers,
+        # or create a headers block
+        if headers:
+            use_headers = headers.copy()
+            use_headers['Authorization'] = 'Bearer ' + access_token
+        else:
+            use_headers = {'Authorization': 'Bearer ' + access_token}
+
+        resp: Optional[requests.Response] = None
+        try:
+            # Send the request (displaying the request/response)
+            # and returning the response, whatever it is.
+            resp = requests.request(method.upper(), url,
+                                    headers=use_headers,
+                                    params=params,
+                                    data=data,
+                                    files=files,
+                                    timeout=timeout,
+                                    verify=DmApi._verify_ssl_cert)
+        except:
+            _LOGGER.exception('Request failed')
+
+        return resp
+
+    @classmethod
     @synchronized
     def set_api_url(cls, url: str, verify_ssl_cert: bool = True) -> None:
         """Replaces the class API URL value.
+        Typically https://example.com/data-manager-api
         """
         assert url
         DmApi._dm_api_url = url
@@ -100,18 +144,12 @@ class DmApi:
         """
         assert access_token
 
-        headers: Dict[str, Any] = {'Authorization': 'Bearer ' + access_token}
-        url: str = DmApi._dm_api_url + f'/application/{_DM_JOB_APPLICATION_ID}'
-
-        try:
-            resp = requests.get(url, headers=headers, timeout=timeout_s,
-                                verify=DmApi._verify_ssl_cert)
-        except:
-            _LOGGER.exception('Exception getting Job application info')
-            return None
-        if resp.status_code not in [200]:
-            _LOGGER.warning('Failed getting Job application info [%d]',
-                            resp.status_code)
+        resp = DmApi._request('GET',
+                              f'/application/{_DM_JOB_APPLICATION_ID}',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            _LOGGER.warning('Failed getting Job application info [%s]', resp)
             return None
 
         # If there are versions, return the first in the list
@@ -132,18 +170,15 @@ class DmApi:
         """
         assert access_token
 
-        headers: Dict[str, Any] = {'Authorization': 'Bearer ' + access_token}
-        url: str = DmApi._dm_api_url + '/account-server/namespace'
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False,
+                           msg={'msg': 'No API URL defined'})
 
-        resp: Optional[requests.Response] = None
-        try:
-            resp = requests.get(url, headers=headers, timeout=timeout_s,
-                                verify=DmApi._verify_ssl_cert)
-        except:
-            _LOGGER.exception('Exception on ping')
-
+        resp = DmApi._request('GET', '/account-server/namespace',
+                              access_token=access_token, timeout=timeout_s)
         if not resp or resp.status_code not in [200]:
-            return DmApiRv(success=False, msg=f'Failed ping (resp={resp})')
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed ping (resp={resp})'})
 
         # OK if we get here
         return DmApiRv(success=True, msg=None)
@@ -158,33 +193,23 @@ class DmApi:
             -> bool:
         """Puts an individual file into a DM project.
         """
-        headers: Dict[str, Any] = {'Authorization': 'Bearer ' + access_token}
-
         data: Dict[str, Any] = {}
         if project_path:
             data['path'] = project_path
-        url: str = DmApi._dm_api_url + f'/project/{project_id}/file'
         files = {'file': open(project_file, 'rb')}  # pylint: disable=consider-using-with
 
         _LOGGER.debug('Putting file %s -> %s (project_id=%s)',
                       project_file, project_path, project_id)
 
-        try:
-            resp = requests.put(url,
-                                headers=headers,
-                                data=data,
-                                files=files,
-                                timeout=timeout_s,
-                                verify=DmApi._verify_ssl_cert)
-        except:
-            _LOGGER.exception('Exception putting file %s -> %s (project_id=%s)',
-                              project_file, project_path, project_id)
-            return False
+        resp = DmApi._request('PUT', f'/project/{project_id}/file',
+                              access_token=access_token,
+                              data=data,
+                              files=files,
+                              timeout=timeout_s)
 
-        if resp.status_code not in [201]:
-            _LOGGER.warning('Failed putting file %s -> %s (project_id=%s) [%d]',
-                            project_file, project_path, project_id,
-                            resp.status_code)
+        if not resp or resp.status_code not in [201]:
+            _LOGGER.warning('Failed putting file %s -> %s (resp=%s project_id=%s)',
+                            project_file, project_path, resp, project_id)
             return False
 
         # OK if we get here
@@ -215,9 +240,7 @@ class DmApi:
         assert isinstance(project_files, (list, str))
 
         if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg='No API URL defined')
-
-        headers: Dict[str, Any] = {'Authorization': 'Bearer ' + access_token}
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
 
         # If we're not forcing the files collect the names
         # of every file on the path - we use this to skip files that
@@ -235,24 +258,13 @@ class DmApi:
             params: Dict[str, Any] = {'project_id': project_id}
             if project_path:
                 params['path'] = project_path
-            url: str = DmApi._dm_api_url + '/file'
 
-            try:
-                resp: requests.Response =\
-                    requests.get(url,
-                                 headers=headers,
-                                 params=params,
-                                 timeout=4,
-                                 verify=DmApi._verify_ssl_cert)
-            except:
-                msg: str = 'Exception getting files'
-                _LOGGER.exception(msg)
-                return DmApiRv(success=False, msg=msg)
-
+            resp = DmApi._request('GET', '/file', access_token=access_token,
+                                  params=params)
             if not resp or resp.status_code not in [200]:
                 return DmApiRv(success=False,
-                               msg=f'Failed getting existing files'
-                                   f' (project_id={project_id})')
+                               msg={'msg': f'Failed getting existing files'
+                                    f' (resp={resp} project_id={project_id})'})
 
             for item in resp.json()['files']:
                 existing_path_files.append(item['file_name'])
@@ -269,7 +281,8 @@ class DmApi:
             # Source file has to exist
             # whether we end up sending it or not.
             if not os.path.isfile(src_file):
-                return DmApiRv(success=False, msg=f'No such file ({src_file})')
+                return DmApiRv(success=False,
+                               msg={'msg': f'No such file ({src_file})'})
             if os.path.basename(src_file) in existing_path_files:
                 _LOGGER.debug('Skipping %s - already present (project_id=%s)',
                               src_file, project_id)
@@ -279,7 +292,8 @@ class DmApi:
                                                src_file,
                                                project_path,
                                                timeout_per_file_s):
-                    return DmApiRv(success=False, msg='Failed sending files')
+                    return DmApiRv(success=False,
+                                   msg={'msg': 'Failed sending files'})
 
         # OK if we get here
         return DmApiRv(success=True, msg=None)
@@ -293,6 +307,7 @@ class DmApi:
                           callback_url: Optional[str] = None,
                           callback_context: Optional[str] = None,
                           specification: Optional[Dict[str, Any]] = None,
+                          debug: Optional[str] = None,
                           timeout_s: int = 4)\
             -> DmApiRv:
         """Instantiates a Job (based on the latest Job application ID
@@ -305,18 +320,17 @@ class DmApi:
         assert isinstance(specification, (type(None), dict))
 
         if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg='No API URL defined')
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
 
         # Get the latest Job operator version.
         # If there isn't one the DM can't run Jobs.
         job_application_version: Optional[str] =\
             DmApi._get_latest_job_operator_version(access_token)
         if not job_application_version:
-            return DmApiRv(success=False, msg='No Job operator installed')
+            return DmApiRv(success=False,
+                           msg={'msg': 'No Job operator installed'})
 
         _LOGGER.debug('Starting Job instance (project_id=%s)', project_id)
-
-        headers: Dict[str, Any] = {'Authorization': 'Bearer ' + access_token}
 
         data: Dict[str, Any] =\
             {'application_id': _DM_JOB_APPLICATION_ID,
@@ -324,6 +338,8 @@ class DmApi:
              'as_name': name,
              'project_id': project_id,
              'specification': json.dumps(specification)}
+        if debug:
+            data['debug'] = debug
         if callback_url:
             _LOGGER.debug('Job callback_url=%s (project_id=%s)',
                           callback_url, project_id)
@@ -333,28 +349,11 @@ class DmApi:
                               callback_context, project_id)
                 data['callback_context'] = callback_context
 
-        url: str = DmApi._dm_api_url + '/instance'
-
-        try:
-            resp: requests.Response =\
-                requests.post(url,
-                              headers=headers,
-                              data=data,
-                              timeout=timeout_s,
-                              verify=DmApi._verify_ssl_cert)
-        except:
-            msg: str = 'Exception starting instance'
-            _LOGGER.exception(msg)
-            return DmApiRv(success=False, msg=msg)
-        if resp.status_code not in [201]:
+        resp = DmApi._request('POST', '/instance', access_token=access_token,
+                              data=data, timeout=timeout_s)
+        if not resp or resp.status_code not in [201]:
             return DmApiRv(success=False,
-                           msg=f'Failed to start instance [{resp.status_code}]')
-
-        # OK if we get here
+                           msg={'msg': f'Failed to start instance [{resp}]'})
 
         _LOGGER.debug('Started Job instance (project_id=%s)', project_id)
-
-        instance_id: str = resp.json()['instance_id']
-        task_id: str = resp.json()['task_id']
-        return DmApiRv(success=True,
-                       msg=f'instance_id={instance_id} task_id={task_id}')
+        return DmApiRv(success=True, msg=resp.json())

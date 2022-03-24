@@ -8,7 +8,7 @@ Informatics Matters Data Manager API Utilities
 A Python 3 package that provides simplified access to key parts of the
 Data Manager API REST interface. The functions provide access to some of the
 key API methods, implemented initially to support execution of Jobs from a
-Fragalysis stack.
+Fragalysis stack `backend`_.
 
 The following utilities are available: -
 
@@ -18,6 +18,10 @@ The following utilities are available: -
 - ``DmApi.put_project_files()``
 - ``DmApi.post_job_instance()``
 
+A ``namedtuple`` is used as the return value for many of the methods: -
+
+- ``DmApiRv``
+
 Installation (Python)
 =====================
 
@@ -26,31 +30,55 @@ there::
 
     pip install im-data-manager-api
 
-Once installed you can use the available classes to upload files to a project
-(as an example)::
+Once installed you can use the available classes to upload files to a Data
+Manager **Project** (as an example)::
 
-    >>> from dm_api.dm_api import DmApi
+    >>> from dm_api.dm_api import DmApi, DmApiRv
     >>> rv = DmApi.ping(token)
     >>> assert rv.success
     >>> project_id = 'project-12345678-1234-1234-1234-123456781234'
     >>> rv = DmApi.put_project_files(token, project_id, 'data.sdf')
     >>> assert rv.success
 
-And start Jobs in a Data Manager Project::
+Or start Jobs::
 
-    >>> spec = {"collection": "im-test", "job": "nop", "version": "1.0.0"}
+    >>> spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
     >>> rv = DmApi.post_job_instance(token, project_id, 'My Job', specification=spec)
     >>> assert rv.success
 
+Depending on which API method is used, when successful,
+the Data Manager response payload (its JSON content) is returned in the
+``DmApiRv.msg`` property as a Python dictionary.
+
+For example, when successful the ``DmApi.post_job_instance()`` will return
+the assigned **Task** and **Instance** identities::
+
+    >>> rv.msg
+    {'task_id': 'task-...', 'instance_id': 'instance-...'}
+
+Consult the DM API for details of the payloads you can expect.
+
+**Access Tokens**
+
 If you do not have a token the method ``DmApi.get_access_token()`` will
-return one from an appropriate keycloak instance. Every API method will need
-an access token.
+return one from an appropriate keycloak instance and user credentials.
+Every API method will need an access token.
 
-The DM API URL is obtained using the environment variable ``SQUONK_API_URL``.
-If you haven't set this variable you can set the URL using a class method::
+**The Data Manager URL**
 
-    >>> DmApi.set_api_url('https://example.com/data-manager-api')
+The URL to the Data Manager API is taken from the environment variable
+``SQUONK_API_URL`` if it exists. If you haven't set this variable you need
+to set the URL before you use any API method::
 
+    >>> url = 'https://example.com/data-manager-api'
+    >>> DmApi.set_api_url(url)
+
+If the Data Manager API is not secure (e.g. you're developing locally)
+you can disable the automatic SSL authentication when setting the URL::
+
+    >>> DmApi.set_api_url(url, verify_ssl_cert=False)
+
+.. _backend: https://github.com/xchem/fragalysis-backend
 .. _PyPI: https://pypi.org/project/im-data-manager-api
 
 Get in touch
