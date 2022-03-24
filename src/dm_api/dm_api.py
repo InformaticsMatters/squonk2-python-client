@@ -1,4 +1,12 @@
 """Python utilities to simplify calls to some parts of the Data Manager API.
+
+For API methods where a user can expect material from a successful call
+the original response payload can be found in the DmApiRv 'msg' property
+as a Python dictionary.
+
+The URL to the DM API URL is picked up from the environment variable
+'SQUONK_API_URL'. If this isn't set the user can set it programmatically
+using the 'DmApi.set_api_url()' method.
 """
 from collections import namedtuple
 import json
@@ -19,6 +27,8 @@ DmApiRv: namedtuple = namedtuple('DmApiRv', 'success msg')
 
 # The Job instance Application ID - a 'well known' identity.
 _DM_JOB_APPLICATION_ID: str = 'datamanagerjobs.squonk.it'
+# The API URL environment variable
+_API_URL_ENV_NAME: str = 'SQUONK_API_URL'
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -29,7 +39,9 @@ class DmApi:
 
     # The default DM API is extracted from the environment,
     # otherwise it can be set using 'set_api_url()'
-    _dm_api_url: str = os.environ.get('SQUONK_API_URL', '')
+    _dm_api_url: str = os.environ.get(_API_URL_ENV_NAME, '')
+    # Do we expect the DM API to be secure?
+    # This can be disabled using 'set_api_url()'
     _verify_ssl_cert: bool = True
 
     @classmethod
@@ -296,7 +308,7 @@ class DmApi:
                                    msg={'msg': 'Failed sending files'})
 
         # OK if we get here
-        return DmApiRv(success=True, msg=None)
+        return DmApiRv(success=True, msg={})
 
     @classmethod
     @synchronized
