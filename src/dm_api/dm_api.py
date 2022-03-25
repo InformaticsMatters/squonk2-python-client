@@ -196,12 +196,12 @@ class DmApi:
         return DmApiRv(success=True, msg=None)
 
     @classmethod
-    def _put_project_file(cls,
-                          access_token: str,
-                          project_id: str,
-                          project_file: str,
-                          project_path: str = '/',
-                          timeout_s: int = 120)\
+    def _put_unmanaged_project_file(cls,
+                                    access_token: str,
+                                    project_id: str,
+                                    project_file: str,
+                                    project_path: str = '/',
+                                    timeout_s: int = 120)\
             -> bool:
         """Puts an individual file into a DM project.
         """
@@ -229,13 +229,13 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def put_project_files(cls,
-                          access_token: str,
-                          project_id: str,
-                          project_files: Union[str, List[str]],
-                          project_path: str = '/',
-                          force: bool = False,
-                          timeout_per_file_s: int = 120)\
+    def upload_unmanaged_project_files(cls,
+                                       access_token: str,
+                                       project_id: str,
+                                       project_files: Union[str, List[str]],
+                                       project_path: str = '/',
+                                       force: bool = False,
+                                       timeout_per_file_s: int = 120)\
             -> DmApiRv:
         """Puts a file, or list of files, into a DM Project
         using an optional path. The files can include relative or absolute
@@ -250,6 +250,9 @@ class DmApi:
         assert project_id
         assert project_files
         assert isinstance(project_files, (list, str))
+        assert project_path\
+               and isinstance(project_path, str)\
+               and project_path.startswith('/')
 
         if not DmApi._dm_api_url:
             return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
@@ -299,11 +302,11 @@ class DmApi:
                 _LOGGER.debug('Skipping %s - already present (project_id=%s)',
                               src_file, project_id)
             else:
-                if not DmApi._put_project_file(access_token,
-                                               project_id,
-                                               src_file,
-                                               project_path,
-                                               timeout_per_file_s):
+                if not DmApi._put_unmanaged_project_file(access_token,
+                                                         project_id,
+                                                         src_file,
+                                                         project_path,
+                                                         timeout_per_file_s):
                     return DmApiRv(success=False,
                                    msg={'msg': 'Failed sending files'})
 
@@ -312,15 +315,88 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def post_job_instance(cls,
-                          access_token: str,
-                          project_id: str,
-                          name: str,
-                          callback_url: Optional[str] = None,
-                          callback_context: Optional[str] = None,
-                          specification: Optional[Dict[str, Any]] = None,
-                          debug: Optional[str] = None,
-                          timeout_s: int = 4)\
+    def list_project_files(cls,
+                           access_token: str,
+                           project_id: str,
+                           project_path: str = '/',
+                           include_hidden: bool = False,
+                           timeout_s: int = 8)\
+            -> DmApiRv:
+        """Gets the list of project files on a path.
+        """
+        assert access_token
+        assert project_id
+        assert project_path\
+               and isinstance(project_path, str)\
+               and project_path.startswith('/')
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        params: Dict[str, Any] = {'project_id': project_id,
+                                  'path': project_path,
+                                  'include_hidden': include_hidden}
+        resp = DmApi._request('GET', f'/file',
+                              access_token=access_token,
+                              params=params,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get instance [{resp}]'})
+
+        # OK if we get here
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def download_unmanaged_project_file(cls,
+                                        access_token: str,
+                                        project_id: str,
+                                        project_file: str,
+                                        local_file: str,
+                                        project_path: str = '/',
+                                        timeout_s: int = 8)\
+            -> DmApiRv:
+        """Get a single unmanaged file from a project path, saving it to
+        the filename defined in local_file.
+        """
+        assert access_token
+        assert project_id
+        assert project_file
+        assert local_file
+        assert project_path\
+               and isinstance(project_path, str)\
+               and project_path.startswith('/')
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        params: Dict[str, Any] = {'path': project_path,
+                                  'file': project_file}
+        resp = DmApi._request('GET', f'/project/{project_id}/file',
+                              access_token=access_token,
+                              params=params,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get file [{resp}]'})
+
+        # OK if we get here
+        with open(local_file, 'wb') as file_handle:
+            file_handle.write(resp.content)
+        return DmApiRv(success=True, msg={})
+
+    @classmethod
+    @synchronized
+    def start_job_instance(cls,
+                           access_token: str,
+                           project_id: str,
+                           name: str,
+                           callback_url: Optional[str] = None,
+                           callback_context: Optional[str] = None,
+                           specification: Optional[Dict[str, Any]] = None,
+                           debug: Optional[str] = None,
+                           timeout_s: int = 4)\
             -> DmApiRv:
         """Instantiates a Job (based on the latest Job application ID
         and version known to the API).

@@ -10,18 +10,25 @@ Data Manager API REST interface. The functions provide access to some of the
 key API methods, implemented initially to support execution of Jobs from a
 Fragalysis stack `backend`_.
 
-The following utilities are available: -
+The following API functions are available: -
 
 - ``DmApi.get_access_token()``
 - ``DmApi.set_api_url()``
 - ``DmApi.ping()``
-- ``DmApi.put_project_files()``
-- ``DmApi.post_job_instance()``
+- ``DmApi.upload_unmanaged_project_files()``
+- ``DmApi.list_project_files()``
+- ``DmApi.download_unmanaged_project_file()``
+- ``DmApi.start_job_instance()``
 - ``DmApi.get_instance()``
+- ``DmApi.delete_instance()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
 
 - ``DmApiRv``
+
+it contains a boolean ``success`` field and a dictionary ``msg`` filed,
+that typically contains the underlying REST API response content, or an error
+message on failure.
 
 Installation (Python)
 =====================
@@ -38,26 +45,26 @@ Manager **Project** (as an example)::
     >>> rv = DmApi.ping(token)
     >>> assert rv.success
     >>> project_id = 'project-12345678-1234-1234-1234-123456781234'
-    >>> rv = DmApi.put_project_files(token, project_id, 'data.sdf')
+    >>> rv = DmApi.upload_unmanaged_project_files(token, project_id, 'data.sdf')
     >>> assert rv.success
 
 Or start Jobs::
 
     >>> spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
-    >>> rv = DmApi.post_job_instance(token, project_id, 'My Job', specification=spec)
+    >>> rv = DmApi.start_job_instance(token, project_id, 'My Job', specification=spec)
     >>> assert rv.success
 
 Depending on which API method is used, when successful,
 the Data Manager response payload (its JSON content) is returned in the
 ``DmApiRv.msg`` property as a Python dictionary.
 
-For example, when successful the ``DmApi.post_job_instance()`` will return
+For example, when successful the ``DmApi.start_job_instance()`` will return
 the assigned **Task** and **Instance** identities::
 
     >>> rv.msg
     {'task_id': 'task-...', 'instance_id': 'instance-...'}
 
-Consult the DM API for details of the payloads you can expect.
+Consult the DM API for up-to-date details of the payloads you can expect.
 
 **Access Tokens**
 
@@ -65,7 +72,7 @@ If you do not have a token the method ``DmApi.get_access_token()`` will
 return one from an appropriate keycloak instance and user credentials.
 Every API method will need an access token.
 
-**The Data Manager URL**
+**The Data Manager API URL**
 
 The URL to the Data Manager API is taken from the environment variable
 ``SQUONK_API_URL`` if it exists. If you haven't set this variable you need
