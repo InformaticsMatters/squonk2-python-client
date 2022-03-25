@@ -14,7 +14,10 @@ The following API functions are available: -
 
 - ``DmApi.get_access_token()``
 - ``DmApi.set_api_url()``
+
 - ``DmApi.ping()``
+
+- ``DmApi.get_version()``
 - ``DmApi.upload_unmanaged_project_files()``
 - ``DmApi.list_project_files()``
 - ``DmApi.download_unmanaged_project_file()``

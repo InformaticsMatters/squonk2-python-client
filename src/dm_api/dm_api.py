@@ -196,6 +196,27 @@ class DmApi:
         return DmApiRv(success=True, msg=None)
 
     @classmethod
+    @synchronized
+    def get_version(cls, access_token: str, timeout_s: int = 4)\
+            -> DmApiRv:
+        """Calls the DM API to get the underlying service version.
+        """
+        assert access_token
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False,
+                           msg={'msg': 'No API URL defined'})
+
+        resp = DmApi._request('GET', '/version',
+                              access_token=access_token, timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed getting version (resp={resp})'})
+
+        # OK if we get here
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
     def _put_unmanaged_project_file(cls,
                                     access_token: str,
                                     project_id: str,
