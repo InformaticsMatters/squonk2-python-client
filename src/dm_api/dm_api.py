@@ -514,3 +514,78 @@ class DmApi:
                            msg={'msg': f'Failed to delete instance [{resp}]'})
 
         return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def get_task(cls,
+                 access_token: str,
+                 task_id: str,
+                 event_prior_ordinal: int = 0,
+                 event_limit: int = 0,
+                 timeout_s: int = 4)\
+            -> DmApiRv:
+        """Gets information about a specific Task
+        """
+        assert access_token
+        assert task_id
+        assert event_prior_ordinal >= 0
+        assert event_limit >= 0
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        params: Dict[str, Any] = {}
+        if event_prior_ordinal:
+            params['event_prior_ordinal'] = event_prior_ordinal
+        if event_limit:
+            params['event_limit'] = event_limit
+        resp = DmApi._request('GET', f'/task/{task_id}',
+                              access_token=access_token,
+                              params=params,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get task [{resp}]'})
+
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def get_available_jobs(cls, access_token: str, timeout_s: int = 4)\
+            -> DmApiRv:
+        """Gets a summary list of avaailble Jobs.
+        """
+        assert access_token
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        resp = DmApi._request('GET', '/job',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get available jobs [{resp}]'})
+
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def get_job(cls, access_token: str, job_id: int, timeout_s: int = 4)\
+            -> DmApiRv:
+        """Gets detailed information about a specific Job.
+        """
+        assert access_token
+        assert job_id > 0
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        resp = DmApi._request('GET', f'/job/{job_id}',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get job detail [{resp}]'})
+
+        return DmApiRv(success=True, msg=resp.json())

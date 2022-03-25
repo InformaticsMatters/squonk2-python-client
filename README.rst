@@ -18,11 +18,14 @@ The following API functions are available: -
 - ``DmApi.ping()``
 
 - ``DmApi.get_version()``
+- ``DmApi.get_available_jobs()``
+- ``DmApi.get_job()``
 - ``DmApi.upload_unmanaged_project_files()``
 - ``DmApi.list_project_files()``
 - ``DmApi.download_unmanaged_project_file()``
 - ``DmApi.start_job_instance()``
 - ``DmApi.get_instance()``
+- ``DmApi.get_task()``
 - ``DmApi.delete_instance()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
