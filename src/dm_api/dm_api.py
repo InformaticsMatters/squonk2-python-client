@@ -336,7 +336,7 @@ class DmApi:
         params: Dict[str, Any] = {'project_id': project_id,
                                   'path': project_path,
                                   'include_hidden': include_hidden}
-        resp = DmApi._request('GET', f'/file',
+        resp = DmApi._request('GET', '/file',
                               access_token=access_token,
                               params=params,
                               timeout=timeout_s)
