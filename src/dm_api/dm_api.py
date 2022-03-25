@@ -88,6 +88,66 @@ class DmApi:
         return resp
 
     @classmethod
+    def _get_latest_job_operator_version(cls,
+                                         access_token: str,
+                                         timeout_s: int = 4)\
+            -> Optional[str]:
+        """Gets Job application data frm the DM API.
+        We'll get and return the latest version found so that we can launch
+        Jobs. If the Job application info is not available it indicates
+        the server has no Job Operator installed.
+        """
+        assert access_token
+
+        resp = DmApi._request('GET',
+                              f'/application/{_DM_JOB_APPLICATION_ID}',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            _LOGGER.warning('Failed getting Job application info [%s]', resp)
+            return None
+
+        # If there are versions, return the first in the list
+        if 'versions' in resp.json() and len(resp.json()['versions']):
+            return resp.json()['versions'][0]
+
+        _LOGGER.debug('No versions returned for Job application info'
+                      ' - no operator?')
+        return ''
+
+    @classmethod
+    def _put_unmanaged_project_file(cls,
+                                    access_token: str,
+                                    project_id: str,
+                                    project_file: str,
+                                    project_path: str = '/',
+                                    timeout_s: int = 120)\
+            -> bool:
+        """Puts an individual file into a DM project.
+        """
+        data: Dict[str, Any] = {}
+        if project_path:
+            data['path'] = project_path
+        files = {'file': open(project_file, 'rb')}  # pylint: disable=consider-using-with
+
+        _LOGGER.debug('Putting file %s -> %s (project_id=%s)',
+                      project_file, project_path, project_id)
+
+        resp = DmApi._request('PUT', f'/project/{project_id}/file',
+                              access_token=access_token,
+                              data=data,
+                              files=files,
+                              timeout=timeout_s)
+
+        if not resp or resp.status_code not in [201]:
+            _LOGGER.warning('Failed putting file %s -> %s (resp=%s project_id=%s)',
+                            project_file, project_path, resp, project_id)
+            return False
+
+        # OK if we get here
+        return True
+
+    @classmethod
     @synchronized
     def set_api_url(cls, url: str, verify_ssl_cert: bool = True) -> None:
         """Replaces the class API URL value.
@@ -145,34 +205,6 @@ class DmApi:
         return resp.json()['access_token']
 
     @classmethod
-    def _get_latest_job_operator_version(cls,
-                                         access_token: str,
-                                         timeout_s: int = 4)\
-            -> Optional[str]:
-        """Gets Job application data frm the DM API.
-        We'll get and return the latest version found so that we can launch
-        Jobs. If the Job application info is not available it indicates
-        the server has no Job Operator installed.
-        """
-        assert access_token
-
-        resp = DmApi._request('GET',
-                              f'/application/{_DM_JOB_APPLICATION_ID}',
-                              access_token=access_token,
-                              timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
-            _LOGGER.warning('Failed getting Job application info [%s]', resp)
-            return None
-
-        # If there are versions, return the first in the list
-        if 'versions' in resp.json() and len(resp.json()['versions']):
-            return resp.json()['versions'][0]
-
-        _LOGGER.debug('No versions returned for Job application info'
-                      ' - no operator?')
-        return ''
-
-    @classmethod
     @synchronized
     def ping(cls, access_token: str, timeout_s: int = 4)\
             -> DmApiRv:
@@ -215,38 +247,6 @@ class DmApi:
 
         # OK if we get here
         return DmApiRv(success=True, msg=resp.json())
-
-    @classmethod
-    def _put_unmanaged_project_file(cls,
-                                    access_token: str,
-                                    project_id: str,
-                                    project_file: str,
-                                    project_path: str = '/',
-                                    timeout_s: int = 120)\
-            -> bool:
-        """Puts an individual file into a DM project.
-        """
-        data: Dict[str, Any] = {}
-        if project_path:
-            data['path'] = project_path
-        files = {'file': open(project_file, 'rb')}  # pylint: disable=consider-using-with
-
-        _LOGGER.debug('Putting file %s -> %s (project_id=%s)',
-                      project_file, project_path, project_id)
-
-        resp = DmApi._request('PUT', f'/project/{project_id}/file',
-                              access_token=access_token,
-                              data=data,
-                              files=files,
-                              timeout=timeout_s)
-
-        if not resp or resp.status_code not in [201]:
-            _LOGGER.warning('Failed putting file %s -> %s (resp=%s project_id=%s)',
-                            project_file, project_path, resp, project_id)
-            return False
-
-        # OK if we get here
-        return True
 
     @classmethod
     @synchronized
@@ -440,7 +440,7 @@ class DmApi:
             # Incorrect URL, bad token or server out of action?
             return DmApiRv(success=False,
                            msg={'msg': 'Failed getting Job operator version'})
-        elif not job_application_version:
+        if not job_application_version:
             return DmApiRv(success=False,
                            msg={'msg': 'No Job operator installed'})
 
