@@ -170,7 +170,7 @@ class DmApi:
 
         _LOGGER.debug('No versions returned for Job application info'
                       ' - no operator?')
-        return None
+        return ''
 
     @classmethod
     @synchronized
@@ -435,7 +435,12 @@ class DmApi:
         # If there isn't one the DM can't run Jobs.
         job_application_version: Optional[str] =\
             DmApi._get_latest_job_operator_version(access_token)
-        if not job_application_version:
+        if job_application_version is None:
+            # Failed calling the server.
+            # Incorrect URL, bad token or server out of action?
+            return DmApiRv(success=False,
+                           msg={'msg': 'Failed getting Job operator version'})
+        elif not job_application_version:
             return DmApiRv(success=False,
                            msg={'msg': 'No Job operator installed'})
 
