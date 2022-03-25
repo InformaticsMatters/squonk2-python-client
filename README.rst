@@ -6,9 +6,9 @@ Informatics Matters Data Manager API Utilities
    :alt: PyPI package (latest)
 
 A Python 3 package that provides simplified access to key parts of the
-Data Manager API REST interface. The functions provide access to some of the
-key API methods, implemented initially to support execution of Jobs from a
-Fragalysis stack `backend`_.
+Informatics Matters Data Manager API REST interface. The functions provide
+access to some of the key API methods, implemented initially to support
+execution of Jobs from a Fragalysis stack `backend`_.
 
 The following API functions are available: -
 
@@ -18,6 +18,9 @@ The following API functions are available: -
 - ``DmApi.ping()``
 
 - ``DmApi.get_version()``
+- ``DmApi.get_available_projects()``
+- ``DmApi.get_project()``
+- ``DmApi.get_project_instances()``
 - ``DmApi.get_available_jobs()``
 - ``DmApi.get_job()``
 - ``DmApi.upload_unmanaged_project_files()``
@@ -32,9 +35,9 @@ A ``namedtuple`` is used as the return value for many of the methods: -
 
 - ``DmApiRv``
 
-it contains a boolean ``success`` field and a dictionary ``msg`` filed,
-that typically contains the underlying REST API response content, or an error
-message on failure.
+It contains a boolean ``success`` field and a dictionary ``msg`` field. The
+``msg`` typically contains the underlying REST API response content
+(rendered as a dictionary), or an error message on failure.
 
 Installation (Python)
 =====================
@@ -82,13 +85,13 @@ Every API method will need an access token.
 
 The URL to the Data Manager API is taken from the environment variable
 ``SQUONK_API_URL`` if it exists. If you haven't set this variable you need
-to set the URL before you use any API method::
+to set the Data Manager API URL before you use any API method::
 
     >>> url = 'https://example.com/data-manager-api'
     >>> DmApi.set_api_url(url)
 
 If the Data Manager API is not secure (e.g. you're developing locally)
-you can disable the automatic SSL authentication when setting the URL::
+you can disable the automatic SSL authentication when you set the URL::
 
     >>> DmApi.set_api_url(url, verify_ssl_cert=False)
 

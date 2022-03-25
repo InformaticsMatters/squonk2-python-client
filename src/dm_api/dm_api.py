@@ -474,6 +474,50 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def get_available_projects(cls, access_token: str, timeout_s: int = 4)\
+            -> DmApiRv:
+        """Gets information about all projects available to you.
+        """
+        assert access_token
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        resp = DmApi._request('GET', '/project',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get projects [{resp}]'})
+
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def get_project(cls,
+                    access_token: str,
+                    project_id: str,
+                    timeout_s: int = 4)\
+            -> DmApiRv:
+        """Gets detailed information about a specific project.
+        """
+        assert access_token
+        assert project_id
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        resp = DmApi._request('GET', f'/project/{project_id}',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get project [{resp}]'})
+
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
     def get_instance(cls,
                      access_token: str,
                      instance_id: str,
@@ -493,6 +537,32 @@ class DmApi:
         if not resp or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get instance [{resp}]'})
+
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def get_project_instances(cls,
+                              access_token: str,
+                              project_id: str,
+                              timeout_s: int = 4)\
+            -> DmApiRv:
+        """Gets information about all instances available to you.
+        """
+        assert access_token
+        assert project_id
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+
+        params: Dict[str, Any] = {'project_id': project_id}
+        resp = DmApi._request('GET', '/instance',
+                              access_token=access_token,
+                              params=params,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed to get project instances [{resp}]'})
 
         return DmApiRv(success=True, msg=resp.json())
 
