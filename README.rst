@@ -14,6 +14,7 @@ The following API functions are available: -
 
 - ``DmApi.get_access_token()``
 - ``DmApi.set_api_url()``
+- ``DmApi.get_api_url()``
 
 - ``DmApi.ping()``
 
@@ -97,6 +98,17 @@ you can disable the automatic SSL authentication when you set the URL::
 
 .. _backend: https://github.com/xchem/fragalysis-backend
 .. _PyPI: https://pypi.org/project/im-data-manager-api
+
+Developer testing
+=================
+From a clone of the repository and a suitable DM-API deployment, user
+and project you should be able to run a set of basic API tests with the
+``test`` module in the project root::
+
+    $ export PYTHONPATH=src
+    $ ./test.py -p project-e1ce441e-c4d1-4ad1-9057-1a11dbdccebe
+    DM-API connected
+    DM-API version=0.7.1
 
 Get in touch
 ============

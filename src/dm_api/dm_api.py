@@ -12,7 +12,7 @@ from collections import namedtuple
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
@@ -160,6 +160,13 @@ class DmApi:
         # Disable the 'InsecureRequestWarning'?
         if not verify_ssl_cert:
             disable_warnings(InsecureRequestWarning)
+
+    @classmethod
+    @synchronized
+    def get_api_url(cls) -> Tuple[str, bool]:
+        """Return the URL and whether validating the SSL layer.
+        """
+        return DmApi._dm_api_url, DmApi._verify_ssl_cert
 
     @classmethod
     @synchronized
