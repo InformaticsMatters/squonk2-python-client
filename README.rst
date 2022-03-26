@@ -26,6 +26,7 @@ The following API functions are available: -
 - ``DmApi.get_job()``
 - ``DmApi.upload_unmanaged_project_files()``
 - ``DmApi.list_project_files()``
+- ``DmApi.delete_unmanaged_project_files()``
 - ``DmApi.download_unmanaged_project_file()``
 - ``DmApi.start_job_instance()``
 - ``DmApi.get_instance()``

@@ -343,6 +343,44 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def delete_unmanaged_project_files(cls,
+                                       access_token: str,
+                                       project_id: str,
+                                       project_files: Union[str, List[str]],
+                                       project_path: str = '/',
+                                       timeout_s: int = 4)\
+            -> DmApiRv:
+        """Deletes an unmanaged project file on a path.
+        """
+        assert access_token
+        assert project_id
+        assert isinstance(project_files, (list, str))
+        assert project_path\
+               and isinstance(project_path, str)\
+               and project_path.startswith('/')
+
+        if isinstance(project_files, str):
+            files_to_delete = [project_files]
+        else:
+            files_to_delete = project_files
+
+        for file_to_delete in files_to_delete:
+            params: Dict[str, Any] = {'project_id': project_id,
+                                      'path': project_path,
+                                      'file': file_to_delete}
+            resp = DmApi._request('DELETE', '/file',
+                                  access_token=access_token,
+                                  params=params,
+                                  timeout=timeout_s)
+            if not resp or resp.status_code not in [204]:
+                return DmApiRv(success=False,
+                               msg={'msg': f'Failed to delete project file [{resp}]'})
+
+        # OK if we get here
+        return DmApiRv(success=True, msg={})
+
+    @classmethod
+    @synchronized
     def list_project_files(cls,
                            access_token: str,
                            project_id: str,

@@ -7,34 +7,34 @@ import time
 
 from dm_api.dm_api import DmApi, DmApiRv
 
+# Get configuration from the environment.
+# All the expected variables must be defined...
 API_URL: str = os.environ['SQUONK_API_URL']
-KEYCLOCK_URL: str = os.environ['SQUONK_API_KEYCLOAK_URL']
-KEYCLOCK_REALM: str = os.environ['SQUONK_API_KEYCLOAK_REALM']
-KEYCLOCK_CLIENT_ID: str = os.environ['SQUONK_API_KEYCLOAK_CLIENT_ID']
-KEYCLOCK_USER: str = os.environ['SQUONK_API_KEYCLOAK_USER']
-KEYCLOCK_USER_PASSWORD: str = os.environ['SQUONK_API_KEYCLOAK_USER_PASSWORD']
+KEYCLOAK_URL: str = os.environ['SQUONK_API_KEYCLOAK_URL']
+KEYCLOAK_REALM: str = os.environ['SQUONK_API_KEYCLOAK_REALM']
+KEYCLOAK_CLIENT_ID: str = os.environ['SQUONK_API_KEYCLOAK_CLIENT_ID']
+KEYCLOAK_USER: str = os.environ['SQUONK_API_KEYCLOAK_USER']
+KEYCLOAK_USER_PASSWORD: str = os.environ['SQUONK_API_KEYCLOAK_USER_PASSWORD']
 
 
 def main():
+    # Prepare arg-parser and parse the command-line...
     arg_parser: argparse.ArgumentParser = argparse\
         .ArgumentParser(description='Data Manager API Tester',
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
     arg_parser.add_argument('-p', '--project-id',
                             help='A pre-existing DM-API Project',
                             required=True,
                             type=str)
     args: argparse.Namespace = arg_parser.parse_args()
 
-    project_id: str = args.project_id
-
     # Configure
     DmApi.set_api_url(API_URL)
     url, verify = DmApi.get_api_url()
     assert url == API_URL
     token = DmApi.get_access_token(
-        KEYCLOCK_URL, KEYCLOCK_REALM, KEYCLOCK_CLIENT_ID,
-        KEYCLOCK_USER, KEYCLOCK_USER_PASSWORD)
+        KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID,
+        KEYCLOAK_USER, KEYCLOAK_USER_PASSWORD)
     assert token
     print(f"DM-API connected")
 
@@ -45,9 +45,16 @@ def main():
     assert rv.success
     print(f"DM-API version={rv.msg['version']}")
 
-    # Put a simple file into the project and run a test Job
+    # Put a simple file into the project, get it back and delete it
+    project_id: str = args.project_id
     rv = DmApi.upload_unmanaged_project_files(token, project_id, 'LICENSE', force=True)
     assert rv.success
+    rv = DmApi.download_unmanaged_project_file(token, project_id, 'LICENSE', 'LICENSE')
+    assert rv.success
+    rv = DmApi.delete_unmanaged_project_files(token, project_id, 'LICENSE')
+    assert rv.success
+
+    # Run a test job
     spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
     rv = DmApi.start_job_instance(token, project_id, 'Test Job', specification=spec)
     assert rv.success
@@ -55,9 +62,11 @@ def main():
     job_instance_id = rv.msg['instance_id']
     print(f'Running Job (task_id={job_task_id} instance_id={job_instance_id})')
 
-    # Wait for Job and then delete it
+    # Wait for the Job (but not forever) and then delete it
+    max_wait_seconds = 120
+    wait_seconds = 0
     done = False
-    while not done:
+    while not done and wait_seconds < max_wait_seconds:
         rv = DmApi.get_instance(token, job_instance_id)
         assert rv.success
         job_phase = rv.msg['phase']
@@ -67,6 +76,8 @@ def main():
         else:
             print(f'Waiting ({job_phase})...')
             time.sleep(2)
+            wait_seconds += 2
+    assert done
     rv = DmApi.delete_instance(token, job_instance_id)
     assert rv.success
 
