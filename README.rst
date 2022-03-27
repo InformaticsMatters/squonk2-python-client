@@ -1,5 +1,5 @@
-Informatics Matters Data Manager API Utilities
-==============================================
+Informatics Matters Data Manager API Client
+===========================================
 
 .. image:: https://badge.fury.io/py/im-data-manager-api.svg
    :target: https://badge.fury.io/py/im-data-manager-api
@@ -39,7 +39,7 @@ A ``namedtuple`` is used as the return value for many of the methods: -
 
 It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
-(rendered as a dictionary), or an error message on failure.
+(rendered as a Python dictionary), or an error message if the call failed.
 
 Installation (Python)
 =====================
@@ -106,7 +106,7 @@ From a clone of the repository and access to a suitable DM-API deployment user
 and project you should be able to run a set of basic API tests with the
 ``test`` module in the project root.
 
-First, you need to provide the tst code with a suitablke configuration
+First, you need to provide the test code with a suitable configuration
 via the environment::
 
     $ export SQUONK_API_URL='https://example.com/data-manager-api'
