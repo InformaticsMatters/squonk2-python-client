@@ -45,8 +45,30 @@ def main():
     assert rv.success
     print(f"DM-API version={rv.msg['version']}")
 
-    # Put a simple file into the project, get it back and delete it
+    # Check the project exists
+    rv = DmApi.get_available_projects(token)
     project_id: str = args.project_id
+    assert rv.success
+    found = False
+    for project in rv.msg['projects']:
+        if project['project_id'] == project_id:
+            print(f"Found project (product_id={project['product_id']} size={project['size']})")
+            found = True
+            break
+    assert found
+
+    # get a list of project files on the root
+    print("Listing project files")
+    rv = DmApi.list_project_files(token, project_id, '/')
+    assert rv.success
+    num_project_files = 0
+    for project_file in rv.msg['files']:
+        num_project_files += 1
+        print(f"+ {project_file['file_name']}")
+    plural = 'file' if num_project_files == 1 else 'files'
+    print(f"Project has {num_project_files} {plural}")
+
+    # Put a simple file into the project, get it back and delete it
     rv = DmApi.upload_unmanaged_project_files(token, project_id, 'LICENSE', force=True)
     assert rv.success
     rv = DmApi.download_unmanaged_project_file(token, project_id, 'LICENSE', 'LICENSE')
