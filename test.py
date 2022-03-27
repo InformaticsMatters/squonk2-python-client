@@ -36,7 +36,7 @@ def main():
         KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID,
         KEYCLOAK_USER, KEYCLOAK_USER_PASSWORD)
     assert token
-    print(f"DM-API connected")
+    print(f'DM-API connected ({API_URL})')
 
     # Basic ping/version
     rv: DmApiRv = DmApi.ping(token)
@@ -93,7 +93,7 @@ def main():
         assert rv.success
         job_phase = rv.msg['phase']
         if job_phase == 'COMPLETED':
-            print(f'Dome ({job_phase})')
+            print(f'Done ({job_phase})')
             done = True
         else:
             print(f'Waiting ({job_phase})...')

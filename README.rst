@@ -121,7 +121,7 @@ exists on the chosen Data Manager service::
 
     $ export PYTHONPATH=src
     $ ./test.py -p project-e1ce441e-c4d1-4ad1-9057-1a11dbdccebe
-    DM-API connected
+    DM-API connected (https://example.com/data-manager-api)
     DM-API version=0.7.1
     [...]
 
