@@ -84,7 +84,8 @@ def main():
     job_instance_id = rv.msg['instance_id']
     print(f'Running Job (task_id={job_task_id} instance_id={job_instance_id})')
 
-    # Wait for the Job (but not forever) and then delete it
+    # Wait for the Job (but not forever),
+    # print the events and then delete it
     max_wait_seconds = 120
     wait_seconds = 0
     done = False
@@ -100,8 +101,15 @@ def main():
             time.sleep(2)
             wait_seconds += 2
     assert done
+    print('Job events...')
+    rv = DmApi.get_task(token, job_task_id)
+    assert rv.success
+    for event in rv.msg['events']:
+        print(f"# {event['time']} {event['level']} {event['message']}")
     rv = DmApi.delete_instance(token, job_instance_id)
     assert rv.success
+
+    print('Done!')
 
 
 if __name__ == '__main__':
