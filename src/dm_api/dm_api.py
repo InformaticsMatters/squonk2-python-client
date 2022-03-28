@@ -49,17 +49,27 @@ class DmApi:
                  method: str,
                  endpoint: str,
                  access_token: str,
+                 error_message: str,
+                 expected_response_codes: Optional[List[int]] = None,
                  headers: Optional[Dict[str, Any]] = None,
                  data: Optional[Dict[str, Any]] = None,
                  files: Optional[Dict[str, Any]] = None,
                  params: Optional[Dict[str, Any]] = None,
                  timeout: int = 4)\
-            -> Optional[requests.Response]:
+            -> Tuple[DmApiRv, Optional[requests.Response]]:
         """Sends a request to the DM API endpoint.
+
+        All the public API methods pass control to this method,
+        returning its result to the user.
         """
         assert method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
         assert endpoint
         assert access_token
+        assert isinstance(expected_response_codes, (type(None), list))
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False,
+                           msg={'msg': 'No API URL defined'}), None
 
         url: str = DmApi._dm_api_url + endpoint
 
@@ -71,6 +81,7 @@ class DmApi:
         else:
             use_headers = {'Authorization': 'Bearer ' + access_token}
 
+        expected_codes = expected_response_codes if expected_response_codes else [200]
         resp: Optional[requests.Response] = None
         try:
             # Send the request (displaying the request/response)
@@ -84,8 +95,18 @@ class DmApi:
                                     verify=DmApi._verify_ssl_cert)
         except:
             _LOGGER.exception('Request failed')
+        if resp is None or resp.status_code not in expected_codes:
+            return DmApiRv(success=False,
+                           msg={'msg': f'{error_message} (resp={resp})'}),\
+                   resp
 
-        return resp
+        # Try and decode the response,
+        # replacing with empty dictionary on failure.
+        try:
+            msg = resp.json()
+        except json.decoder.JSONDecodeError:
+            msg = {}
+        return DmApiRv(success=True, msg=msg), resp
 
     @classmethod
     def _get_latest_job_operator_version(cls,
@@ -99,20 +120,22 @@ class DmApi:
         """
         assert access_token
 
-        resp = DmApi._request('GET',
-                              f'/application/{_DM_JOB_APPLICATION_ID}',
-                              access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            _LOGGER.warning('Failed getting Job application info [%s]', resp)
+        rv, resp = DmApi.\
+            _request('GET',
+                     f'/application/{_DM_JOB_APPLICATION_ID}',
+                     access_token=access_token,
+                     error_message='Failed getting Job application info',
+                     timeout=timeout_s)
+        if not rv.success:
+            _LOGGER.error('Failed getting Job application info [%s]', resp)
             return None
 
         # If there are versions, return the first in the list
         if 'versions' in resp.json() and len(resp.json()['versions']):
             return resp.json()['versions'][0]
 
-        _LOGGER.debug('No versions returned for Job application info'
-                      ' - no operator?')
+        _LOGGER.warning('No versions returned for Job application info'
+                        ' - no operator?')
         return ''
 
     @classmethod
@@ -122,7 +145,7 @@ class DmApi:
                                     project_file: str,
                                     project_path: str = '/',
                                     timeout_s: int = 120)\
-            -> bool:
+            -> DmApiRv:
         """Puts an individual file into a DM project.
         """
         data: Dict[str, Any] = {}
@@ -130,22 +153,19 @@ class DmApi:
             data['path'] = project_path
         files = {'file': open(project_file, 'rb')}  # pylint: disable=consider-using-with
 
-        _LOGGER.debug('Putting file %s -> %s (project_id=%s)',
-                      project_file, project_path, project_id)
+        rv, resp = DmApi.\
+            _request('PUT', f'/project/{project_id}/file',
+                     access_token=access_token,
+                     data=data,
+                     files=files,
+                     expected_response_codes=[201],
+                     error_message=f'Failed putting file {project_path}/{project_file}',
+                     timeout=timeout_s)
 
-        resp = DmApi._request('PUT', f'/project/{project_id}/file',
-                              access_token=access_token,
-                              data=data,
-                              files=files,
-                              timeout=timeout_s)
-
-        if resp is None or resp.status_code not in [201]:
+        if not rv.success:
             _LOGGER.warning('Failed putting file %s -> %s (resp=%s project_id=%s)',
                             project_file, project_path, resp, project_id)
-            return False
-
-        # OK if we get here
-        return True
+        return rv
 
     @classmethod
     @synchronized
@@ -221,18 +241,10 @@ class DmApi:
         """
         assert access_token
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False,
-                           msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('GET', '/account-server/namespace',
-                              access_token=access_token, timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed ping (resp={resp})'})
-
-        # OK if we get here
-        return DmApiRv(success=True, msg=None)
+        return DmApi._request('GET', '/account-server/namespace',
+                              access_token=access_token,
+                              error_message='Failed ping',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -242,18 +254,10 @@ class DmApi:
         """
         assert access_token
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False,
-                           msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('GET', '/version',
-                              access_token=access_token, timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed getting version (resp={resp})'})
-
-        # OK if we get here
-        return DmApiRv(success=True, msg=resp.json())
+        return DmApi._request('GET', '/version',
+                              access_token=access_token,
+                              error_message='Failed getting version',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -273,24 +277,16 @@ class DmApi:
         assert as_organisation_id
         assert as_unit_id
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False,
-                           msg={'msg': 'No API URL defined'})
-
         data: Dict[str, Any] = {'unit_id': as_unit_id,
                                 'organisation_id': as_organisation_id,
                                 'tier_product_id': as_tier_product_id,
                                 'name': project_name}
-        resp = DmApi._request('POST', '/project',
+        return DmApi._request('POST', '/project',
                               access_token=access_token,
                               data=data,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [201]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed creating project (resp={resp})'})
-
-        # OK if we get here
-        return DmApiRv(success=True, msg=resp.json())
+                              expected_response_codes=[201],
+                              error_message='Failed creating project',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -304,19 +300,10 @@ class DmApi:
         assert access_token
         assert project_id
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False,
-                           msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('DELETE', f'/project/{project_id}',
+        return DmApi._request('DELETE', f'/project/{project_id}',
                               access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed deleting project (resp={resp})'})
-
-        # OK if we get here
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed deleting project',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -356,28 +343,23 @@ class DmApi:
             _LOGGER.warning('Putting files (force=true project_id=%s)',
                             project_id)
         else:
-            _LOGGER.debug('Getting existing files on path %s (project_id=%s)',
-                          project_path, project_id)
-
             # What files already exist on the path?
             # To save time we avoid putting files that appear to exist.
             params: Dict[str, Any] = {'project_id': project_id}
             if project_path:
                 params['path'] = project_path
 
-            resp = DmApi._request('GET', '/file', access_token=access_token,
-                                  params=params)
-            if resp is None or resp.status_code not in [200, 404]:
-                return DmApiRv(success=False,
-                               msg={'msg': f'Failed getting existing files'
-                                    f' (resp={resp} project_id={project_id})'})
+            rv, resp = DmApi.\
+                _request('GET', '/file', access_token=access_token,
+                         expected_response_codes=[200, 404],
+                         error_message='Failed getting existing project files',
+                         params=params)
+            if not rv.success:
+                return rv
 
             if resp.status_code in [200]:
                 for item in resp.json()['files']:
                     existing_path_files.append(item['file_name'])
-
-            _LOGGER.debug('Got %d files (project_id=%s)',
-                          len(existing_path_files), project_id)
 
         # Now post every file that's not in the existing list
         if isinstance(project_files, str):
@@ -390,17 +372,15 @@ class DmApi:
             if not os.path.isfile(src_file):
                 return DmApiRv(success=False,
                                msg={'msg': f'No such file ({src_file})'})
-            if os.path.basename(src_file) in existing_path_files:
-                _LOGGER.debug('Skipping %s - already present (project_id=%s)',
-                              src_file, project_id)
-            else:
-                if not DmApi._put_unmanaged_project_file(access_token,
-                                                         project_id,
-                                                         src_file,
-                                                         project_path,
-                                                         timeout_per_file_s):
-                    return DmApiRv(success=False,
-                                   msg={'msg': 'Failed sending files'})
+            if os.path.basename(src_file) not in existing_path_files:
+                rv = DmApi._put_unmanaged_project_file(access_token,
+                                                       project_id,
+                                                       src_file,
+                                                       project_path,
+                                                       timeout_per_file_s)
+
+                if not rv.success:
+                    return rv
 
         # OK if we get here
         return DmApiRv(success=True, msg={})
@@ -432,13 +412,15 @@ class DmApi:
             params: Dict[str, Any] = {'project_id': project_id,
                                       'path': project_path,
                                       'file': file_to_delete}
-            resp = DmApi._request('DELETE', '/file',
-                                  access_token=access_token,
-                                  params=params,
-                                  timeout=timeout_s)
-            if resp is None or resp.status_code not in [204]:
-                return DmApiRv(success=False,
-                               msg={'msg': f'Failed to delete project file [{resp}]'})
+            rv, _ =\
+                DmApi._request('DELETE', '/file',
+                               access_token=access_token,
+                               params=params,
+                               expected_response_codes=[204],
+                               error_message='Failed to delete project file',
+                               timeout=timeout_s)
+            if not rv.success:
+                return rv
 
         # OK if we get here
         return DmApiRv(success=True, msg={})
@@ -460,22 +442,14 @@ class DmApi:
                and isinstance(project_path, str)\
                and project_path.startswith('/')
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
         params: Dict[str, Any] = {'project_id': project_id,
                                   'path': project_path,
                                   'include_hidden': include_hidden}
-        resp = DmApi._request('GET', '/file',
+        return DmApi._request('GET', '/file',
                               access_token=access_token,
                               params=params,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get instance [{resp}]'})
-
-        # OK if we get here
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to list project files',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -498,23 +472,20 @@ class DmApi:
                and isinstance(project_path, str)\
                and project_path.startswith('/')
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
         params: Dict[str, Any] = {'path': project_path,
                                   'file': project_file}
-        resp = DmApi._request('GET', f'/project/{project_id}/file',
-                              access_token=access_token,
-                              params=params,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get file [{resp}]'})
+        rv, resp = DmApi._request('GET', f'/project/{project_id}/file',
+                                  access_token=access_token,
+                                  params=params,
+                                  error_message='Failed to get file',
+                                  timeout=timeout_s)
+        if not rv.success:
+            return rv
 
         # OK if we get here
         with open(local_file, 'wb') as file_handle:
             file_handle.write(resp.content)
-        return DmApiRv(success=True, msg={})
+        return rv
 
     @classmethod
     @synchronized
@@ -537,9 +508,6 @@ class DmApi:
         assert name
         assert isinstance(specification, (type(None), dict))
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
         # Get the latest Job operator version.
         # If there isn't one the DM can't run Jobs.
         job_application_version: Optional[str] =\
@@ -553,8 +521,6 @@ class DmApi:
             return DmApiRv(success=False,
                            msg={'msg': 'No Job operator installed'})
 
-        _LOGGER.debug('Starting Job instance (project_id=%s)', project_id)
-
         data: Dict[str, Any] =\
             {'application_id': _DM_JOB_APPLICATION_ID,
              'application_version': job_application_version,
@@ -564,22 +530,14 @@ class DmApi:
         if debug:
             data['debug'] = debug
         if callback_url:
-            _LOGGER.debug('Job callback_url=%s (project_id=%s)',
-                          callback_url, project_id)
             data['callback_url'] = callback_url
             if callback_context:
-                _LOGGER.debug('Job callback_context=%s (project_id=%s)',
-                              callback_context, project_id)
                 data['callback_context'] = callback_context
 
-        resp = DmApi._request('POST', '/instance', access_token=access_token,
-                              data=data, timeout=timeout_s)
-        if resp is None or resp.status_code not in [201]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to start instance [{resp}]'})
-
-        _LOGGER.debug('Started Job instance (project_id=%s)', project_id)
-        return DmApiRv(success=True, msg=resp.json())
+        return DmApi._request('POST', '/instance', access_token=access_token,
+                              expected_response_codes=[201],
+                              error_message='Failed to start instance',
+                              data=data, timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -589,17 +547,10 @@ class DmApi:
         """
         assert access_token
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('GET', '/project',
+        return DmApi._request('GET', '/project',
                               access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get projects [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to get projects',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -613,17 +564,10 @@ class DmApi:
         assert access_token
         assert project_id
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('GET', f'/project/{project_id}',
+        return DmApi._request('GET', f'/project/{project_id}',
                               access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get project [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to get project',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -637,17 +581,10 @@ class DmApi:
         assert access_token
         assert instance_id
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('GET', f'/instance/{instance_id}',
+        return DmApi._request('GET', f'/instance/{instance_id}',
                               access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get instance [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to get instance',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -661,19 +598,12 @@ class DmApi:
         assert access_token
         assert project_id
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
         params: Dict[str, Any] = {'project_id': project_id}
-        resp = DmApi._request('GET', '/instance',
+        return DmApi._request('GET', '/instance',
                               access_token=access_token,
                               params=params,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get project instances [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to get project instances',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -687,17 +617,10 @@ class DmApi:
         assert access_token
         assert instance_id
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('DELETE', f'/instance/{instance_id}',
+        return DmApi._request('DELETE', f'/instance/{instance_id}',
                               access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to delete instance [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to delete instance',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -715,23 +638,16 @@ class DmApi:
         assert event_prior_ordinal >= 0
         assert event_limit >= 0
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
         params: Dict[str, Any] = {}
         if event_prior_ordinal:
             params['event_prior_ordinal'] = event_prior_ordinal
         if event_limit:
             params['event_limit'] = event_limit
-        resp = DmApi._request('GET', f'/task/{task_id}',
+        return DmApi._request('GET', f'/task/{task_id}',
                               access_token=access_token,
                               params=params,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get task [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to get task',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -741,17 +657,10 @@ class DmApi:
         """
         assert access_token
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('GET', '/job',
+        return DmApi._request('GET', '/job',
                               access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get available jobs [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to get available jobs',
+                              timeout=timeout_s)[0]
 
     @classmethod
     @synchronized
@@ -762,14 +671,7 @@ class DmApi:
         assert access_token
         assert job_id > 0
 
-        if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
-
-        resp = DmApi._request('GET', f'/job/{job_id}',
+        return DmApi._request('GET', f'/job/{job_id}',
                               access_token=access_token,
-                              timeout=timeout_s)
-        if resp is None or resp.status_code not in [200]:
-            return DmApiRv(success=False,
-                           msg={'msg': f'Failed to get job detail [{resp}]'})
-
-        return DmApiRv(success=True, msg=resp.json())
+                              error_message='Failed to get job',
+                              timeout=timeout_s)[0]
