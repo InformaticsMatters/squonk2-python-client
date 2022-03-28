@@ -131,6 +131,7 @@ class DmApi:
             return None
 
         # If there are versions, return the first in the list
+        assert resp
         if 'versions' in resp.json() and len(resp.json()['versions']):
             return resp.json()['versions'][0]
 
@@ -357,6 +358,7 @@ class DmApi:
             if not ret_val.success:
                 return ret_val
 
+            assert resp
             if resp.status_code in [200]:
                 for item in resp.json()['files']:
                     existing_path_files.append(item['file_name'])
@@ -484,6 +486,7 @@ class DmApi:
             return ret_val
 
         # OK if we get here
+        assert resp
         with open(local_file, 'wb') as file_handle:
             file_handle.write(resp.content)
         return ret_val

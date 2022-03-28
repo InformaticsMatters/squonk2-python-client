@@ -24,7 +24,7 @@ setuptools.setup(
     author_email='achristie@informaticsmatters.com',
     url='https://github.com/informaticsmatters/data-manager-api',
     license='MIT',
-    description='Data Manager API utilities',
+    description='Data Manager API Client',
     long_description=long_description,
     keywords='api',
     platforms=['any'],
