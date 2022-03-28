@@ -24,7 +24,6 @@ def main():
                         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     arg_parser.add_argument('-p', '--project-id',
                             help='A pre-existing DM-API Project',
-                            required=True,
                             type=str)
     args: argparse.Namespace = arg_parser.parse_args()
 
@@ -45,17 +44,26 @@ def main():
     assert rv.success
     print(f"DM-API version={rv.msg['version']}")
 
-    # Check the project exists
-    rv = DmApi.get_available_projects(token)
-    project_id: str = args.project_id
-    assert rv.success
-    found = False
-    for project in rv.msg['projects']:
-        if project['project_id'] == project_id:
-            print(f"Found project (product_id={project['product_id']} size={project['size']})")
-            found = True
-            break
-    assert found
+    # If given a project ID find it,
+    # otherwise create one (assuming admin user)
+    if args.project_id:
+        rv = DmApi.get_available_projects(token)
+        project_id = args.project_id
+        assert rv.success
+        found = False
+        for project in rv.msg['projects']:
+            if project['project_id'] == project_id:
+                print(f"Found project (product_id={project['product_id']} size={project['size']})")
+                found = True
+                break
+        assert found
+    else:
+        print('Creating new Project...')
+        rv = DmApi.create_project(token, 'DmApi-generated Project')
+        assert rv.success
+        project_id = rv.msh['project_id']
+        print(f'Created project_id={project_id}')
+    assert project_id
 
     # get a list of project files on the root
     print("Listing project files")
@@ -108,6 +116,12 @@ def main():
         print(f"# {event['time']} {event['level']} {event['message']}")
     rv = DmApi.delete_instance(token, job_instance_id)
     assert rv.success
+
+    # Finally, if we created a project, delete it.
+    if not args.project_id:
+        print(f'Deleting project_id={project_id}...')
+        rv = DmApi.delete_project(token, project_id)
+        assert rv.success
 
     print('Done!')
 

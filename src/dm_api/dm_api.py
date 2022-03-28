@@ -257,6 +257,69 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def create_project(cls,
+                       access_token: str,
+                       project_name: str,
+                       as_tier_product_id: str = 'product-11111111-1111-1111-1111-111111111111',
+                       as_organisation_id: str = 'org-11111111-1111-1111-1111-111111111111',
+                       as_unit_id: str = 'unit-11111111-1111-1111-1111-111111111111',
+                       timeout_s: int = 4)\
+            -> DmApiRv:
+        """Creates a project using an organisation, unit and product.
+        """
+        assert access_token
+        assert project_name
+        assert as_tier_product_id
+        assert as_organisation_id
+        assert as_unit_id
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False,
+                           msg={'msg': 'No API URL defined'})
+
+        data: Dict[str, Any] = {'unit_id': as_unit_id,
+                                'organisation_id': as_organisation_id,
+                                'product_id': as_tier_product_id,
+                                'name': project_name}
+        resp = DmApi._request('POST', '/project',
+                              access_token=access_token,
+                              data=data,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed creating project (resp={resp})'})
+
+        # OK if we get here
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
+    def delete_project(cls,
+                       access_token: str,
+                       project_id: str,
+                       timeout_s: int = 4) \
+            -> DmApiRv:
+        """Deletes a project.
+        """
+        assert access_token
+        assert project_id
+
+        if not DmApi._dm_api_url:
+            return DmApiRv(success=False,
+                           msg={'msg': 'No API URL defined'})
+
+        resp = DmApi._request('DELETE', f'/project/{project_id}',
+                              access_token=access_token,
+                              timeout=timeout_s)
+        if not resp or resp.status_code not in [200]:
+            return DmApiRv(success=False,
+                           msg={'msg': f'Failed deleting project (resp={resp})'})
+
+        # OK if we get here
+        return DmApiRv(success=True, msg=resp.json())
+
+    @classmethod
+    @synchronized
     def upload_unmanaged_project_files(cls,
                                        access_token: str,
                                        project_id: str,

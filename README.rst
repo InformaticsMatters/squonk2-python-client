@@ -18,6 +18,8 @@ The following API functions are available: -
 
 - ``DmApi.ping()``
 
+- ``DmApi.create_project()``
+- ``DmApi.delete_project()``
 - ``DmApi.get_version()``
 - ``DmApi.get_available_projects()``
 - ``DmApi.get_project()``
