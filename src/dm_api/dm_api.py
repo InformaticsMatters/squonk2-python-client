@@ -120,13 +120,13 @@ class DmApi:
         """
         assert access_token
 
-        rv, resp = DmApi.\
+        ret_val, resp = DmApi.\
             _request('GET',
                      f'/application/{_DM_JOB_APPLICATION_ID}',
                      access_token=access_token,
                      error_message='Failed getting Job application info',
                      timeout=timeout_s)
-        if not rv.success:
+        if not ret_val.success:
             _LOGGER.error('Failed getting Job application info [%s]', resp)
             return None
 
@@ -153,7 +153,7 @@ class DmApi:
             data['path'] = project_path
         files = {'file': open(project_file, 'rb')}  # pylint: disable=consider-using-with
 
-        rv, resp = DmApi.\
+        ret_val, resp = DmApi.\
             _request('PUT', f'/project/{project_id}/file',
                      access_token=access_token,
                      data=data,
@@ -162,10 +162,10 @@ class DmApi:
                      error_message=f'Failed putting file {project_path}/{project_file}',
                      timeout=timeout_s)
 
-        if not rv.success:
+        if not ret_val.success:
             _LOGGER.warning('Failed putting file %s -> %s (resp=%s project_id=%s)',
                             project_file, project_path, resp, project_id)
-        return rv
+        return ret_val
 
     @classmethod
     @synchronized
@@ -349,13 +349,13 @@ class DmApi:
             if project_path:
                 params['path'] = project_path
 
-            rv, resp = DmApi.\
+            ret_val, resp = DmApi.\
                 _request('GET', '/file', access_token=access_token,
                          expected_response_codes=[200, 404],
                          error_message='Failed getting existing project files',
                          params=params)
-            if not rv.success:
-                return rv
+            if not ret_val.success:
+                return ret_val
 
             if resp.status_code in [200]:
                 for item in resp.json()['files']:
@@ -373,14 +373,15 @@ class DmApi:
                 return DmApiRv(success=False,
                                msg={'msg': f'No such file ({src_file})'})
             if os.path.basename(src_file) not in existing_path_files:
-                rv = DmApi._put_unmanaged_project_file(access_token,
-                                                       project_id,
-                                                       src_file,
-                                                       project_path,
-                                                       timeout_per_file_s)
+                ret_val = DmApi.\
+                    _put_unmanaged_project_file(access_token,
+                                                project_id,
+                                                src_file,
+                                                project_path,
+                                                timeout_per_file_s)
 
-                if not rv.success:
-                    return rv
+                if not ret_val.success:
+                    return ret_val
 
         # OK if we get here
         return DmApiRv(success=True, msg={})
@@ -412,15 +413,15 @@ class DmApi:
             params: Dict[str, Any] = {'project_id': project_id,
                                       'path': project_path,
                                       'file': file_to_delete}
-            rv, _ =\
+            ret_val, _ =\
                 DmApi._request('DELETE', '/file',
                                access_token=access_token,
                                params=params,
                                expected_response_codes=[204],
                                error_message='Failed to delete project file',
                                timeout=timeout_s)
-            if not rv.success:
-                return rv
+            if not ret_val.success:
+                return ret_val
 
         # OK if we get here
         return DmApiRv(success=True, msg={})
@@ -474,18 +475,18 @@ class DmApi:
 
         params: Dict[str, Any] = {'path': project_path,
                                   'file': project_file}
-        rv, resp = DmApi._request('GET', f'/project/{project_id}/file',
-                                  access_token=access_token,
-                                  params=params,
-                                  error_message='Failed to get file',
-                                  timeout=timeout_s)
-        if not rv.success:
-            return rv
+        ret_val, resp = DmApi._request('GET', f'/project/{project_id}/file',
+                                       access_token=access_token,
+                                       params=params,
+                                       error_message='Failed to get file',
+                                       timeout=timeout_s)
+        if not ret_val.success:
+            return ret_val
 
         # OK if we get here
         with open(local_file, 'wb') as file_handle:
             file_handle.write(resp.content)
-        return rv
+        return ret_val
 
     @classmethod
     @synchronized
