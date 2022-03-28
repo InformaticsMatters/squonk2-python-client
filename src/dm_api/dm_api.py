@@ -279,13 +279,13 @@ class DmApi:
 
         data: Dict[str, Any] = {'unit_id': as_unit_id,
                                 'organisation_id': as_organisation_id,
-                                'product_id': as_tier_product_id,
+                                'tier_product_id': as_tier_product_id,
                                 'name': project_name}
         resp = DmApi._request('POST', '/project',
                               access_token=access_token,
                               data=data,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if not resp or resp.status_code not in [201]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed creating project (resp={resp})'})
 

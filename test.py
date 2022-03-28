@@ -44,25 +44,38 @@ def main():
     assert rv.success
     print(f"DM-API version={rv.msg['version']}")
 
+    # Get existing projects
+    rv_projects = DmApi.get_available_projects(token)
+    assert rv_projects.success
+
     # If given a project ID find it,
     # otherwise create one (assuming admin user)
+    project_id = ''
     if args.project_id:
-        rv = DmApi.get_available_projects(token)
-        project_id = args.project_id
-        assert rv.success
         found = False
-        for project in rv.msg['projects']:
-            if project['project_id'] == project_id:
+        for project in rv_projects.msg['projects']:
+            if project['project_id'] == args.project_id:
                 print(f"Found project (product_id={project['product_id']} size={project['size']})")
                 found = True
                 break
         assert found
+        project_id = args.project_id
     else:
-        print('Creating new Project...')
-        rv = DmApi.create_project(token, 'DmApi-generated Project')
-        assert rv.success
-        project_id = rv.msh['project_id']
-        print(f'Created project_id={project_id}')
+        # Delete project if it exists
+        new_project_name = 'DmApi-generated Project'
+        project_exists = False
+        for project in rv_projects.msg['projects']:
+            if project['name'] == new_project_name:
+                print(f"Using existing project ({project['project_id']})")
+                project_id = project['project_id']
+                project_exists = True
+                break
+        if not project_exists:
+            print(f'Creating new Project ("{new_project_name}")...')
+            rv = DmApi.create_project(token, 'DmApi-generated Project')
+            assert rv.success
+            project_id = rv.msg['project_id']
+            print(f'Created project_id={project_id}')
     assert project_id
 
     # get a list of project files on the root
@@ -70,9 +83,12 @@ def main():
     rv = DmApi.list_project_files(token, project_id, '/')
     assert rv.success
     num_project_files = 0
-    for project_file in rv.msg['files']:
-        num_project_files += 1
-        print(f"+ {project_file['file_name']}")
+    if rv.msg['files']:
+        for project_file in rv.msg['files']:
+            num_project_files += 1
+            print(f"+ {project_file['file_name']}")
+    else:
+        print('+ (none)')
     plural = 'file' if num_project_files == 1 else 'files'
     print(f"Project has {num_project_files} {plural}")
 
