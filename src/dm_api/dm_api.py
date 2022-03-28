@@ -103,7 +103,7 @@ class DmApi:
                               f'/application/{_DM_JOB_APPLICATION_ID}',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             _LOGGER.warning('Failed getting Job application info [%s]', resp)
             return None
 
@@ -139,7 +139,7 @@ class DmApi:
                               files=files,
                               timeout=timeout_s)
 
-        if not resp or resp.status_code not in [201]:
+        if resp is None or resp.status_code not in [201]:
             _LOGGER.warning('Failed putting file %s -> %s (resp=%s project_id=%s)',
                             project_file, project_path, resp, project_id)
             return False
@@ -227,7 +227,7 @@ class DmApi:
 
         resp = DmApi._request('GET', '/account-server/namespace',
                               access_token=access_token, timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed ping (resp={resp})'})
 
@@ -248,7 +248,7 @@ class DmApi:
 
         resp = DmApi._request('GET', '/version',
                               access_token=access_token, timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed getting version (resp={resp})'})
 
@@ -285,7 +285,7 @@ class DmApi:
                               access_token=access_token,
                               data=data,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [201]:
+        if resp is None or resp.status_code not in [201]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed creating project (resp={resp})'})
 
@@ -311,7 +311,7 @@ class DmApi:
         resp = DmApi._request('DELETE', f'/project/{project_id}',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed deleting project (resp={resp})'})
 
@@ -367,13 +367,14 @@ class DmApi:
 
             resp = DmApi._request('GET', '/file', access_token=access_token,
                                   params=params)
-            if not resp or resp.status_code not in [200]:
+            if resp is None or resp.status_code not in [200, 404]:
                 return DmApiRv(success=False,
                                msg={'msg': f'Failed getting existing files'
                                     f' (resp={resp} project_id={project_id})'})
 
-            for item in resp.json()['files']:
-                existing_path_files.append(item['file_name'])
+            if resp.status_code in [200]:
+                for item in resp.json()['files']:
+                    existing_path_files.append(item['file_name'])
 
             _LOGGER.debug('Got %d files (project_id=%s)',
                           len(existing_path_files), project_id)
@@ -435,7 +436,7 @@ class DmApi:
                                   access_token=access_token,
                                   params=params,
                                   timeout=timeout_s)
-            if not resp or resp.status_code not in [204]:
+            if resp is None or resp.status_code not in [204]:
                 return DmApiRv(success=False,
                                msg={'msg': f'Failed to delete project file [{resp}]'})
 
@@ -469,7 +470,7 @@ class DmApi:
                               access_token=access_token,
                               params=params,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get instance [{resp}]'})
 
@@ -506,7 +507,7 @@ class DmApi:
                               access_token=access_token,
                               params=params,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get file [{resp}]'})
 
@@ -573,7 +574,7 @@ class DmApi:
 
         resp = DmApi._request('POST', '/instance', access_token=access_token,
                               data=data, timeout=timeout_s)
-        if not resp or resp.status_code not in [201]:
+        if resp is None or resp.status_code not in [201]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to start instance [{resp}]'})
 
@@ -594,7 +595,7 @@ class DmApi:
         resp = DmApi._request('GET', '/project',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get projects [{resp}]'})
 
@@ -618,7 +619,7 @@ class DmApi:
         resp = DmApi._request('GET', f'/project/{project_id}',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get project [{resp}]'})
 
@@ -642,7 +643,7 @@ class DmApi:
         resp = DmApi._request('GET', f'/instance/{instance_id}',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get instance [{resp}]'})
 
@@ -668,7 +669,7 @@ class DmApi:
                               access_token=access_token,
                               params=params,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get project instances [{resp}]'})
 
@@ -692,7 +693,7 @@ class DmApi:
         resp = DmApi._request('DELETE', f'/instance/{instance_id}',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to delete instance [{resp}]'})
 
@@ -726,7 +727,7 @@ class DmApi:
                               access_token=access_token,
                               params=params,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get task [{resp}]'})
 
@@ -746,7 +747,7 @@ class DmApi:
         resp = DmApi._request('GET', '/job',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get available jobs [{resp}]'})
 
@@ -767,7 +768,7 @@ class DmApi:
         resp = DmApi._request('GET', f'/job/{job_id}',
                               access_token=access_token,
                               timeout=timeout_s)
-        if not resp or resp.status_code not in [200]:
+        if resp is None or resp.status_code not in [200]:
             return DmApiRv(success=False,
                            msg={'msg': f'Failed to get job detail [{resp}]'})
 

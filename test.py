@@ -98,8 +98,7 @@ def main():
     project_path = '/license'
     rv = DmApi.upload_unmanaged_project_files(token, project_id,
                                               local_file,
-                                              project_path=project_path,
-                                              force=True)
+                                              project_path=project_path)
     assert rv.success
     rv = DmApi.download_unmanaged_project_file(token, project_id,
                                                local_file,
