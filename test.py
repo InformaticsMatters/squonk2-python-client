@@ -92,12 +92,23 @@ def main():
     plural = 'file' if num_project_files == 1 else 'files'
     print(f"Project has {num_project_files} {plural}")
 
+    print('Uploading, getting and deleting an unmanaged project file on a path...')
     # Put a simple file into the project, get it back and delete it
-    rv = DmApi.upload_unmanaged_project_files(token, project_id, 'LICENSE', force=True)
+    local_file = 'LICENSE'
+    project_path = '/license'
+    rv = DmApi.upload_unmanaged_project_files(token, project_id,
+                                              local_file,
+                                              project_path=project_path,
+                                              force=True)
     assert rv.success
-    rv = DmApi.download_unmanaged_project_file(token, project_id, 'LICENSE', 'LICENSE')
+    rv = DmApi.download_unmanaged_project_file(token, project_id,
+                                               local_file,
+                                               project_path=project_path,
+                                               local_file=local_file)
     assert rv.success
-    rv = DmApi.delete_unmanaged_project_files(token, project_id, 'LICENSE')
+    rv = DmApi.delete_unmanaged_project_files(token, project_id,
+                                              local_file,
+                                              project_path=project_path)
     assert rv.success
 
     # Run a test job
