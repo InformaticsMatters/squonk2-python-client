@@ -27,15 +27,25 @@ def main():
                             type=str)
     args: argparse.Namespace = arg_parser.parse_args()
 
-    # Configure
+    # Configure.
+    # Depending on keycloak configuration
+    # you may only have 5 minutes before the token expires.
     DmApi.set_api_url(API_URL)
     url, verify = DmApi.get_api_url()
     assert url == API_URL
-    token = DmApi.get_access_token(
+    first_token = DmApi.get_access_token(
         KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID,
         KEYCLOAK_USER, KEYCLOAK_USER_PASSWORD)
-    assert token
+    assert first_token
     print(f'DM-API connected ({API_URL})')
+
+    # Get another token using the existing token.
+    # Just tests that prior tokens are given back.
+    token = DmApi.get_access_token(
+        KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT_ID,
+        KEYCLOAK_USER, KEYCLOAK_USER_PASSWORD,
+        prior_token=first_token)
+    assert token == first_token
 
     # Basic ping/version
     rv: DmApiRv = DmApi.ping(token)
@@ -49,7 +59,8 @@ def main():
     assert rv_projects.success
 
     # If given a project ID find it,
-    # otherwise create one (assuming admin user)
+    # otherwise create one using the '1111' codes,
+    # assuming admin user (because we have no Product, Unit, Organisation atm)
     project_id = ''
     if args.project_id:
         found = False
@@ -62,7 +73,7 @@ def main():
         project_id = args.project_id
     else:
         # Delete project if it exists
-        new_project_name = 'DmApi-generated Project'
+        new_project_name = 'DmApi Project'
         project_exists = False
         for project in rv_projects.msg['projects']:
             if project['name'] == new_project_name:
@@ -92,7 +103,7 @@ def main():
     plural = 'file' if num_project_files == 1 else 'files'
     print(f"Project has {num_project_files} {plural}")
 
-    print('Uploading, getting and deleting an unmanaged project file on a path...')
+    print('Uploading, downloading and deleting unmanaged file on a path...')
     # Put a simple file into the project, get it back and delete it
     local_file = 'LICENSE'
     project_path = '/license'
@@ -111,15 +122,18 @@ def main():
     assert rv.success
 
     # Run a test job
+    print('Starting Job...')
+    job_name = 'DmApi Job'
     spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
-    rv = DmApi.start_job_instance(token, project_id, 'Test Job', specification=spec)
+    rv = DmApi.start_job_instance(token, project_id, job_name, specification=spec)
     assert rv.success
     job_task_id = rv.msg['task_id']
     job_instance_id = rv.msg['instance_id']
-    print(f'Running Job (task_id={job_task_id} instance_id={job_instance_id})')
+    print(f'Started (task_id={job_task_id} instance_id={job_instance_id})')
 
     # Wait for the Job (but not forever),
     # print the events and then delete it
+    print('Waiting for job completion...')
     max_wait_seconds = 120
     wait_seconds = 0
     done = False
@@ -140,16 +154,20 @@ def main():
     assert rv.success
     for event in rv.msg['events']:
         print(f"# {event['time']} {event['level']} {event['message']}")
+    print('Deleting Job...')
     rv = DmApi.delete_instance(token, job_instance_id)
     assert rv.success
+    print('Deleted')
 
     # Finally, if we created a project, delete it.
     if not args.project_id:
+        print('Deleting project I created...')
         print(f'Deleting project_id={project_id}...')
         rv = DmApi.delete_project(token, project_id)
         assert rv.success
+        print('Deleted')
 
-    print('Done!')
+    print('Done')
 
 
 if __name__ == '__main__':

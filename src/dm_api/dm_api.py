@@ -9,13 +9,16 @@ The URL to the DM API URL is picked up from the environment variable
 using the 'DmApi.set_api_url()' method.
 """
 from collections import namedtuple
+from datetime import datetime
 import json
 import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple, Union
+import urllib
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
+from authlib.jose import jwt
 from wrapt import synchronized
 import requests
 
@@ -30,6 +33,11 @@ _DM_JOB_APPLICATION_ID: str = 'datamanagerjobs.squonk.it'
 # The API URL environment variable
 _API_URL_ENV_NAME: str = 'SQUONK_API_URL'
 
+# How old do tokens need to be to re-use them?
+# If less than the value provided here, we get a new one.
+# Used in get_access_token().
+_PRIOR_TOKEN_MIN_AGE_M: int = 1
+
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
@@ -43,6 +51,11 @@ class DmApi:
     # Do we expect the DM API to be secure?
     # This can be disabled using 'set_api_url()'
     _verify_ssl_cert: bool = True
+
+    # The most recent access token Host and public key.
+    # Set during token collection.
+    _access_token_realm_url: str = ''
+    _access_token_public_key: str = ''
 
     @classmethod
     def _request(cls,
@@ -197,12 +210,17 @@ class DmApi:
                          keycloak_client_id: str,
                          username: str,
                          password: str,
+                         prior_token: Optional[str] = None,
                          timeout_s: int = 4)\
             -> Optional[str]:
         """Gets a DM API access token from the given Keycloak server, realm
         and client ID. The keycloak URL is typically 'https://example.com/auth'.
         If keycloak fails to yield a token None is returned, with messages
         written to the log.
+
+        The caller can (is encouraged to) provide a prior token. The token
+        logic then only calls keycloak to obtain a new token if the current
+        one looks like it will expire (in less than 60 seconds).
         """
         assert keycloak_url
         assert keycloak_realm
@@ -210,14 +228,43 @@ class DmApi:
         assert username
         assert password
 
+        # Do we have the public key for this host/realm?
+        # if not grab it now.
+        realm_url: str = f'{keycloak_url}/realms/{keycloak_realm}'
+        if prior_token and DmApi._access_token_realm_url != realm_url:
+            # New realm URL, remember and get the public key
+            DmApi._access_token_realm_url = realm_url
+            with urllib.request.urlopen(realm_url) as realm_stream:
+                response = realm_stream.read()
+                public_key = json.loads(response)['public_key']
+            assert public_key
+            key = '-----BEGIN PUBLIC KEY-----\n' +\
+                  public_key +\
+                  '\n-----END PUBLIC KEY-----'
+            DmApi._access_token_public_key = key.encode('ascii')
+
+        # If a prior token's been supplied,
+        # re-use it if there's still time left before expiry.
+        if prior_token:
+            assert DmApi._access_token_public_key
+            decoded_token: Dict[str, Any] = jwt.\
+                decode(prior_token, DmApi._access_token_public_key)
+            utc_timestamp: int = int(datetime.utcnow().timestamp())
+            token_remaining_seconds: int = decoded_token['exp'] - utc_timestamp
+            if token_remaining_seconds >= _PRIOR_TOKEN_MIN_AGE_M * 60:
+                # Plenty of time left on the prior token,
+                # return it to the user
+                return prior_token
+
+        # No prior token, or not enough time left on the one given.
+        # Get a new token.
         data: str = f'client_id={keycloak_client_id}'\
             f'&grant_type=password'\
             f'&username={username}'\
             f'&password={password}'
         headers: Dict[str, Any] =\
             {'Content-Type': 'application/x-www-form-urlencoded'}
-        url = f'{keycloak_url}/realms/{keycloak_realm}' \
-              f'/protocol/openid-connect/token'
+        url = f'{realm_url}/protocol/openid-connect/token'
 
         try:
             resp: requests.Response = requests.\
