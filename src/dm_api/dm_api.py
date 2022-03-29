@@ -1,8 +1,8 @@
 """Python utilities to simplify calls to some parts of the Data Manager API.
 
 For API methods where a user can expect material from a successful call
-the original response payload can be found in the DmApiRv 'msg' property
-as a Python dictionary.
+the original response payload can be found in the DmApiRv 'msg' property,
+rendered as a Python dictionary.
 
 The URL to the DM API URL is picked up from the environment variable
 'SQUONK_API_URL'. If this isn't set the user can set it programmatically
@@ -199,8 +199,10 @@ class DmApi:
                          password: str,
                          timeout_s: int = 4)\
             -> Optional[str]:
-        """Gets a DM API access token from the given Keycloak server
-        and clint ID. The keycloak URL is typically 'https://example.com/auth'
+        """Gets a DM API access token from the given Keycloak server, realm
+        and client ID. The keycloak URL is typically 'https://example.com/auth'.
+        If keycloak fails to yield a token None is returned, with messages
+        written to the log.
         """
         assert keycloak_url
         assert keycloak_realm
@@ -218,15 +220,15 @@ class DmApi:
               f'/protocol/openid-connect/token'
 
         try:
-            resp: requests.Response = requests.post(url,
-                                                    headers=headers,
-                                                    data=data,
-                                                    timeout=timeout_s)
+            resp: requests.Response = requests.\
+                post(url, headers=headers, data=data, timeout=timeout_s)
         except:
+            _LOGGER.exception('Failed to get response from Keycloak')
             return None
 
         if resp.status_code not in [200]:
-            _LOGGER.error('Failed to get token text=%s', resp.text)
+            _LOGGER.error('Failed to get token status_code=%s text=%s',
+                          resp.status_code, resp.text)
             assert False
 
         assert 'access_token' in resp.json()
