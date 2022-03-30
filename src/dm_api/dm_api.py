@@ -117,7 +117,7 @@ class DmApi:
         # replacing with empty dictionary on failure.
         try:
             msg = resp.json()
-        except json.decoder.JSONDecodeError:
+        except:
             msg = {}
         return DmApiRv(success=True, msg=msg), resp
 
