@@ -357,13 +357,13 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def upload_unmanaged_project_files(cls,
-                                       access_token: str,
-                                       project_id: str,
-                                       project_files: Union[str, List[str]],
-                                       project_path: str = '/',
-                                       force: bool = False,
-                                       timeout_per_file_s: int = 120)\
+    def put_unmanaged_project_files(cls,
+                                    access_token: str,
+                                    project_id: str,
+                                    project_files: Union[str, List[str]],
+                                    project_path: str = '/',
+                                    force: bool = False,
+                                    timeout_per_file_s: int = 120)\
             -> DmApiRv:
         """Puts a file, or list of files, into a DM Project
         using an optional path. The files can include relative or absolute
@@ -505,13 +505,13 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def download_unmanaged_project_file(cls,
-                                        access_token: str,
-                                        project_id: str,
-                                        project_file: str,
-                                        local_file: str,
-                                        project_path: str = '/',
-                                        timeout_s: int = 8)\
+    def get_unmanaged_project_file(cls,
+                                   access_token: str,
+                                   project_id: str,
+                                   project_file: str,
+                                   local_file: str,
+                                   project_path: str = '/',
+                                   timeout_s: int = 8)\
             -> DmApiRv:
         """Get a single unmanaged file from a project path, saving it to
         the filename defined in local_file.

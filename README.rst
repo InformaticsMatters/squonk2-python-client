@@ -26,10 +26,10 @@ The following API functions are available: -
 - ``DmApi.get_project_instances()``
 - ``DmApi.get_available_jobs()``
 - ``DmApi.get_job()``
-- ``DmApi.upload_unmanaged_project_files()``
+- ``DmApi.put_unmanaged_project_files()``
 - ``DmApi.list_project_files()``
 - ``DmApi.delete_unmanaged_project_files()``
-- ``DmApi.download_unmanaged_project_file()``
+- ``DmApi.get_unmanaged_project_file()``
 - ``DmApi.start_job_instance()``
 - ``DmApi.get_instance()``
 - ``DmApi.get_task()``
@@ -58,7 +58,7 @@ Manager **Project** (as an example)::
     >>> rv = DmApi.ping(token)
     >>> assert rv.success
     >>> project_id = 'project-12345678-1234-1234-1234-123456781234'
-    >>> rv = DmApi.upload_unmanaged_project_files(token, project_id, 'data.sdf')
+    >>> rv = DmApi.put_unmanaged_project_files(token, project_id, 'data.sdf')
     >>> assert rv.success
 
 Or start Jobs::
