@@ -107,14 +107,14 @@ def main():
     # Put a simple file into the project, get it back and delete it
     local_file = 'LICENSE'
     project_path = '/license'
-    rv = DmApi.upload_unmanaged_project_files(token, project_id,
-                                              local_file,
-                                              project_path=project_path)
+    rv = DmApi.put_unmanaged_project_files(token, project_id,
+                                           local_file,
+                                           project_path=project_path)
     assert rv.success
-    rv = DmApi.download_unmanaged_project_file(token, project_id,
-                                               local_file,
-                                               project_path=project_path,
-                                               local_file=local_file)
+    rv = DmApi.put_unmanaged_project_file(token, project_id,
+                                          local_file,
+                                          project_path=project_path,
+                                          local_file=local_file)
     assert rv.success
     rv = DmApi.delete_unmanaged_project_files(token, project_id,
                                               local_file,
