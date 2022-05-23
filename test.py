@@ -111,7 +111,7 @@ def main():
                                            local_file,
                                            project_path=project_path)
     assert rv.success
-    rv = DmApi.put_unmanaged_project_file(token, project_id,
+    rv = DmApi.get_unmanaged_project_file(token, project_id,
                                           local_file,
                                           project_path=project_path,
                                           local_file=local_file)
