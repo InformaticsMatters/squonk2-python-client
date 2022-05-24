@@ -80,7 +80,6 @@ class DmApi:
         """
         assert method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
         assert endpoint
-        assert access_token
         assert isinstance(expected_response_codes, (type(None), list))
 
         if not DmApi._dm_api_url:
@@ -89,13 +88,14 @@ class DmApi:
 
         url: str = DmApi._dm_api_url + endpoint
 
-        # Adds the access token to the headers,
+        # if we have it, add the access token to the headers,
         # or create a headers block
-        if headers:
-            use_headers = headers.copy()
-            use_headers['Authorization'] = 'Bearer ' + access_token
-        else:
-            use_headers = {'Authorization': 'Bearer ' + access_token}
+        use_headers = headers.copy() if headers else {}
+        if access_token:
+            if headers:
+                use_headers['Authorization'] = 'Bearer ' + access_token
+            else:
+                use_headers = {'Authorization': 'Bearer ' + access_token}
 
         expected_codes = expected_response_codes if expected_response_codes else [200]
         resp: Optional[requests.Response] = None
