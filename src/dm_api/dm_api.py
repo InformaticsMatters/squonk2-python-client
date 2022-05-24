@@ -61,8 +61,8 @@ class DmApi:
     def _request(cls,
                  method: str,
                  endpoint: str,
-                 access_token: str,
                  error_message: str,
+                 access_token: Optional[str] = None,
                  expected_response_codes: Optional[List[int]] = None,
                  headers: Optional[Dict[str, Any]] = None,
                  data: Optional[Dict[str, Any]] = None,
@@ -70,7 +70,10 @@ class DmApi:
                  params: Optional[Dict[str, Any]] = None,
                  timeout: int = 4)\
             -> Tuple[DmApiRv, Optional[requests.Response]]:
-        """Sends a request to the DM API endpoint.
+        """Sends a request to the DM API endpoint. The caller normally has to provide
+        an oauth-like access token but this is not mandated. Some DM API methods
+        use DM-generated tokens rather than access tokens. If so the caller will pass
+        this through via the URL or 'params' - whatever is appropriate for the call.
 
         All the public API methods pass control to this method,
         returning its result to the user.
@@ -542,12 +545,52 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def get_unmanaged_project_file_with_token(cls,
+                                              token: str,
+                                              project_id: str,
+                                              project_file: str,
+                                              local_file: str,
+                                              project_path: str = '/',
+                                              timeout_s: int = 8)\
+            -> DmApiRv:
+        """Get a single unmanaged file from a project path using an Instance-generated
+        callback token. The file is saved to the filename defined in local_file.
+        This method does not require authentication but does require a token,
+        obtained when the job was executed and a callback given and token requested.
+        """
+        assert token
+        assert project_id
+        assert project_file
+        assert local_file
+        assert project_path\
+               and isinstance(project_path, str)\
+               and project_path.startswith('/')
+
+        params: Dict[str, Any] = {'path': project_path,
+                                  'file': project_file,
+                                  'token': token}
+        ret_val, resp = DmApi._request('GET', f'/project/{project_id}/file-with-token',
+                                       params=params,
+                                       error_message='Failed to get file',
+                                       timeout=timeout_s)
+        if not ret_val.success:
+            return ret_val
+
+        # OK if we get here
+        assert resp is not None
+        with open(local_file, 'wb') as file_handle:
+            file_handle.write(resp.content)
+        return ret_val
+
+    @classmethod
+    @synchronized
     def start_job_instance(cls,
                            access_token: str,
                            project_id: str,
                            name: str,
                            callback_url: Optional[str] = None,
                            callback_context: Optional[str] = None,
+                           generate_callback_token: bool = False,
                            specification: Optional[Dict[str, Any]] = None,
                            debug: Optional[str] = None,
                            timeout_s: int = 4)\
@@ -586,6 +629,8 @@ class DmApi:
             data['callback_url'] = callback_url
             if callback_context:
                 data['callback_context'] = callback_context
+            if generate_callback_token:
+                data['generate_callback_token'] = True
 
         return DmApi._request('POST', '/instance', access_token=access_token,
                               expected_response_codes=[201],
@@ -673,6 +718,22 @@ class DmApi:
         return DmApi._request('DELETE', f'/instance/{instance_id}',
                               access_token=access_token,
                               error_message='Failed to delete instance',
+                              timeout=timeout_s)[0]
+
+    @classmethod
+    @synchronized
+    def delete_instance_token(cls,
+                              instance_id: str,
+                              token: str,
+                              timeout_s: int = 4)\
+            -> DmApiRv:
+        """Deletes an Application/Job instance.
+        """
+        assert instance_id
+        assert token
+
+        return DmApi._request('DELETE', f'/instance/{instance_id}/token/{token}',
+                              error_message='Failed to delete instance token',
                               timeout=timeout_s)[0]
 
     @classmethod

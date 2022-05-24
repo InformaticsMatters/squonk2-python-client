@@ -30,10 +30,12 @@ The following API functions are available: -
 - ``DmApi.list_project_files()``
 - ``DmApi.delete_unmanaged_project_files()``
 - ``DmApi.get_unmanaged_project_file()``
+- ``DmApi.get_unmanaged_project_file_with_token()``
 - ``DmApi.start_job_instance()``
 - ``DmApi.get_instance()``
 - ``DmApi.get_task()``
 - ``DmApi.delete_instance()``
+- ``DmApi.delete_instance_token()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
 
