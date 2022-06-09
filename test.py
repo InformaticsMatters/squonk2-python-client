@@ -123,9 +123,13 @@ def main():
 
     # Run a test job
     print('Starting Job...')
-    job_name = 'DmApi Job'
-    spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
-    rv = DmApi.start_job_instance(token, project_id, job_name, specification=spec)
+    job_collection = 'im-test'
+    job_name = 'nop'
+    job_version = '1.0.0'
+    rv = DmApi.get_job_by_name(token, job_collection, job_name, job_version)
+    assert rv.success
+    spec = {'collection': job_collection, 'job': job_name, 'version': job_version}
+    rv = DmApi.start_job_instance(token, project_id, 'DmApi Job', specification=spec)
     assert rv.success
     job_task_id = rv.msg['task_id']
     job_instance_id = rv.msg['instance_id']

@@ -780,12 +780,39 @@ class DmApi:
     @synchronized
     def get_job(cls, access_token: str, job_id: int, timeout_s: int = 4)\
             -> DmApiRv:
-        """Gets detailed information about a specific Job.
+        """Gets detailed information about a specific Job
+        using the numeric Job record identity
         """
         assert access_token
         assert job_id > 0
 
         return DmApi._request('GET', f'/job/{job_id}',
                               access_token=access_token,
+                              error_message='Failed to get job',
+                              timeout=timeout_s)[0]
+
+    @classmethod
+    @synchronized
+    def get_job_by_name(cls,
+                        access_token: str,
+                        job_collection: str,
+                        job_name: str,
+                        job_version: str,
+                        timeout_s: int = 4)\
+            -> DmApiRv:
+        """Gets detailed information about a specific Job
+        using the collection, name and version
+        """
+        assert access_token
+        assert job_collection
+        assert job_name
+        assert job_version
+
+        params: Dict[str, Any] = {'collection': job_collection,
+                                  'name': job_name,
+                                  'version': job_version}
+        return DmApi._request('GET', '/job/get-by-name',
+                              access_token=access_token,
+                              params=params,
                               error_message='Failed to get job',
                               timeout=timeout_s)[0]
