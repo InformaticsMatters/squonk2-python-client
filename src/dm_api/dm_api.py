@@ -816,3 +816,27 @@ class DmApi:
                               params=params,
                               error_message='Failed to get job',
                               timeout=timeout_s)[0]
+
+    @classmethod
+    @synchronized
+    def set_admin_state(cls,
+                        access_token: str,
+                        admin: bool,
+                        impersonate: Optional[str] = None,
+                        timeout_s: int = 4)\
+            -> DmApiRv:
+        """Adds or removes the 'become-admin' state of your account,
+        assuming you can do this.
+        """
+        assert access_token
+
+        data: Dict[str, Any] = {'become_admin': admin}
+        if impersonate:
+            data['impersonate'] = impersonate
+
+        return DmApi._request('PATCH', '/user/account',
+                              access_token=access_token,
+                              data=data,
+                              expected_response_codes=[204],
+                              error_message='Failed to set the admin state',
+                              timeout=timeout_s)[0]
