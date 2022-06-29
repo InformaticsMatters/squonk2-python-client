@@ -5,7 +5,7 @@
 First create and activate a virtual environment: -
 
     python3 -m venv ~/venvs/dm-api-client
-    source ~/venvs/dm-api-client/bin/activate
+    ~/venvs/dm-api-client/bin/activate
 
 You can either use the Python code directly by setting PYTHONPATH: -
 
