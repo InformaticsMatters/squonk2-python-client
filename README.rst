@@ -97,10 +97,13 @@ and password::
         keycloak_user_password,
     )
 
-Note that this assumes you hav a Keycloak account with a username and password. If you have only used a federated login
-(e.g. CAS, GitHub etc.) then you may not have a password. To create one go to your Keycloak account
-(e.g. https://<server-name>/auth/realms/<realm-name>/account), login with whatever mechanism you use
-and then give yourself a password in the 'Password' section.
+.. note::
+    That this assumes you hav a Keycloak account with a username and password.
+    If you have only used a federated login (e.g. CAS, GitHub etc.) then you
+    may not have a password. To create one go to your Keycloak account
+    (e.g. ``https://<server-name>/auth/realms/<realm-name>/account``),
+    login with whatever mechanism you use and then give yourself a password
+    in the **Password** section.
 
 **The Data Manager API URL**
 
@@ -150,8 +153,7 @@ Consult the DM API for up-to-date details of the payloads you can expect.
 
 Other examples
 ==============
-
-More complete examples can be found in the examples dir.
+More complete examples can be found in the repository's ``examples`` directory.
 
 Developer testing
 =================
