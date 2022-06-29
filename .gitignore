@@ -8,3 +8,5 @@ venv
 build
 dist
 
+examples/foo.smi
+
