@@ -55,27 +55,6 @@ there::
 
     pip install im-data-manager-api
 
-**Using the API**
-
-With an API URL and access token you can use the API. Here, as an example,
-we upload files to a Data Manager **Project**::
-
-    rv: DmApiRv = DmApi.ping(token)
-    assert rv.success
-    project_id = 'project-12345678-1234-1234-1234-123456781234'
-    rv = DmApi.put_unmanaged_project_files(token, project_id, 'data.sdf')
-    assert rv.success
-
-Or start Jobs::
-
-    spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
-    rv = DmApi.start_job_instance(token, project_id, 'My Job', specification=spec)
-    assert rv.success
-
-
-.. _backend: https://github.com/xchem/fragalysis-backend
-.. _PyPI: https://pypi.org/project/im-data-manager-api
-
 Other examples
 ==============
 More complete examples can be found in the repository's ``examples`` directory.
@@ -111,3 +90,5 @@ Get in touch
 - Report bugs, suggest features or view the source code `on GitHub`_.
 
 .. _on GitHub: https://github.com/informaticsmatters/data-manager-api
+.. _backend: https://github.com/xchem/fragalysis-backend
+.. _PyPI: https://pypi.org/project/im-data-manager-api
