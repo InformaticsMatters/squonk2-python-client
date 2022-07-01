@@ -318,21 +318,15 @@ class DmApi:
                        access_token: str,
                        project_name: str,
                        as_tier_product_id: str = 'product-11111111-1111-1111-1111-111111111111',
-                       as_organisation_id: str = 'org-11111111-1111-1111-1111-111111111111',
-                       as_unit_id: str = 'unit-11111111-1111-1111-1111-111111111111',
                        timeout_s: int = 4)\
             -> DmApiRv:
-        """Creates a project using an organisation, unit and product.
+        """Creates a project using an Account and product.
         """
         assert access_token
         assert project_name
         assert as_tier_product_id
-        assert as_organisation_id
-        assert as_unit_id
 
-        data: Dict[str, Any] = {'unit_id': as_unit_id,
-                                'organisation_id': as_organisation_id,
-                                'tier_product_id': as_tier_product_id,
+        data: Dict[str, Any] = {'tier_product_id': as_tier_product_id,
                                 'name': project_name}
         return DmApi._request('POST', '/project',
                               access_token=access_token,
