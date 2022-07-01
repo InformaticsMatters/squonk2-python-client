@@ -55,4 +55,4 @@ jobs:
       run: |
         sphinx-build -b html docs build
       env:
-        PYTHONPATH=./src
+        PYTHONPATH: ./src
