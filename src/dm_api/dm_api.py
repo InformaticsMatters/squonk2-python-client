@@ -1,12 +1,12 @@
 """Python utilities to simplify calls to some parts of the Data Manager API.
 
 For API methods where a user can expect material from a successful call
-the original response payload can be found in the DmApiRv 'msg' property,
+the original response payload can be found in the ``DmApiRv`` ``msg`` property,
 rendered as a Python dictionary.
 
 The URL to the DM API URL is picked up from the environment variable
-'SQUONK_API_URL'. If this isn't set the user can set it programmatically
-using the 'DmApi.set_api_url()' method.
+``SQUONK_API_URL``. If this isn't set the user can set it programmatically
+using the ``DmApi.set_api_url()`` method.
 """
 from collections import namedtuple
 from datetime import datetime
@@ -22,11 +22,12 @@ from authlib.jose import jwt
 from wrapt import synchronized
 import requests
 
-# The return value from our public methods.
-# 'success' (a boolean) is True if the call was successful, False otherwise.
-# The 'msg' (an optional dictionary) will provide a potentially useful
-# error message or API-specific response content on success.
 DmApiRv: namedtuple = namedtuple('DmApiRv', 'success msg')
+"""The return value from our public methods.
+
+:param success: True if the call was successful, False otherwise.
+:param msg: API request response content
+"""
 
 # The Job instance Application ID - a 'well known' identity.
 _DM_JOB_APPLICATION_ID: str = 'datamanagerjobs.squonk.it'
@@ -42,7 +43,10 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class DmApi:
-    """Simplified API access methods.
+    """The DmAPI class provides high-level, simplified access to the DM API.
+    You can use the request module directly for finer control. This module
+    provides a wrapper around the handling of the request, returning a simplified
+    namedtuple response value ``DmApiRv``
     """
 
     # The default DM API is extracted from the environment,
@@ -320,7 +324,17 @@ class DmApi:
                        as_tier_product_id: str = 'product-11111111-1111-1111-1111-111111111111',
                        timeout_s: int = 4)\
             -> DmApiRv:
-        """Creates a project using an Account and product.
+        """Creates a Project, which requires a name and a Product ID obtained from
+        the Account Server.
+
+        :param access_token: A valid DM API access token.
+        :param project_name: A unique name.
+        :param as_tier_product_id: If no account server is
+            attached any suitable value can be used. If you are an admin user
+            you can also use the reserved value of
+            ``product-11111111-1111-1111-1111-111111111111``
+            which is automatically accepted.
+        :param timeout_s: The API request timeout
         """
         assert access_token
         assert project_name
@@ -761,7 +775,7 @@ class DmApi:
     @synchronized
     def get_available_jobs(cls, access_token: str, timeout_s: int = 4)\
             -> DmApiRv:
-        """Gets a summary list of avaailble Jobs.
+        """Gets a summary list of available Jobs.
         """
         assert access_token
 
