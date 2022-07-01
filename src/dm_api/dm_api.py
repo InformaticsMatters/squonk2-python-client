@@ -4,9 +4,11 @@ For API methods where a user can expect material from a successful call
 the original response payload can be found in the ``DmApiRv`` ``msg`` property,
 rendered as a Python dictionary.
 
-The URL to the DM API URL is picked up from the environment variable
-``SQUONK_API_URL``. If this isn't set the user can set it programmatically
-using the ``DmApi.set_api_url()`` method.
+.. note::
+    The URL to the DM API is picked automatically up from the environment variable
+    ``SQUONK_API_URL``, expected to be of the form **https://example.com/data-manager-api**.
+    If the variable isn't set the user must set it programmatically
+    using :py:meth:`DmApi.set_api_url()`.
 """
 from collections import namedtuple
 from datetime import datetime
@@ -191,8 +193,11 @@ class DmApi:
     @classmethod
     @synchronized
     def set_api_url(cls, url: str, verify_ssl_cert: bool = True) -> None:
-        """Replaces the class API URL value.
-        Typically https://example.com/data-manager-api
+        """Replaces the API URL value, which is otherwise set using
+        the ``SQUONK_API_URL`` environment variable.
+
+        :param url: The API endpoint, typically **https://example.com/data-manager-api**
+        :param verify_ssl_cert: Use False to avoid SSL verification in request calls
         """
         assert url
         DmApi._dm_api_url = url
@@ -205,7 +210,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_api_url(cls) -> Tuple[str, bool]:
-        """Return the URL and whether validating the SSL layer.
+        """Return the API URL and whether validating the SSL layer.
         """
         return DmApi._dm_api_url, DmApi._verify_ssl_cert
 
@@ -735,7 +740,14 @@ class DmApi:
                               token: str,
                               timeout_s: int = 4)\
             -> DmApiRv:
-        """Deletes an Application/Job instance.
+        """Deletes a DM API Instance **callback token**. This API method is not
+        authenticated and therefore does not need an access token. Once the token is
+        deleted no further calls to :py:meth:`DmApi.get_unmanaged_project_file_with_token()`
+        will be possible. Once deleted the token cannot be re-instantiated.
+
+        :param instance_id: A valid DM API instance
+        :param token: The callback Token associated with the instance
+        :param timeout_s: The API request timeout
         """
         assert instance_id
         assert token
@@ -776,6 +788,9 @@ class DmApi:
     def get_available_jobs(cls, access_token: str, timeout_s: int = 4)\
             -> DmApiRv:
         """Gets a summary list of available Jobs.
+
+        :param access_token: A valid DM API access token.
+        :param timeout_s: The API request timeout
         """
         assert access_token
 
