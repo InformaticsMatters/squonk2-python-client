@@ -3,7 +3,7 @@
 
 # Setup module for the Data Manager API module
 #
-# March 2022
+# July 2022
 
 import setuptools
 import os
@@ -19,7 +19,7 @@ with open('README.rst', 'r', encoding='utf-8') as fh:
 setuptools.setup(
 
     name='im-data-manager-api',
-    version=os.environ.get('GITHUB_REF_SLUG', '1.0.0'),
+    version=os.environ.get('GITHUB_REF_SLUG', '3.0.0'),
     author='Alan Christie',
     author_email='achristie@informaticsmatters.com',
     url='https://github.com/informaticsmatters/data-manager-api',
@@ -41,8 +41,6 @@ setuptools.setup(
         'Environment :: Other Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Topic :: Software Development :: Libraries :: Python Modules',
