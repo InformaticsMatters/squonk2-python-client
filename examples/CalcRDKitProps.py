@@ -44,8 +44,9 @@ else:
 # The project is identified by the project_id.
 # We simply name the file (or files) and the project-relative
 # destination path.
-rv = DmApi.put_unmanaged_project_files(token, project_id,
-                                       job_input,
+rv = DmApi.put_unmanaged_project_files(token,
+                                       project_id=project_id,
+                                       project_files=job_input,
                                        project_path='/work')
 if rv.success:
     print('FILE UPLOAD OK')
@@ -64,7 +65,10 @@ spec = {'collection': 'rdkit',
             'outputFile': 'work/foo.smi',
             'inputFile': 'work/100.smi'
         }}
-rv = DmApi.start_job_instance(token, project_id, 'My Job', specification=spec)
+rv = DmApi.start_job_instance(token,
+                              project_id=project_id,
+                              name='My Job',
+                              specification=spec)
 # If successful the DM returns an instance ID
 # (the instance identity of our specific Job)
 # and a Task ID, which is responsible for running the Job.
@@ -83,7 +87,7 @@ while True:
     if iterations > 10:
         print("TIMEOUT")
         exit(1)
-    rv = DmApi.get_task(token, task_id)
+    rv = DmApi.get_task(token, task_id=task_id)
     if rv.msg['done']:
         break
     print('waiting ...')
@@ -94,10 +98,10 @@ print('DONE')
 # Here we get Files from the project.
 # These might be files the Job's created.
 rv = DmApi.get_unmanaged_project_file(token,
-                                      project_id,
-                                      'foo.smi',
-                                      'examples/foo.smi',
-                                      project_path='/work')
+                                      project_id=project_id,
+                                      project_file='foo.smi',
+                                      project_path='/work',
+                                      local_file='examples/foo.smi')
 if rv.success:
     print('DOWNLOAD OK')
 else:
@@ -106,7 +110,7 @@ else:
 
 # Now, as the Job remains in the DM until deleted
 # we tidy up by removing the Job using the instace ID we were given.
-rv = DmApi.delete_instance(token, instance_id)
+rv = DmApi.delete_instance(token, instance_id=instance_id)
 if rv.success:
     print('CLEANUP OK')
 else:
