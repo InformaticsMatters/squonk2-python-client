@@ -1,5 +1,12 @@
+###########################
 The Data Manager API Client
-===========================
+###########################
+Python 3 utilities providing simplified access to the Data Manager API.
 
-.. automodule:: dm_api.dm_api
-   :members:
+.. toctree::
+    :maxdepth: 2
+
+    connecting
+    url
+    dmapi
+    examples

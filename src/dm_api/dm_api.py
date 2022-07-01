@@ -1,8 +1,6 @@
-"""Python utilities to simplify calls to some parts of the Data Manager API.
-
-For API methods where a user can expect material from a successful call
-the original response payload can be found in the ``DmApiRv`` ``msg`` property,
-rendered as a Python dictionary.
+#!/usr/bin/env python
+"""Python utilities to simplify calls to some parts of the Data Manager API to
+interact with **Projects**, **Instances** (**Jobs**) and **Files**.
 
 .. note::
     The URL to the DM API is picked automatically up from the environment variable
@@ -25,7 +23,7 @@ from wrapt import synchronized
 import requests
 
 DmApiRv: namedtuple = namedtuple('DmApiRv', 'success msg')
-"""The return value from our public methods.
+"""The return value from most of the the DmApi class public methods.
 
 :param success: True if the call was successful, False otherwise.
 :param msg: API request response content
@@ -90,7 +88,7 @@ class DmApi:
 
         if not DmApi._dm_api_url:
             return DmApiRv(success=False,
-                           msg={'msg': 'No API URL defined'}), None
+                           msg={'error': 'No API URL defined'}), None
 
         url: str = DmApi._dm_api_url + endpoint
 
@@ -119,7 +117,7 @@ class DmApi:
             _LOGGER.exception('Request failed')
         if resp is None or resp.status_code not in expected_codes:
             return DmApiRv(success=False,
-                           msg={'msg': f'{error_message} (resp={resp})'}),\
+                           msg={'error': f'{error_message} (resp={resp})'}),\
                    resp
 
         # Try and decode the response,
@@ -226,13 +224,24 @@ class DmApi:
                          timeout_s: int = 4)\
             -> Optional[str]:
         """Gets a DM API access token from the given Keycloak server, realm
-        and client ID. The keycloak URL is typically 'https://example.com/auth'.
+        and client ID.
+
         If keycloak fails to yield a token None is returned, with messages
         written to the log.
 
-        The caller can (is encouraged to) provide a prior token. The token
-        logic then only calls keycloak to obtain a new token if the current
+        The caller can (is encouraged to) provide a prior token in oprder to
+        reduce token requests on the server. When a ``prior_token`` is provided
+        the code only calls keycloak to obtain a new token if the current
         one looks like it will expire (in less than 60 seconds).
+
+        :param keycloak_url: The keycloak server URL, typically **https://example.com/auth**
+        :param keycloak_realm: The keycloak realm
+        :param keycloak_client_id: The keycloak DM-API client ID
+        :param username: A valid username
+        :param password: A valid password
+        :param prior_token: An optional prior token. If supplied it will be used
+            unless it is about to expire
+        :param timeout_s: The underlying request timeout
         """
         assert keycloak_url
         assert keycloak_realm
@@ -297,9 +306,11 @@ class DmApi:
     @synchronized
     def ping(cls, access_token: str, timeout_s: int = 4)\
             -> DmApiRv:
-        """Calls the DM API to ensure the server is responding.
-        Here we do something relatively simple, and the best endpoint
-        to call (in DM 0.7) is '/account-server/namespace'.
+        """A handy API method that calls the DM API to ensure the server is
+        responding.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
 
@@ -312,7 +323,10 @@ class DmApi:
     @synchronized
     def get_version(cls, access_token: str, timeout_s: int = 4)\
             -> DmApiRv:
-        """Calls the DM API to get the underlying service version.
+        """Returns the DM-API service version.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
 
@@ -362,6 +376,10 @@ class DmApi:
                        timeout_s: int = 4) \
             -> DmApiRv:
         """Deletes a project.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The DM-API project id to delete
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert project_id
@@ -382,12 +400,21 @@ class DmApi:
                                     timeout_per_file_s: int = 120)\
             -> DmApiRv:
         """Puts a file, or list of files, into a DM Project
-        using an optional path. The files can include relative or absolute
-        paths but are written to the same path in the project.
+        using an optional path.
 
-        Files are not written to the project if a file of the same name exists.
-        'force' can be used to over-write files but files on the server that
-        are immutable cannot be over-written and will result in an error.
+        :param access_token: A valid DM API access token
+        :param project_id: The project where the files are to be written
+        :param project_files: A file or list of files. Leading paths are stripped
+            so the two file files ``['dir/file-a.txt', 'file-b.txt']`` would
+            be written to the same project directory, i.e. appearing as
+            ``/file-a.txt`` and ``/file-b.txt`` in the project
+        :param project_path: The path in the project to write the files.
+            The path is relative to the project root and must begin ``/``
+        :param force: Files are not written to the project if a file of the
+            same name exists. Here ``force`` can be used to over-write files.
+            Files on the server that are immutable cannot be over-written,
+            and doing so will result in an error
+        :param timeout_s: The underlying request timeout
         """
 
         assert access_token
@@ -399,7 +426,7 @@ class DmApi:
                and project_path.startswith('/')
 
         if not DmApi._dm_api_url:
-            return DmApiRv(success=False, msg={'msg': 'No API URL defined'})
+            return DmApiRv(success=False, msg={'error': 'No API URL defined'})
 
         # If we're not forcing the files collect the names
         # of every file on the path - we use this to skip files that
@@ -438,7 +465,7 @@ class DmApi:
             # whether we end up sending it or not.
             if not os.path.isfile(src_file):
                 return DmApiRv(success=False,
-                               msg={'msg': f'No such file ({src_file})'})
+                               msg={'error': f'No such file ({src_file})'})
             if os.path.basename(src_file) not in existing_path_files:
                 ret_val = DmApi.\
                     _put_unmanaged_project_file(access_token,
@@ -462,7 +489,17 @@ class DmApi:
                                        project_path: str = '/',
                                        timeout_s: int = 4)\
             -> DmApiRv:
-        """Deletes an unmanaged project file on a path.
+        """Deletes an unmanaged project file, or list of files, on a project path.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The project where the files are present
+        :param project_files: A file or list of files. Leading paths are stripped
+            so the two file files ``['dir/file-a.txt', 'file-b.txt']`` would
+            be expected to be in the same project directory, i.e. appearing as
+            ``/file-a.txt`` and ``/file-b.txt`` in the project
+        :param project_path: The path in the project where the files are located.
+            The path is relative to the project root and must begin ``/``
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert project_id
@@ -502,7 +539,13 @@ class DmApi:
                            include_hidden: bool = False,
                            timeout_s: int = 8)\
             -> DmApiRv:
-        """Gets the list of project files on a path.
+        """Gets a list of project files on a path.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The project where the files are present
+        :param project_path: The path in the project to search for files.
+            The path is relative to the project root and must begin ``/``
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert project_id
@@ -531,6 +574,14 @@ class DmApi:
             -> DmApiRv:
         """Get a single unmanaged file from a project path, saving it to
         the filename defined in local_file.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The project where the files are present
+        :param project_file: The name of the file to get
+        :param local_file: The name to use to write the file to on the client
+        :param project_path: The path in the project to search for files.
+            The path is relative to the project root and must begin ``/``
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert project_id
@@ -566,10 +617,23 @@ class DmApi:
                                               project_path: str = '/',
                                               timeout_s: int = 8)\
             -> DmApiRv:
-        """Get a single unmanaged file from a project path using an Instance-generated
-        callback token. The file is saved to the filename defined in local_file.
-        This method does not require authentication but does require a token,
-        obtained when the job was executed and a callback given and token requested.
+        """Like :py:meth:`~DmApi.get_unmanaged_project_file()`, this method
+        get a single unmanaged file from a project path. The method uses an
+        Instance-generated callback token rathgr than a user-access token.
+
+        This method is particularly useful in callback routines where a user
+        access token may not be available. Callback tokens expire and can be
+        deleted and so this function should only be used when a user access
+        token is not available.
+
+        :param token: A DM-generated token, optionally generated when
+            launching instances in the project
+        :param project_id: The project where the files are present
+        :param project_file: The name of the file to get
+        :param local_file: The name to use to write the file to on the client
+        :param project_path: The path in the project to search for files.
+            The path is relative to the project root and must begin ``/``
+        :param timeout_s: The underlying request timeout
         """
         assert token
         assert project_id
@@ -601,15 +665,32 @@ class DmApi:
                            access_token: str,
                            project_id: str,
                            name: str,
+                           specification: Dict[str, Any],
                            callback_url: Optional[str] = None,
                            callback_context: Optional[str] = None,
                            generate_callback_token: bool = False,
-                           specification: Optional[Dict[str, Any]] = None,
                            debug: Optional[str] = None,
                            timeout_s: int = 4)\
             -> DmApiRv:
-        """Instantiates a Job (based on the latest Job application ID
-        and version known to the API).
+        """Instantiates a Job Instance in a Project.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The project where the files are present
+        :param name: A name to associate with the Job
+        :param specification: The Job specification, it must contain
+            keys that define the Job's ``collection``, ``job name`` and
+            ``version``. Job-specific variables are passed in using a ``variables``
+            map in the specification
+        :param callback_url: An optional URL capable of handling Job callbacks.
+            Must be set if ``generate_callback_token`` is used
+        :param callback_context: An optional context string passed to the
+            callback URL
+        :param generate_callback_token: True to instruct the DM to generate
+            a token that can be used with some methods instead of a
+            user access token
+        :param debug: Used to prevent the automatic removal of the Job instance.
+            Only use this if you need to
+        :param timeout_s: The underlying request timeout
         """
 
         assert access_token
@@ -625,10 +706,10 @@ class DmApi:
             # Failed calling the server.
             # Incorrect URL, bad token or server out of action?
             return DmApiRv(success=False,
-                           msg={'msg': 'Failed getting Job operator version'})
+                           msg={'error': 'Failed getting Job operator version'})
         if not job_application_version:
             return DmApiRv(success=False,
-                           msg={'msg': 'No Job operator installed'})
+                           msg={'error': 'No Job operator installed'})
 
         data: Dict[str, Any] =\
             {'application_id': _DM_JOB_APPLICATION_ID,
@@ -655,6 +736,9 @@ class DmApi:
     def get_available_projects(cls, access_token: str, timeout_s: int = 4)\
             -> DmApiRv:
         """Gets information about all projects available to you.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
 
@@ -671,6 +755,10 @@ class DmApi:
                     timeout_s: int = 4)\
             -> DmApiRv:
         """Gets detailed information about a specific project.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The specific project to retrieve
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert project_id
@@ -687,7 +775,11 @@ class DmApi:
                      instance_id: str,
                      timeout_s: int = 4)\
             -> DmApiRv:
-        """Gets information about an Application/Job instance.
+        """Gets information about an instance (Application or Job).
+
+        :param access_token: A valid DM API access token
+        :param instance_id: The specific instance to retrieve
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert instance_id
@@ -705,6 +797,9 @@ class DmApi:
                               timeout_s: int = 4)\
             -> DmApiRv:
         """Gets information about all instances available to you.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert project_id
@@ -723,7 +818,16 @@ class DmApi:
                         instance_id: str,
                         timeout_s: int = 4)\
             -> DmApiRv:
-        """Deletes an Application/Job instance.
+        """Deletes an Instance (Application or Job).
+
+        When instances are deleted the container is removed along with
+        the instance-specific directory that is automatically created
+        in the root of the project. Any files in the instance-specific
+        directory wil be removed.
+
+        :param access_token: A valid DM API access token
+        :param instance_id: The instance to delete
+        :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert instance_id
@@ -805,6 +909,10 @@ class DmApi:
             -> DmApiRv:
         """Gets detailed information about a specific Job
         using the numeric Job record identity
+
+        :param access_token: A valid DM API access token.
+        :param job_id: The numeric Job identity
+        :param timeout_s: The API request timeout
         """
         assert access_token
         assert job_id > 0
@@ -824,7 +932,13 @@ class DmApi:
                         timeout_s: int = 4)\
             -> DmApiRv:
         """Gets detailed information about a specific Job
-        using the collection, name and version
+        using the ``collection``, ``name`` and ``version``
+
+        :param access_token: A valid DM API access token.
+        :param job_collection: The Job collection, e.g. ``im-test``
+        :param job_name: The Job name, e.g. ``nop``
+        :param job_version: The Job version, e.g. ``1.0.0``
+        :param timeout_s: The API request timeout
         """
         assert access_token
         assert job_collection
@@ -848,8 +962,14 @@ class DmApi:
                         impersonate: Optional[str] = None,
                         timeout_s: int = 4)\
             -> DmApiRv:
-        """Adds or removes the 'become-admin' state of your account,
-        assuming you can do this.
+        """Adds or removes the ``become-admin`` state of your account.
+        Only users whose accounts offer administrative capabilities
+        can use this method.
+
+        :param access_token: A valid DM API access token.
+        :param admin: True to set admin state
+        :param imperrsonate: An optional username to switch to
+        :param timeout_s: The API request timeout
         """
         assert access_token
 

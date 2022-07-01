@@ -1,23 +1,6 @@
 #!/usr/bin/env python
-
-# Example that illustrates how to use the client get a token that can be used in other examples.
-# NOTE: this token has a limited lifespan and you may need to regenerate it at intervals.
-#
-# To run this set these environment variables (your parameters may differ):
-#   export DMAPI_USERNAME=<keycloak username>
-#   export DMAPI_PASSWORD=<keycloak password>
-#
-# Then run like this :
-#
-#   ./examples/GetToken.py \
-#       --keycloak-hostname keycloak.xchem-dev.diamond.ac.uk \
-#       --keycloak-realm xchem \
-#       --keycloak-client-id data-manager-api-dev
-#
-# Or set the KEYCLOAK_TOKEN environment variable like this:
-#
-#   export KEYCLOAK_TOKEN=`./examples/GetToken.py --keycloak-hostname keycloak.xchem-dev.diamond.ac.uk --keycloak-realm xchem --keycloak-client-id data-manager-api-dev`
-
+"""Get and print a DM-API access token.
+"""
 import argparse
 import os
 

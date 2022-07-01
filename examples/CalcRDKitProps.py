@@ -1,19 +1,7 @@
 #!/usr/bin/env python
-
-# Example that illustrates how to use the client to run a job that calculates molecular
-# properties using RDKit. See here for details about the job:
-# https://github.com/InformaticsMatters/virtual-screening/blob/main/data-manager/docs/rdkit/rdkit-molprops.md
-#
-# To run this set these environment variables (your parameters may differ):
-#
-#   export KEYCLOAK_TOKEN=`python examples/GetToken.py --keycloak-hostname keycloak.xchem-dev.diamond.ac.uk --keycloak-realm xchem --keycloak-client-id data-manager-api-dev`
-#   export SQUONK_API_URL=https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api
-#   export PROJECT_ID=project-6c54641f-00b3-4cfa-97f7-363a7b76230a
-#
-# Then run like this :
-#
-#   ./examples/CalcRDkitProps.py
-
+"""An example that illustrates how to use the client to run a job that
+calculates molecular properties using RDKit.
+"""
 import os
 import time
 
@@ -21,8 +9,9 @@ from dm_api.dm_api import DmApi, DmApiRv
 
 
 # Token and project id are taken from environment variables...
-token: str = os.environ['KEYCLOAK_TOKEN']
-project_id: str = os.environ['PROJECT_ID']
+token: str = os.environ.get('KEYCLOAK_TOKEN')
+project_id: str = os.environ.get('PROJECT_ID')
+job_input: str = os.environ.get('JOB_INPUT')
 
 if token:
     print('TOKEN OK')
@@ -34,6 +23,12 @@ if project_id:
     print('PROJECT_ID OK')
 else:
     print('No project_id provided')
+    exit(1)
+
+if job_input:
+    print('JOB_INPUT OK')
+else:
+    print('No job_input provided')
     exit(1)
 
 # The 'ping()' is a handy, simple, API method
@@ -50,7 +45,7 @@ else:
 # We simply name the file (or files) and the project-relative
 # destination path.
 rv = DmApi.put_unmanaged_project_files(token, project_id,
-                                       'examples/100.smi',
+                                       job_input,
                                        project_path='/work')
 if rv.success:
     print('FILE UPLOAD OK')

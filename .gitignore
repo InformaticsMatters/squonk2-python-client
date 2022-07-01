@@ -1,10 +1,11 @@
 .idea
 .pytest_cache
 .coverage
+.DS_Store
 *.egg-info
 **/__pycache__
 **.pyc
-venv
+venv/
 build
 dist
 
