@@ -5,6 +5,10 @@ Informatics Matters Data Manager API Client
    :target: https://badge.fury.io/py/im-data-manager-api
    :alt: PyPI package (latest)
 
+.. image:: https://readthedocs.org/projects/data-manager-api/badge/?version=latest
+   :target: https://data-manager-api.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 A Python 3 package that provides simplified access to key parts of the
 Informatics Matters Data Manager API REST interface. The functions provide
 access to some of the key API methods, implemented initially to support
