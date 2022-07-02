@@ -59,34 +59,11 @@ there::
 
     pip install im-data-manager-api
 
-Other examples
-==============
-More complete examples can be found in the repository's ``examples`` directory.
+Documentation
+=============
 
-Developer testing
-=================
-From a clone of the repository and access to a suitable DM-API deployment user
-and project you should be able to run a set of basic API tests with the
-``test`` module in the project root.
-
-First, you need to provide the test code with a suitable configuration
-via the environment::
-
-    export SQUONK_API_URL='https://example.com/data-manager-api'
-    export SQUONK_API_KEYCLOAK_URL='https:/example.com/auth'
-    export SQUONK_API_KEYCLOAK_REALM='squonk'
-    export SQUONK_API_KEYCLOAK_CLIENT_ID='data-manager-api'
-    export SQUONK_API_KEYCLOAK_USER='user1'
-    export SQUONK_API_KEYCLOAK_USER_PASSWORD='blob1234'
-
-With these set you can run the basic ests, here using a project that already
-exists on the chosen Data Manager service::
-
-    export PYTHONPATH=src
-    ./test.py -p project-e1ce441e-c4d1-4ad1-9057-1a11dbdccebe
-    DM-API connected (https://example.com/data-manager-api)
-    DM-API version=0.7.1
-    [...]
+Project documentation is available in the `data-manager-api`_ project on
+**Read the Docs**
 
 Get in touch
 ============
@@ -95,4 +72,5 @@ Get in touch
 
 .. _on GitHub: https://github.com/informaticsmatters/data-manager-api
 .. _backend: https://github.com/xchem/fragalysis-backend
+.. _data-manager-api: https://data-manager-api.readthedocs.io/en/latest/
 .. _PyPI: https://pypi.org/project/im-data-manager-api

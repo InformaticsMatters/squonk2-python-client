@@ -10,3 +10,4 @@ Python 3 utilities providing simplified access to the Data Manager API.
     url
     dmapi
     examples
+    developer
