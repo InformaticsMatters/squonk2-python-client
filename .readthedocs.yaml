@@ -10,5 +10,4 @@ build:
     python: "3.10"
   commands:
   - pip install -r docs-requirements.txt
-  - export PYTHONPATH=${PYTHONPATH}:./src
-  - sphinx-build -b html docs _readthedocs/html/
+  - PYTHONPATH=${PYTHONPATH}:./src sphinx-build -b html docs _readthedocs/html/
