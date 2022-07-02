@@ -9,6 +9,8 @@ build:
   tools:
     python: "3.10"
   commands:
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
   - pip install -r docs-requirements.txt
   - pwd
   - ls -la
