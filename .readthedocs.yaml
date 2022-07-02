@@ -9,8 +9,6 @@ build:
   tools:
     python: "3.10"
   commands:
+  - pip install -r build-requirements.txt
   - export PYTHONPATH=${PYTHONPATH}:./src
   - sphinx-build -b html docs _readthedocs/html/
-python:
-   install:
-   - requirements: build-requirements.txt
