@@ -10,4 +10,7 @@ build:
     python: "3.10"
   commands:
   - pip install -r docs-requirements.txt
+  - pwd
+  - ls -la
+  - echo $PATH
   - sphinx-build -b html docs _readthedocs/html/
