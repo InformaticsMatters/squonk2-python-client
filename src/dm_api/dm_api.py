@@ -29,6 +29,12 @@ DmApiRv: namedtuple = namedtuple('DmApiRv', 'success msg')
 :param msg: API request response content
 """
 
+TEST_PRODUCT_ID: str = 'product-11111111-1111-1111-1111-111111111111'
+"""A test AS Product ID, This ID does not actually exist but is accepted
+as valid by the Data Manager for Administrative users and used for
+testing purposes.
+"""
+
 # The Job instance Application ID - a 'well known' identity.
 _DM_JOB_APPLICATION_ID: str = 'datamanagerjobs.squonk.it'
 # The API URL environment variable
@@ -340,7 +346,7 @@ class DmApi:
     def create_project(cls,
                        access_token: str,
                        project_name: str,
-                       as_tier_product_id: str = 'product-11111111-1111-1111-1111-111111111111',
+                       as_tier_product_id: str,
                        timeout_s: int = 4)\
             -> DmApiRv:
         """Creates a Project, which requires a name and a Product ID obtained from
