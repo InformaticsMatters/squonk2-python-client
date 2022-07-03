@@ -41,8 +41,20 @@ environment variable: -
 CalcRDKitProps
 **************
 An example that illustrates how to use the client to run a job that
-calculates molecular properties using RDKit. This use the **rdkit-molprops**
-Job, which is typically available on a DM server.
+Illustrates how to: -
+
+- Upload a file
+- Run a simple job (with options) using that file
+- Wait for the job to complete
+- Download the results and, finally...
+- Cleanup (delete) the job instance
+
+It uploads a ``.smi`` file, a text file containing lines of tab-separated
+**SMILES** and a **Compound ID** strings. The one used here can be found
+in the examples directory of this repository.
+
+This example calculates molecular properties using RDKit and uses
+the **rdkit-molprops** Job, which is typically available on a DM server.
 
 Read the `rdkit-molprops`_ documentation in our **Virtual Screening** collection
 for further details.
