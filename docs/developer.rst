@@ -8,7 +8,7 @@ and project you should be able to run a set of basic API tests with the
 First, you need to provide the test code with a suitable configuration
 via the environment: -
 
-.. code-block: bash
+.. code-block:: bash
 
     export SQUONK_API_URL='https://example.com/data-manager-api'
     export SQUONK_API_KEYCLOAK_URL='https:/example.com/auth'
@@ -20,7 +20,7 @@ via the environment: -
 With these set you can run the basic ests, here using a project that already
 exists on the chosen Data Manager service: -
 
-.. code-block: bash
+.. code-block:: bash
 
     export PYTHONPATH=src
     ./test.py -p project-e1ce441e-c4d1-4ad1-9057-1a11dbdccebe
