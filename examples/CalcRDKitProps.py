@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """An example that illustrates how to use the client to run a job that
 calculates molecular properties using RDKit.
+You need to have the SQUONK_API_URL environment variable set to the Squonk Data Manager API based URL
 """
 import os
 import time
