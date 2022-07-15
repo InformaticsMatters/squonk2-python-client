@@ -21,9 +21,12 @@ Check it all works by running one of the examples: -
 
 ## Typical usage
 
-1. Set the necessary environment variables.
+1. Set the `SQUONK_API_URL` environment variable to point to the Squonk Data Manager API
+   e.g. https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api
+   See https://data-manager-api.readthedocs.io/en/latest/url.html
+2. Set the necessary environment variables for the example.
    See the documentation of the specific example you are running for details.
-2. Run the example using the appropriate commandline options
+3. Run the example using the appropriate commandline options
 
 ## Examples
 
