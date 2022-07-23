@@ -15,11 +15,15 @@ Data Manager and Account Server REST interfaces. The functions provide
 access to some of the key API methods, implemented initially to support
 execution of Jobs from a Fragalysis stack `backend`_.
 
-The following Authentication functions are available: -
+Simplified Authentication
+=========================
+The following Squonk2 Authentication functions are available: -
 
 - ``Auth.get_access_token()``
 
-The following Data Manager API functions are available: -
+Simplified Data Manager API
+===========================
+The following Squonk2 Data Manager API functions are available: -
 
 - ``DmApi.set_api_url()``
 - ``DmApi.get_api_url()``
@@ -54,6 +58,11 @@ A ``namedtuple`` is used as the return value for many of the methods: -
 It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
 (rendered as a Python dictionary), or an error message if the call failed.
+
+Simplified Account Server API
+=============================
+..  note::
+    The Squonk2 Account Server API is not currently supported.
 
 Installation (Python)
 =====================
