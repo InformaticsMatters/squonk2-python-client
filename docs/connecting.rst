@@ -39,11 +39,11 @@ and password from a pair of environment variables.
     # Now get an API token.
     # It should be valid for the remainder of the utility...
     token: str = Auth.get_access_token(
-        'https://' + args.keycloak_hostname + '/auth',
-        args.keycloak_realm,
-        args.keycloak_client_id,
-        keycloak_user,
-        keycloak_user_password,
+        keycloak_url='https://' + args.keycloak_hostname + '/auth',
+        keycloak_realm=args.keycloak_realm,
+        keycloak_client_id=args.keycloak_client_id,
+        username=keycloak_user,
+        password=keycloak_user_password,
     )
 
 .. note::
@@ -67,7 +67,12 @@ the assigned **Task** and **Instance** identities.
 .. code-block:: python
 
     spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
-    rv: DmApiRv = DmApi.start_job_instance(token, project_id, 'My Job', specification=spec)
+    rv: DmApiRv = DmApi.start_job_instance(
+        token,
+        project_id=project_id,
+        name='My Job',
+        specification=spec
+    )
     assert rv.success
     rv.msg
     {'task_id': 'task-...', 'instance_id': 'instance-...'}
