@@ -1,7 +1,7 @@
 ##########
 Connecting
 ##########
-To use the Squonk2 Data Manager or Accoutn Server API you will need a user
+To use the Squonk2 Data Manager or Account Server API you will need a user
 **access token**.
 
 If you do not have a token the method ``Auth.get_access_token()`` will

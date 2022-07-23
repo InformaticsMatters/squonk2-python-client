@@ -8,7 +8,6 @@ and the Data Manager, and Account Server APIs.
     :maxdepth: 2
 
     connecting
-    url
     auth
     dmapi
     examples
