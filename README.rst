@@ -64,10 +64,10 @@ Simplified Account Server API
 ..  note::
     The Squonk2 Account Server API is not currently supported.
 
-Installation (Python)
-=====================
+Installation
+============
 
-The API utilities are published on `PyPI`_ and can be installed from
+The Squonk2 package is published on `PyPI`_ and can be installed from
 there::
 
     pip install squonk2-client
@@ -75,7 +75,7 @@ there::
 Documentation
 =============
 
-Project documentation is available in the `squonk2-python-client`_ project on
+Documentation is available in the `squonk2-python-client`_ project on
 **Read the Docs**
 
 Get in touch
