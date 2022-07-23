@@ -1,6 +1,7 @@
 ####################
 The Data Manager API
 ####################
+A module providing simplified assess to the Squonk2 Data Manager API.
 
 ***********
 The API URL

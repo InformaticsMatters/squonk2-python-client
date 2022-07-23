@@ -37,6 +37,7 @@ class Auth:
     @synchronized
     def get_access_token(
         cls,
+        *,
         keycloak_url: str,
         keycloak_realm: str,
         keycloak_client_id: str,

@@ -69,6 +69,7 @@ class DmApi:
         cls,
         method: str,
         endpoint: str,
+        *,
         error_message: str,
         access_token: Optional[str] = None,
         expected_response_codes: Optional[List[int]] = None,
@@ -137,7 +138,7 @@ class DmApi:
 
     @classmethod
     def _get_latest_job_operator_version(
-        cls, access_token: str, timeout_s: int = 4
+        cls, access_token: str, *, timeout_s: int = 4
     ) -> Optional[str]:
         """Gets Job application data frm the DM API.
         We'll get and return the latest version found so that we can launch
@@ -169,6 +170,7 @@ class DmApi:
     def _put_unmanaged_project_file(
         cls,
         access_token: str,
+        *,
         project_id: str,
         project_file: str,
         project_path: str = "/",
@@ -205,7 +207,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def set_api_url(cls, url: str, verify_ssl_cert: bool = True) -> None:
+    def set_api_url(cls, url: str, *, verify_ssl_cert: bool = True) -> None:
         """Replaces the API URL value, which is otherwise set using
         the ``SQUONK_API_URL`` environment variable.
 
@@ -228,7 +230,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def ping(cls, access_token: str, timeout_s: int = 4) -> DmApiRv:
+    def ping(cls, access_token: str, *, timeout_s: int = 4) -> DmApiRv:
         """A handy API method that calls the DM API to ensure the server is
         responding.
 
@@ -247,7 +249,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_version(cls, access_token: str, timeout_s: int = 4) -> DmApiRv:
+    def get_version(cls, access_token: str, *, timeout_s: int = 4) -> DmApiRv:
         """Returns the DM-API service version.
 
         :param access_token: A valid DM API access token
@@ -268,6 +270,7 @@ class DmApi:
     def create_project(
         cls,
         access_token: str,
+        *,
         project_name: str,
         as_tier_product_id: str,
         timeout_s: int = 4,
@@ -305,7 +308,7 @@ class DmApi:
     @classmethod
     @synchronized
     def delete_project(
-        cls, access_token: str, project_id: str, timeout_s: int = 4
+        cls, access_token: str, *, project_id: str, timeout_s: int = 4
     ) -> DmApiRv:
         """Deletes a project.
 
@@ -329,6 +332,7 @@ class DmApi:
     def put_unmanaged_project_files(
         cls,
         access_token: str,
+        *,
         project_id: str,
         project_files: Union[str, List[str]],
         project_path: str = "/",
@@ -409,7 +413,11 @@ class DmApi:
                 )
             if os.path.basename(src_file) not in existing_path_files:
                 ret_val = DmApi._put_unmanaged_project_file(
-                    access_token, project_id, src_file, project_path, timeout_per_file_s
+                    access_token,
+                    project_id=project_id,
+                    project_file=src_file,
+                    project_path=project_path,
+                    timeout_s=timeout_per_file_s,
                 )
 
                 if not ret_val.success:
@@ -423,6 +431,7 @@ class DmApi:
     def delete_unmanaged_project_files(
         cls,
         access_token: str,
+        *,
         project_id: str,
         project_files: Union[str, List[str]],
         project_path: str = "/",
@@ -480,6 +489,7 @@ class DmApi:
     def list_project_files(
         cls,
         access_token: str,
+        *,
         project_id: str,
         project_path: str = "/",
         include_hidden: bool = False,
@@ -520,6 +530,7 @@ class DmApi:
     def get_unmanaged_project_file(
         cls,
         access_token: str,
+        *,
         project_id: str,
         project_file: str,
         local_file: str,
@@ -569,6 +580,7 @@ class DmApi:
     @synchronized
     def get_unmanaged_project_file_with_token(
         cls,
+        *,
         token: str,
         project_id: str,
         project_file: str,
@@ -630,6 +642,7 @@ class DmApi:
     def start_job_instance(
         cls,
         access_token: str,
+        *,
         project_id: str,
         name: str,
         specification: Dict[str, Any],
@@ -707,7 +720,9 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_available_projects(cls, access_token: str, timeout_s: int = 4) -> DmApiRv:
+    def get_available_projects(
+        cls, access_token: str, *, timeout_s: int = 4
+    ) -> DmApiRv:
         """Gets information about all projects available to you.
 
         :param access_token: A valid DM API access token
@@ -726,7 +741,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_project(
-        cls, access_token: str, project_id: str, timeout_s: int = 4
+        cls, access_token: str, *, project_id: str, timeout_s: int = 4
     ) -> DmApiRv:
         """Gets detailed information about a specific project.
 
@@ -748,7 +763,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_instance(
-        cls, access_token: str, instance_id: str, timeout_s: int = 4
+        cls, access_token: str, *, instance_id: str, timeout_s: int = 4
     ) -> DmApiRv:
         """Gets information about an instance (Application or Job).
 
@@ -770,7 +785,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_project_instances(
-        cls, access_token: str, project_id: str, timeout_s: int = 4
+        cls, access_token: str, *, project_id: str, timeout_s: int = 4
     ) -> DmApiRv:
         """Gets information about all instances available to you.
 
@@ -793,7 +808,7 @@ class DmApi:
     @classmethod
     @synchronized
     def delete_instance(
-        cls, access_token: str, instance_id: str, timeout_s: int = 4
+        cls, access_token: str, *, instance_id: str, timeout_s: int = 4
     ) -> DmApiRv:
         """Deletes an Instance (Application or Job).
 
@@ -820,7 +835,7 @@ class DmApi:
     @classmethod
     @synchronized
     def delete_instance_token(
-        cls, instance_id: str, token: str, timeout_s: int = 4
+        cls, *, instance_id: str, token: str, timeout_s: int = 4
     ) -> DmApiRv:
         """Deletes a DM API Instance **callback token**. This API method is not
         authenticated and therefore does not need an access token. Once the token is
@@ -846,6 +861,7 @@ class DmApi:
     def get_task(
         cls,
         access_token: str,
+        *,
         task_id: str,
         event_prior_ordinal: int = 0,
         event_limit: int = 0,
@@ -873,7 +889,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_available_jobs(cls, access_token: str, timeout_s: int = 4) -> DmApiRv:
+    def get_available_jobs(cls, access_token: str, *, timeout_s: int = 4) -> DmApiRv:
         """Gets a summary list of available Jobs.
 
         :param access_token: A valid DM API access token.
@@ -891,7 +907,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_job(cls, access_token: str, job_id: int, timeout_s: int = 4) -> DmApiRv:
+    def get_job(cls, access_token: str, *, job_id: int, timeout_s: int = 4) -> DmApiRv:
         """Gets detailed information about a specific Job
         using the numeric Job record identity
 
@@ -915,8 +931,9 @@ class DmApi:
     def get_job_by_name(
         cls,
         access_token: str,
+        *,
         job_collection: str,
-        job_name: str,
+        job_job: str,
         job_version: str,
         timeout_s: int = 4,
     ) -> DmApiRv:
@@ -925,18 +942,18 @@ class DmApi:
 
         :param access_token: A valid DM API access token.
         :param job_collection: The Job collection, e.g. ``im-test``
-        :param job_name: The Job name, e.g. ``nop``
+        :param job_job: The Job name, e.g. ``nop``
         :param job_version: The Job version, e.g. ``1.0.0``
         :param timeout_s: The API request timeout
         """
         assert access_token
         assert job_collection
-        assert job_name
+        assert job_job
         assert job_version
 
         params: Dict[str, Any] = {
             "collection": job_collection,
-            "name": job_name,
+            "job": job_job,
             "version": job_version,
         }
         return DmApi._request(
@@ -953,6 +970,7 @@ class DmApi:
     def set_admin_state(
         cls,
         access_token: str,
+        *,
         admin: bool,
         impersonate: Optional[str] = None,
         timeout_s: int = 4,
