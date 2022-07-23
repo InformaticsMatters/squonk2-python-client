@@ -4,15 +4,15 @@ Examples
 Some examples illustrating the basics of the API.
 
 You can find the source code and data files for these examples in
-the ``examples`` directory of the `data-manager-api`_ repository.
+the ``examples`` directory of the `squonk2-python-client`_ repository.
 
-********
-GetToken
-********
+*********
+get_token
+*********
 An example that illustrates how to use the client get a token
 that can be used in other examples.
 
-.. literalinclude:: ../examples/GetToken.py
+.. literalinclude:: ../examples/get_token.py
     :language: python
 
 .. note::
@@ -32,14 +32,14 @@ environment variable: -
 
 .. code-block:: bash
 
-    KEYCLOAK_TOKEN=$(./examples/GetToken.py \
+    KEYCLOAK_TOKEN=$(./examples/get_token.py \
         --keycloak-hostname keycloak.xchem-dev.diamond.ac.uk \
         --keycloak-realm xchem \
         --keycloak-client-id data-manager-api-dev)
 
-**************
-CalcRDKitProps
-**************
+****************
+calc_rdkit_props
+****************
 An example that illustrates how to use the client to run a job that
 Illustrates how to: -
 
@@ -59,7 +59,7 @@ the **rdkit-molprops** Job, which is typically available on a DM server.
 Read the `rdkit-molprops`_ documentation in our **Virtual Screening** collection
 for further details.
 
-.. literalinclude:: ../examples/CalcRDKitProps.py
+.. literalinclude:: ../examples/calc_rdkit_props.py
     :language: python
 
 Assuming you've set a token in the environment variable ``KEYCLOAK_TOKEN``
@@ -67,7 +67,7 @@ set these additional environment variables (your parameters may differ): -
 
 .. code-block:: bash
 
-    export SQUONK_API_URL=https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api
+    export SQUONK2_DMAPI_URL=https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api
     export PROJECT_ID=project-6c54641f-00b3-4cfa-97f7-363a7b76230a
     export JOB_INPUT=examples/100.smi
 
@@ -75,7 +75,7 @@ Then run the example like this :
 
 .. code-block:: bash
 
-    ./examples/CalcRDKitProps.py
+    ./examples/calc_rdkit_props.py
 
 .. _rdkit-molprops: https://github.com/InformaticsMatters/virtual-screening/blob/main/data-manager/docs/rdkit/rdkit-molprops.md
-.. _data-manager-api: https://github.com/InformaticsMatters/data-manager-api
+.. _squonk2-python-client: https://github.com/InformaticsMatters/squonk2-python-client

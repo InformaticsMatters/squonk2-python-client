@@ -1,6 +1,6 @@
-#######
-The API
-#######
+####################
+The Data Manager API
+####################
 
-.. automodule:: dm_api.dm_api
+.. automodule:: dm_api
     :members:

@@ -1,6 +1,8 @@
 [messages control]
 disable = bare-except,
+          too-few-public-methods,
           too-many-arguments,
           too-many-branches,
           too-many-locals,
-          too-many-public-methods
+          too-many-public-methods,
+          too-many-statements

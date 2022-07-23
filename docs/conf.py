@@ -19,12 +19,12 @@ sys.path.append(os.path.abspath(
 
 # -- Project information -----------------------------------------------------
 
-project = 'Data Manager API Client'
+project = 'Squonk2 Python Client'
 copyright = '2022, Alan Christie'
 author = 'Alan Christie'
 
 # The full version, including alpha/beta/rc tags
-release = '3.0'
+release = '1.0'
 
 
 # -- General configuration ---------------------------------------------------

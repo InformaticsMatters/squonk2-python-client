@@ -43,11 +43,10 @@ jobs:
         python -m pip install --upgrade build
         pip install -r requirements.txt
         pip install -r build-requirements.txt
-    - name: Test
+    - name: Static Analysis
       run: |
+        pre-commit run --all-files
         pyroma .
-        pylint src
-        mypy src --install-types --non-interactive
     - name: Build
       run: |
         python -m build --sdist --wheel --outdir dist/

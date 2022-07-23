@@ -2,7 +2,7 @@
 The API URL
 ###########
 The URL to the Data Manager API is taken from the environment variable
-``SQUONK_API_URL`` if it exists. If you haven't set this variable you need
+``SQUONK2_API_URL`` if it exists. If you haven't set this variable you need
 to set the Data Manager API URL before you can use any API method.
 
 .. code-block:: python

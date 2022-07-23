@@ -1,22 +1,26 @@
-Informatics Matters Data Manager API Client
-===========================================
+Informatics Matters Squonk2 Python Client
+=========================================
 
-.. image:: https://badge.fury.io/py/im-data-manager-api.svg
-   :target: https://badge.fury.io/py/im-data-manager-api
+.. image:: https://badge.fury.io/py/squonk2-client.svg
+   :target: https://badge.fury.io/py/squonk2-client
    :alt: PyPI package (latest)
 
-.. image:: https://readthedocs.org/projects/data-manager-api/badge/?version=latest
-   :target: https://data-manager-api.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/squonk2-python-client/badge/?version=latest
+   :target: https://squonk2-python-client.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
 A Python 3 package that provides simplified access to key parts of the
-Informatics Matters Data Manager API REST interface. The functions provide
+Informatics Matters Squonk2 service, consisting of the Authentication, and
+Data Manager and Account Server REST interfaces. The functions provide
 access to some of the key API methods, implemented initially to support
 execution of Jobs from a Fragalysis stack `backend`_.
 
-The following API functions are available: -
+The following Authentication functions are available: -
 
-- ``DmApi.get_access_token()``
+- ``Auth.get_access_token()``
+
+The following Data Manager API functions are available: -
+
 - ``DmApi.set_api_url()``
 - ``DmApi.get_api_url()``
 
@@ -57,12 +61,12 @@ Installation (Python)
 The API utilities are published on `PyPI`_ and can be installed from
 there::
 
-    pip install im-data-manager-api
+    pip install squonk2-client
 
 Documentation
 =============
 
-Project documentation is available in the `data-manager-api`_ project on
+Project documentation is available in the `squonk2-python-client`_ project on
 **Read the Docs**
 
 Get in touch
@@ -70,7 +74,7 @@ Get in touch
 
 - Report bugs, suggest features or view the source code `on GitHub`_.
 
-.. _on GitHub: https://github.com/informaticsmatters/data-manager-api
+.. _on GitHub: https://github.com/informaticsmatters/squonk2-python-client
 .. _backend: https://github.com/xchem/fragalysis-backend
-.. _data-manager-api: https://data-manager-api.readthedocs.io/en/latest/
-.. _PyPI: https://pypi.org/project/im-data-manager-api
+.. _squonk2-python-client: https://squonk2-python-client.readthedocs.io/en/latest/
+.. _PyPI: https://pypi.org/project/squonk2-python-client

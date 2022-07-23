@@ -1,28 +1,29 @@
-# Examples of using the Python client
+# Examples of using the Squonk2 Python client
 
 ## Setup
-
 First create and activate a virtual environment: -
 
-    python3 -m venv ~/venvs/dm-api-client
-    ~/venvs/dm-api-client/bin/activate
+    python3 -m venv ~/venvs/squonk2-client
+    ~/venvs/squonk2-client/bin/activate
 
-You can either use the Python code directly by setting PYTHONPATH: -
+If you are working from a clone of this repository you can use the Python code
+directly  by setting PYTHONPATH (although this approach is discouraged, unless
+you're actually developing new Squonk2 client code): -
 
     export PYTHONPATH=./src
 
-or, install them from PyPI (preferred): -
+or, install the Squonk2 client from PyPI (preferred): -
 
-    pip install im-data-manager-api
+    pip install squonk2-client
 
 Check it all works by running one of the examples: -
 
-    ./examples/CalcRDkitProps.py --help
+    ./examples/calc_rdkit_props.py --help
 
 ## Typical usage
 
-1. Set the `SQUONK_API_URL` environment variable to point to the Squonk Data Manager API
-   e.g. https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api
+1. Set the `SQUONK2_API_URL` environment variable to point to the Squonk2
+   Data Manager API e.g. `https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api`
    See https://data-manager-api.readthedocs.io/en/latest/url.html
 2. Set the necessary environment variables for the example.
    See the documentation of the specific example you are running for details.

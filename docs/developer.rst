@@ -14,13 +14,13 @@ the Keycloak server, its realm and client and a user's credentials.
 
 .. code-block:: bash
 
-    export SQUONK_API_URL='https://example.com/data-manager-api'
-    export SQUONK_API_URL_VALIDATION='false'
-    export SQUONK_API_KEYCLOAK_URL='https://example.com/auth'
-    export SQUONK_API_KEYCLOAK_REALM='squonk'
-    export SQUONK_API_KEYCLOAK_CLIENT_ID='data-manager-api'
-    export SQUONK_API_KEYCLOAK_USER='user1'
-    export SQUONK_API_KEYCLOAK_USER_PASSWORD='blob1234'
+    export SQUONK2_DMAPI_URL='https://example.com/data-manager-api'
+    export SQUONK2_DMAPI_URL_VALIDATION='false'
+    export SQUONK2_KEYCLOAK_URL='https://example.com/auth'
+    export SQUONK2_KEYCLOAK_REALM='squonk'
+    export SQUONK2_KEYCLOAK_CLIENT_ID='data-manager-api'
+    export SQUONK2_KEYCLOAK_USER='user1'
+    export SQUONK2_KEYCLOAK_USER_PASSWORD='blob1234'
 
 
 With these set you can run the basic tests.
@@ -30,7 +30,6 @@ With these set you can run the basic tests.
     export PYTHONPATH=src
     ./test.py
     DM-API connected (https://example.com/data-manager-api)
-    DM-API version=0.7.1
     [...]
     Done
 
@@ -41,6 +40,5 @@ And here the developer is testing a project that already exists: -
     export PYTHONPATH=src
     ./test.py -p project-e1ce441e-c4d1-4ad1-9057-1a11dbdccebe
     DM-API connected (https://example.com/data-manager-api)
-    DM-API version=0.7.1
     [...]
     Done

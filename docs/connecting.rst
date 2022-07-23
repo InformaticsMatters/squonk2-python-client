@@ -1,9 +1,10 @@
 ##########
 Connecting
 ##########
-To use the Data Manager API you will need a user **access token**.
+To use the Squonk2 Data Manager or Accoutn Server API you will need a user
+**access token**.
 
-If you do not have a token the method ``DmApi.get_access_token()`` will
+If you do not have a token the method ``Auth.get_access_token()`` will
 return one from an appropriate keycloak instance and user credentials.
 Every API method will need an access token.
 
@@ -16,7 +17,7 @@ and password from a pair of environment variables.
     import argparse
     import os
 
-    from dm_api.dm_api import DmApi, DmApiRv
+    from squonk2.auth import Auth
 
     # Username and password are taken from environment variables...
     keycloak_user: str = os.environ['DMAPI_USERNAME']
@@ -37,7 +38,7 @@ and password from a pair of environment variables.
 
     # Now get an API token.
     # It should be valid for the remainder of the utility...
-    token: str = DmApi.get_access_token(
+    token: str = Auth.get_access_token(
         'https://' + args.keycloak_hostname + '/auth',
         args.keycloak_realm,
         args.keycloak_client_id,
@@ -76,7 +77,7 @@ Consult the DM API for up-to-date details of the payloads you can expect.
 ******
 Errors
 ******
-If the result of an API call fails (``DmRRpiRv.success`` is ``False``)
+If the result of an API call fails (``DmApiRv.success`` is ``False``)
 an error message can typically be found in the ``DmApiRv.msg``, a dictionary,
 using the key ``error``.
 
