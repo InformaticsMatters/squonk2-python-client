@@ -2,5 +2,5 @@
 The Authentication API
 ######################
 
-.. automodule:: auth
+.. automodule:: squonk2.auth
     :members:

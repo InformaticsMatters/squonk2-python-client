@@ -2,5 +2,5 @@
 The Data Manager API
 ####################
 
-.. automodule:: dm_api
+.. automodule::squonk2.dm_api
     :members:
