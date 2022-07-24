@@ -36,13 +36,13 @@ the Keycloak server, its realm and client and a user's credentials.
 
 .. code-block:: bash
 
-    export SQUONK2_DMAPI_URL='https://data-manager-test.xchem-dev.diamond.ac.uk/data-manager-api'
+    export SQUONK2_DMAPI_URL='https://example.com/data-manager-api'
     export SQUONK2_DMAPI_URL_VALIDATION='true'
-    export SQUONK2_KEYCLOAK_URL='https://keycloak.xchem-dev.diamond.ac.uk/auth'
-    export SQUONK2_KEYCLOAK_REALM='xchem'
+    export SQUONK2_KEYCLOAK_URL='https://example.com/auth'
+    export SQUONK2_KEYCLOAK_REALM='squonk'
     export SQUONK2_KEYCLOAK_DM_CLIENT_ID='data-manager-api-test'
     export SQUONK2_KEYCLOAK_USER='dmit-user-admin'
-    export SQUONK2_KEYCLOAK_USER_PASSWORD='sodgers-barilla-contacts-bedwarfing'
+    export SQUONK2_KEYCLOAK_USER_PASSWORD='blob1234'
 
 
 With these set you can run the basic tests.
