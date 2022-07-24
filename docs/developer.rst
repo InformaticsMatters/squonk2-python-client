@@ -1,6 +1,28 @@
-#################
-Developer testing
-#################
+###############
+Developer notes
+###############
+
+********
+Building
+********
+You can build and install the package locally with the following::
+
+    rm -rf dist
+    python -m build --sdist --wheel --outdir dist/
+    pip install dist/im-squonk2-client-*.tar.gz
+
+And uninstall with::
+
+    pip uninstall im-squonk2-client
+
+.. note::
+    If you've set ``PYTHONPATH`` (see testing below) you will need to unset it
+    (``unset PYTHONPATH``). Otherrwise you will get a
+    **No files were found to uninstall.** error from ``pip``.
+
+*******
+Testing
+*******
 From a clone of the repository and access to a suitable DM-API deployment user
 and project you should be able to run a set of basic API tests with the
 ``test.py`` module in the project root.
@@ -14,13 +36,13 @@ the Keycloak server, its realm and client and a user's credentials.
 
 .. code-block:: bash
 
-    export SQUONK2_DMAPI_URL='https://example.com/data-manager-api'
-    export SQUONK2_DMAPI_URL_VALIDATION='false'
-    export SQUONK2_KEYCLOAK_URL='https://example.com/auth'
-    export SQUONK2_KEYCLOAK_REALM='squonk'
-    export SQUONK2_KEYCLOAK_CLIENT_ID='data-manager-api'
-    export SQUONK2_KEYCLOAK_USER='user1'
-    export SQUONK2_KEYCLOAK_USER_PASSWORD='blob1234'
+    export SQUONK2_DMAPI_URL='https://data-manager-test.xchem-dev.diamond.ac.uk/data-manager-api'
+    export SQUONK2_DMAPI_URL_VALIDATION='true'
+    export SQUONK2_KEYCLOAK_URL='https://keycloak.xchem-dev.diamond.ac.uk/auth'
+    export SQUONK2_KEYCLOAK_REALM='xchem'
+    export SQUONK2_KEYCLOAK_DM_CLIENT_ID='data-manager-api-test'
+    export SQUONK2_KEYCLOAK_USER='dmit-user-admin'
+    export SQUONK2_KEYCLOAK_USER_PASSWORD='sodgers-barilla-contacts-bedwarfing'
 
 
 With these set you can run the basic tests.
