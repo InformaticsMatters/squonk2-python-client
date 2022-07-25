@@ -1,8 +1,8 @@
-"""Python utilities to simplify calls to some parts of the Data Manager API to
+"""Python utilities to simplify calls to some parts of the Data Manager API that
 interact with **Projects**, **Instances** (**Jobs**) and **Files**.
 
 .. note::
-    The URL to the DM API is picked automatically up from the environment variable
+    The URL to the DM API is automatically picked up from the environment variable
     ``SQUONK2_DMAPI_URL``, expected to be of the form **https://example.com/data-manager-api**.
     If the variable isn't set the user must set it programmatically
     using :py:meth:`DmApi.set_api_url()`.
@@ -27,9 +27,9 @@ DmApiRv: namedtuple = namedtuple("DmApiRv", "success msg")
 """
 
 TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
-"""A test AS Product ID. This ID does not actually exist but is accepted
-as valid by the Data Manager for Administrative users and used for
-testing purposes.
+"""A test Account Server (AS) Product ID. This ID does not actually exist in the AS
+but is accepted as valid by the Data Manager for Administrative users and used for
+testing purposes. It allows the creation of Projects without the need of an AS Product.
 """
 
 # The Job instance Application ID - a 'well known' identity.
@@ -45,6 +45,8 @@ _PRIOR_TOKEN_MIN_AGE_M: int = 1
 
 # A common read timeout
 _READ_TIMEOUT_S: int = 4
+# A longer timeout
+_READ_LONG_TIMEOUT_S: int = 12
 
 # Debug request times?
 # If set the duration of each request call is logged.
@@ -65,18 +67,13 @@ class DmApi:
 
     # The default DM API is extracted from the environment,
     # otherwise it can be set using 'set_api_url()'
-    _dm_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
+    __dm_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
     # Do we expect the DM API to be secure?
-    # This can be disabled using 'set_api_url()'
-    _verify_ssl_cert: bool = True
-
-    # The most recent access token Host and public key.
-    # Set during token collection.
-    _access_token_realm_url: str = ""
-    _access_token_public_key: str = ""
+    # Normally yes, but this can be disabled using 'set_api_url()'
+    __verify_ssl_cert: bool = True
 
     @classmethod
-    def _request(
+    def __request(
         cls,
         method: str,
         endpoint: str,
@@ -102,10 +99,10 @@ class DmApi:
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
-        if not DmApi._dm_api_url:
+        if not DmApi.__dm_api_url:
             return DmApiRv(success=False, msg={"error": "No API URL defined"}), None
 
-        url: str = DmApi._dm_api_url + endpoint
+        url: str = DmApi.__dm_api_url + endpoint
 
         # if we have it, add the access token to the headers,
         # or create a headers block
@@ -124,7 +121,7 @@ class DmApi:
             print(f"# params={params}")
             print(f"# data={data}")
             print(f"# timeout={timeout}")
-            print(f"# verify={DmApi._verify_ssl_cert}")
+            print(f"# verify={DmApi.__verify_ssl_cert}")
 
         expected_codes = expected_response_codes if expected_response_codes else [200]
         resp: Optional[requests.Response] = None
@@ -142,7 +139,7 @@ class DmApi:
                 data=data,
                 files=files,
                 timeout=timeout,
-                verify=DmApi._verify_ssl_cert,
+                verify=DmApi.__verify_ssl_cert,
             )
         except:
             _LOGGER.exception("Request failed")
@@ -176,17 +173,17 @@ class DmApi:
         return DmApiRv(success=True, msg=msg), resp
 
     @classmethod
-    def _get_latest_job_operator_version(
+    def __get_latest_job_operator_version(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> Optional[str]:
-        """Gets Job application data frm the DM API.
+        """Gets Job application data from the DM API.
         We'll get and return the latest version found so that we can launch
         Jobs. If the Job application info is not available it indicates
         the server has no Job Operator installed.
         """
         assert access_token
 
-        ret_val, resp = DmApi._request(
+        ret_val, resp = DmApi.__request(
             "GET",
             f"/application/{_DM_JOB_APPLICATION_ID}",
             access_token=access_token,
@@ -206,7 +203,7 @@ class DmApi:
         return ""
 
     @classmethod
-    def _put_unmanaged_project_file(
+    def __put_unmanaged_project_file(
         cls,
         access_token: str,
         *,
@@ -223,7 +220,7 @@ class DmApi:
             "file": open(project_file, "rb")  # pylint: disable=consider-using-with
         }
 
-        ret_val, resp = DmApi._request(
+        ret_val, resp = DmApi.__request(
             "PUT",
             f"/project/{project_id}/file",
             access_token=access_token,
@@ -254,8 +251,8 @@ class DmApi:
         :param verify_ssl_cert: Use False to avoid SSL verification in request calls
         """
         assert url
-        DmApi._dm_api_url = url
-        DmApi._verify_ssl_cert = verify_ssl_cert
+        DmApi.__dm_api_url = url
+        DmApi.__verify_ssl_cert = verify_ssl_cert
 
         # Disable the 'InsecureRequestWarning'?
         if not verify_ssl_cert:
@@ -265,7 +262,7 @@ class DmApi:
     @synchronized
     def get_api_url(cls) -> Tuple[str, bool]:
         """Return the API URL and whether validating the SSL layer."""
-        return DmApi._dm_api_url, DmApi._verify_ssl_cert
+        return DmApi.__dm_api_url, DmApi.__verify_ssl_cert
 
     @classmethod
     @synchronized
@@ -278,7 +275,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             "/account-server/namespace",
             access_token=access_token,
@@ -298,7 +295,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             "/version",
             access_token=access_token,
@@ -316,7 +313,8 @@ class DmApi:
         as_tier_product_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
-        """Creates a Project, which requires a name and a Product ID obtained from
+        """Creates a Project, which requires a name and a Product ID
+        (a Data Manger Project Tier Product) obtained from
         the Account Server.
 
         :param access_token: A valid DM API access token.
@@ -336,7 +334,7 @@ class DmApi:
             "tier_product_id": as_tier_product_id,
             "name": project_name,
         }
-        return DmApi._request(
+        return DmApi.__request(
             "POST",
             "/project",
             access_token=access_token,
@@ -360,7 +358,7 @@ class DmApi:
         assert access_token
         assert project_id
 
-        return DmApi._request(
+        return DmApi.__request(
             "DELETE",
             f"/project/{project_id}",
             access_token=access_token,
@@ -395,7 +393,7 @@ class DmApi:
             same name exists. Here ``force`` can be used to over-write files.
             Files on the server that are immutable cannot be over-written,
             and doing so will result in an error
-        :param timeout_s: The underlying request timeout
+        :param timeout_per_file_s: The underlying request timeout
         """
 
         assert access_token
@@ -408,7 +406,7 @@ class DmApi:
             and project_path.startswith("/")
         )
 
-        if not DmApi._dm_api_url:
+        if not DmApi.__dm_api_url:
             return DmApiRv(success=False, msg={"error": "No API URL defined"})
 
         # If we're not forcing the files collect the names
@@ -424,7 +422,7 @@ class DmApi:
             if project_path:
                 params["path"] = project_path
 
-            ret_val, resp = DmApi._request(
+            ret_val, resp = DmApi.__request(
                 "GET",
                 "/file",
                 access_token=access_token,
@@ -453,7 +451,7 @@ class DmApi:
                     success=False, msg={"error": f"No such file ({src_file})"}
                 )
             if os.path.basename(src_file) not in existing_path_files:
-                ret_val = DmApi._put_unmanaged_project_file(
+                ret_val = DmApi.__put_unmanaged_project_file(
                     access_token,
                     project_id=project_id,
                     project_file=src_file,
@@ -510,7 +508,7 @@ class DmApi:
                 "path": project_path,
                 "file": file_to_delete,
             }
-            ret_val, _ = DmApi._request(
+            ret_val, _ = DmApi.__request(
                 "DELETE",
                 "/file",
                 access_token=access_token,
@@ -534,7 +532,7 @@ class DmApi:
         project_id: str,
         project_path: str = "/",
         include_hidden: bool = False,
-        timeout_s: int = 8,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets a list of project files on a path.
 
@@ -542,6 +540,7 @@ class DmApi:
         :param project_id: The project where the files are present
         :param project_path: The path in the project to search for files.
             The path is relative to the project root and must begin ``/``
+        :param include_hidden: Include hidden files in the reponse
         :param timeout_s: The underlying request timeout
         """
         assert access_token
@@ -557,7 +556,7 @@ class DmApi:
             "path": project_path,
             "include_hidden": include_hidden,
         }
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             "/file",
             access_token=access_token,
@@ -576,9 +575,9 @@ class DmApi:
         project_file: str,
         local_file: str,
         project_path: str = "/",
-        timeout_s: int = 8,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
     ) -> DmApiRv:
-        """Get a single unmanaged file from a project path, saving it to
+        """Get a single unmanaged file from a project path, save it to
         the filename defined in local_file.
 
         :param access_token: A valid DM API access token
@@ -600,7 +599,7 @@ class DmApi:
         )
 
         params: Dict[str, Any] = {"path": project_path, "file": project_file}
-        ret_val, resp = DmApi._request(
+        ret_val, resp = DmApi.__request(
             "GET",
             f"/project/{project_id}/file",
             access_token=access_token,
@@ -627,15 +626,15 @@ class DmApi:
         project_file: str,
         local_file: str,
         project_path: str = "/",
-        timeout_s: int = 8,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
     ) -> DmApiRv:
         """Like :py:meth:`~DmApi.get_unmanaged_project_file()`, this method
-        get a single unmanaged file from a project path. The method uses an
-        Instance-generated callback token rathgr than a user-access token.
+        gets a single unmanaged file from a project path. The method uses an
+        Instance-generated callback token rather than a user-access token.
 
         This method is particularly useful in callback routines where a user
         access token may not be available. Callback tokens expire and can be
-        deleted and so this function should only be used when a user access
+        deleted, and so this function should only be used when a user access
         token is not available.
 
         :param token: A DM-generated token, optionally generated when
@@ -662,7 +661,7 @@ class DmApi:
             "file": project_file,
             "token": token,
         }
-        ret_val, resp = DmApi._request(
+        ret_val, resp = DmApi.__request(
             "GET",
             f"/project/{project_id}/file-with-token",
             params=params,
@@ -721,7 +720,7 @@ class DmApi:
 
         # Get the latest Job operator version.
         # If there isn't one the DM can't run Jobs.
-        job_application_version: Optional[str] = DmApi._get_latest_job_operator_version(
+        job_application_version: Optional[str] = DmApi.__get_latest_job_operator_version(
             access_token
         )
         if job_application_version is None:
@@ -749,7 +748,7 @@ class DmApi:
             if generate_callback_token:
                 data["generate_callback_token"] = True
 
-        return DmApi._request(
+        return DmApi.__request(
             "POST",
             "/instance",
             access_token=access_token,
@@ -771,7 +770,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             "/project",
             access_token=access_token,
@@ -793,7 +792,7 @@ class DmApi:
         assert access_token
         assert project_id
 
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             f"/project/{project_id}",
             access_token=access_token,
@@ -815,7 +814,7 @@ class DmApi:
         assert access_token
         assert instance_id
 
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             f"/instance/{instance_id}",
             access_token=access_token,
@@ -831,13 +830,14 @@ class DmApi:
         """Gets information about all instances available to you.
 
         :param access_token: A valid DM API access token
+        :param project_id: A valid DM project
         :param timeout_s: The underlying request timeout
         """
         assert access_token
         assert project_id
 
         params: Dict[str, Any] = {"project_id": project_id}
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             "/instance",
             access_token=access_token,
@@ -856,7 +856,7 @@ class DmApi:
         When instances are deleted the container is removed along with
         the instance-specific directory that is automatically created
         in the root of the project. Any files in the instance-specific
-        directory wil be removed.
+        directory will be removed.
 
         :param access_token: A valid DM API access token
         :param instance_id: The instance to delete
@@ -865,7 +865,7 @@ class DmApi:
         assert access_token
         assert instance_id
 
-        return DmApi._request(
+        return DmApi.__request(
             "DELETE",
             f"/instance/{instance_id}",
             access_token=access_token,
@@ -890,7 +890,7 @@ class DmApi:
         assert instance_id
         assert token
 
-        return DmApi._request(
+        return DmApi.__request(
             "DELETE",
             f"/instance/{instance_id}/token/{token}",
             error_message="Failed to delete instance token",
@@ -908,7 +908,15 @@ class DmApi:
         event_limit: int = 0,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
-        """Gets information about a specific Task"""
+        """Gets information about a specific Task
+
+        :param access_token: A valid DM API access token
+        :param task_id: The task
+        :param event_prior_ordinal: The event prior ordinal, Use 0 for the first
+        :param event_limit: The number of events to return. Use 0 for the default,
+            which depends on the environment, and is typically 500
+        :param timeout_s: The underlying request timeout
+        """
         assert access_token
         assert task_id
         assert event_prior_ordinal >= 0
@@ -919,7 +927,7 @@ class DmApi:
             params["event_prior_ordinal"] = event_prior_ordinal
         if event_limit:
             params["event_limit"] = event_limit
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             f"/task/{task_id}",
             access_token=access_token,
@@ -940,7 +948,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             "/job",
             access_token=access_token,
@@ -963,7 +971,7 @@ class DmApi:
         assert access_token
         assert job_id > 0
 
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             f"/job/{job_id}",
             access_token=access_token,
@@ -1001,7 +1009,7 @@ class DmApi:
             "job": job_job,
             "version": job_version,
         }
-        return DmApi._request(
+        return DmApi.__request(
             "GET",
             "/job/get-by-version",
             access_token=access_token,
@@ -1026,7 +1034,7 @@ class DmApi:
 
         :param access_token: A valid DM API access token.
         :param admin: True to set admin state
-        :param imperrsonate: An optional username to switch to
+        :param impersonate: An optional username to switch to
         :param timeout_s: The API request timeout
         """
         assert access_token
@@ -1035,7 +1043,7 @@ class DmApi:
         if impersonate:
             data["impersonate"] = impersonate
 
-        return DmApi._request(
+        return DmApi.__request(
             "PATCH",
             "/user/account",
             access_token=access_token,

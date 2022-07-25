@@ -24,14 +24,10 @@ class Auth:
     authentication service (Keycloak).
     """
 
-    # Do we expect the DM API to be secure?
-    # This can be disabled using 'set_api_url()'
-    _verify_ssl_cert: bool = True
-
     # The most recent access token Host and public key.
     # Set during token collection.
-    _access_token_realm_url: str = ""
-    _access_token_public_key: str = ""
+    __access_token_realm_url: str = ""
+    __access_token_public_key: str = ""
 
     @classmethod
     @synchronized
@@ -75,9 +71,9 @@ class Auth:
         # Do we have the public key for this host/realm?
         # if not grab it now.
         realm_url: str = f"{keycloak_url}/realms/{keycloak_realm}"
-        if prior_token and Auth._access_token_realm_url != realm_url:
+        if prior_token and Auth.__access_token_realm_url != realm_url:
             # New realm URL, remember and get the public key
-            Auth._access_token_realm_url = realm_url
+            Auth.__access_token_realm_url = realm_url
             with urllib.request.urlopen(realm_url) as realm_stream:
                 response = realm_stream.read()
                 public_key = json.loads(response)["public_key"]
@@ -87,14 +83,14 @@ class Auth:
                 + public_key
                 + "\n-----END PUBLIC KEY-----"
             )
-            Auth._access_token_public_key = key.encode("ascii")
+            Auth.__access_token_public_key = key.encode("ascii")
 
         # If a prior token's been supplied,
         # re-use it if there's still time left before expiry.
         if prior_token:
-            assert Auth._access_token_public_key
+            assert Auth.__access_token_public_key
             decoded_token: Dict[str, Any] = jwt.decode(
-                prior_token, Auth._access_token_public_key
+                prior_token, Auth.__access_token_public_key
             )
             utc_timestamp: int = int(datetime.utcnow().timestamp())
             token_remaining_seconds: int = decoded_token["exp"] - utc_timestamp
