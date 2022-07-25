@@ -11,6 +11,7 @@ from collections import namedtuple
 import json
 import logging
 import os
+import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
@@ -41,6 +42,16 @@ _API_URL_ENV_NAME: str = "SQUONK2_DMAPI_URL"
 # If less than the value provided here, we get a new one.
 # Used in get_access_token().
 _PRIOR_TOKEN_MIN_AGE_M: int = 1
+
+# A common read timeout
+_READ_TIMEOUT_S: int = 4
+
+# Debug request times?
+# If set the duration of each request call is logged.
+_DEBUG_REQUEST_TIME: bool = False
+# Debug request calls?
+# If set the arguments and response of each request call is logged.
+_DEBUG_REQUEST: bool = False
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -77,7 +88,7 @@ class DmApi:
         data: Optional[Dict[str, Any]] = None,
         files: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
-        timeout: int = 4,
+        timeout: int = _READ_TIMEOUT_S,
     ) -> Tuple[DmApiRv, Optional[requests.Response]]:
         """Sends a request to the DM API endpoint. The caller normally has to provide
         an oauth-like access token but this is not mandated. Some DM API methods
@@ -105,8 +116,21 @@ class DmApi:
             else:
                 use_headers = {"Authorization": "Bearer " + access_token}
 
+        if _DEBUG_REQUEST:
+            print("# ---")
+            print(f"# method={method}")
+            print(f"# url={url}")
+            print(f"# headers={use_headers}")
+            print(f"# params={params}")
+            print(f"# data={data}")
+            print(f"# timeout={timeout}")
+            print(f"# verify={DmApi._verify_ssl_cert}")
+
         expected_codes = expected_response_codes if expected_response_codes else [200]
         resp: Optional[requests.Response] = None
+
+        if _DEBUG_REQUEST_TIME:
+            request_start: float = time.perf_counter()
         try:
             # Send the request (displaying the request/response)
             # and returning the response, whatever it is.
@@ -122,23 +146,35 @@ class DmApi:
             )
         except:
             _LOGGER.exception("Request failed")
+
+        # Try and decode the response,
+        # replacing with empty dictionary on failure.
+        msg: Optional[Dict[Any, Any]] = None
+        if resp:
+            try:
+                msg = resp.json()
+            except:
+                pass
+
+        if resp and _DEBUG_REQUEST:
+            print(f"# request() status_code={resp.status_code} json={msg}")
+
+        if _DEBUG_REQUEST_TIME:
+            assert request_start
+            request_finish: float = time.perf_counter()
+            print(f"# request() duration={request_finish - request_start} seconds")
+
         if resp is None or resp.status_code not in expected_codes:
             return (
                 DmApiRv(success=False, msg={"error": f"{error_message} (resp={resp})"}),
                 resp,
             )
 
-        # Try and decode the response,
-        # replacing with empty dictionary on failure.
-        try:
-            msg = resp.json()
-        except:
-            msg = {}
         return DmApiRv(success=True, msg=msg), resp
 
     @classmethod
     def _get_latest_job_operator_version(
-        cls, access_token: str, *, timeout_s: int = 4
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> Optional[str]:
         """Gets Job application data frm the DM API.
         We'll get and return the latest version found so that we can launch
@@ -230,7 +266,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def ping(cls, access_token: str, *, timeout_s: int = 4) -> DmApiRv:
+    def ping(cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S) -> DmApiRv:
         """A handy API method that calls the DM API to ensure the server is
         responding.
 
@@ -249,7 +285,9 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_version(cls, access_token: str, *, timeout_s: int = 4) -> DmApiRv:
+    def get_version(
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> DmApiRv:
         """Returns the DM-API service version.
 
         :param access_token: A valid DM API access token
@@ -273,7 +311,7 @@ class DmApi:
         *,
         project_name: str,
         as_tier_product_id: str,
-        timeout_s: int = 4,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Creates a Project, which requires a name and a Product ID obtained from
         the Account Server.
@@ -308,7 +346,7 @@ class DmApi:
     @classmethod
     @synchronized
     def delete_project(
-        cls, access_token: str, *, project_id: str, timeout_s: int = 4
+        cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Deletes a project.
 
@@ -435,7 +473,7 @@ class DmApi:
         project_id: str,
         project_files: Union[str, List[str]],
         project_path: str = "/",
-        timeout_s: int = 4,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Deletes an unmanaged project file, or list of files, on a project path.
 
@@ -650,7 +688,7 @@ class DmApi:
         callback_context: Optional[str] = None,
         generate_callback_token: bool = False,
         debug: Optional[str] = None,
-        timeout_s: int = 4,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Instantiates a Job Instance in a Project.
 
@@ -721,7 +759,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_available_projects(
-        cls, access_token: str, *, timeout_s: int = 4
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about all projects available to you.
 
@@ -741,7 +779,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_project(
-        cls, access_token: str, *, project_id: str, timeout_s: int = 4
+        cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets detailed information about a specific project.
 
@@ -763,7 +801,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_instance(
-        cls, access_token: str, *, instance_id: str, timeout_s: int = 4
+        cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about an instance (Application or Job).
 
@@ -785,7 +823,7 @@ class DmApi:
     @classmethod
     @synchronized
     def get_project_instances(
-        cls, access_token: str, *, project_id: str, timeout_s: int = 4
+        cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about all instances available to you.
 
@@ -808,7 +846,7 @@ class DmApi:
     @classmethod
     @synchronized
     def delete_instance(
-        cls, access_token: str, *, instance_id: str, timeout_s: int = 4
+        cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Deletes an Instance (Application or Job).
 
@@ -835,7 +873,7 @@ class DmApi:
     @classmethod
     @synchronized
     def delete_instance_token(
-        cls, *, instance_id: str, token: str, timeout_s: int = 4
+        cls, *, instance_id: str, token: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Deletes a DM API Instance **callback token**. This API method is not
         authenticated and therefore does not need an access token. Once the token is
@@ -865,7 +903,7 @@ class DmApi:
         task_id: str,
         event_prior_ordinal: int = 0,
         event_limit: int = 0,
-        timeout_s: int = 4,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets information about a specific Task"""
         assert access_token
@@ -889,7 +927,9 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_available_jobs(cls, access_token: str, *, timeout_s: int = 4) -> DmApiRv:
+    def get_available_jobs(
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> DmApiRv:
         """Gets a summary list of available Jobs.
 
         :param access_token: A valid DM API access token.
@@ -907,7 +947,9 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_job(cls, access_token: str, *, job_id: int, timeout_s: int = 4) -> DmApiRv:
+    def get_job(
+        cls, access_token: str, *, job_id: int, timeout_s: int = _READ_TIMEOUT_S
+    ) -> DmApiRv:
         """Gets detailed information about a specific Job
         using the numeric Job record identity
 
@@ -935,10 +977,10 @@ class DmApi:
         job_collection: str,
         job_job: str,
         job_version: str,
-        timeout_s: int = 4,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets detailed information about a specific Job
-        using the ``collection``, ``name`` and ``version``
+        using its ``collection``, ``name`` and ``version``
 
         :param access_token: A valid DM API access token.
         :param job_collection: The Job collection, e.g. ``im-test``
@@ -973,7 +1015,7 @@ class DmApi:
         *,
         admin: bool,
         impersonate: Optional[str] = None,
-        timeout_s: int = 4,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Adds or removes the ``become-admin`` state of your account.
         Only users whose accounts offer administrative capabilities

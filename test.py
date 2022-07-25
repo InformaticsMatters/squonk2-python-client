@@ -43,16 +43,23 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     arg_parser.add_argument(
-        "-p", "--project-id", help="A pre-existing DM Project", type=str
+        "-p",
+        "--project-id",
+        help="An optional pre-existing DM Project."
+        " If one is not provided a new one is created"
+        " (and then deleted)",
+        type=str,
     )
     args: argparse.Namespace = arg_parser.parse_args()
 
-    # Configure.
+    # Configure the URL.
     # Depending on keycloak configuration
     # you may only have 5 minutes before the token expires.
     DmApi.set_api_url(DMAPI_URL, verify_ssl_cert=API_URL_VALIDATION)
     url, _ = DmApi.get_api_url()
     assert url == DMAPI_URL
+    print(f"DM-API url={url}")
+
     first_token = Auth.get_access_token(
         keycloak_url=KEYCLOAK_URL,
         keycloak_realm=KEYCLOAK_REALM,
@@ -61,9 +68,9 @@ def main():
         password=KEYCLOAK_USER_PASSWORD,
     )
     if not first_token:
-        fail(f'Failed to get token from "{KEYCLOAK_URL}"')
+        fail(f"Failed to get token from {KEYCLOAK_URL} for '{KEYCLOAK_USER}'")
         sys.exit(1)
-    print(f"DM-API connected ({DMAPI_URL})")
+    print(f"DM-API authorised as '{KEYCLOAK_USER}' ({DMAPI_URL})")
 
     # Get another token using the existing token.
     # Just tests that prior tokens are given back.
@@ -81,10 +88,12 @@ def main():
     api_rv: DmApiRv = DmApi.ping(token)
     if not api_rv.success:
         fail("ping()", api_rv)
+    print("DM-API ping (SUCCESS)")
+
     api_rv = DmApi.get_version(token)
     if not api_rv.success:
         fail("get_version()", api_rv)
-    print(f"DM-API version={api_rv.msg['version']}")
+    print(f"DM-API version='{api_rv.msg['version']}'")
 
     # Get existing projects
     rv_projects = DmApi.get_available_projects(token)
@@ -114,7 +123,9 @@ def main():
         project_exists = False
         for project in rv_projects.msg["projects"]:
             if project["name"] == new_project_name:
-                print(f"Using existing project ({project['project_id']})")
+                print(
+                    f"Found existing test project '{new_project_name}' ({project['project_id']})"
+                )
                 project_id = project["project_id"]
                 project_exists = True
                 break
