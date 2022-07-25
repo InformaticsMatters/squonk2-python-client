@@ -720,9 +720,9 @@ class DmApi:
 
         # Get the latest Job operator version.
         # If there isn't one the DM can't run Jobs.
-        job_application_version: Optional[str] = DmApi.__get_latest_job_operator_version(
-            access_token
-        )
+        job_application_version: Optional[
+            str
+        ] = DmApi.__get_latest_job_operator_version(access_token)
         if job_application_version is None:
             # Failed calling the server.
             # Incorrect URL, bad token or server out of action?
