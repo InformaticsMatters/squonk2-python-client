@@ -24,15 +24,15 @@ To run this example set these environment variables
 
 .. code-block:: bash
 
-    export DMAPI_USERNAME=<keycloak username>
-    export DMAPI_PASSWORD=<keycloak password>
+    export SQUONK2_KEYCLOAK_USER=<keycloak username>
+    export SQUONK2_KEYCLOAK_USER_PASSWORD=<keycloak password>
 
 Then run it like this, storing the token in the ``KEYCLOAK_TOKEN``
 environment variable: -
 
 .. code-block:: bash
 
-    KEYCLOAK_TOKEN=$(./examples/get_token.py \
+    export KEYCLOAK_TOKEN=$(./examples/get_token.py \
         --keycloak-hostname keycloak.xchem-dev.diamond.ac.uk \
         --keycloak-realm xchem \
         --keycloak-client-id data-manager-api-dev)
@@ -63,7 +63,10 @@ for further details.
     :language: python
 
 Assuming you've set a token in the environment variable ``KEYCLOAK_TOKEN``
-set these additional environment variables (your parameters may differ): -
+set these additional environment variables.
+You will need access to pre-existing Squonk2 Project, we've used
+``project-6c54641f-00b3-4cfa-97f7-363a7b76230a`` but you will need
+to provide ione that's valid with your environment: -
 
 .. code-block:: bash
 

@@ -6,8 +6,15 @@ import os
 
 from squonk2.auth import Auth
 
+# Username and password are taken from environment variables...
+keycloak_user: str = os.environ["SQUONK2_KEYCLOAK_USER"]
+keycloak_user_password: str = os.environ["SQUONK2_KEYCLOAK_USER_PASSWORD"]
+
 # Less sensitive information is extracted from the command-line...
-parser = argparse.ArgumentParser(description="Delete All DM Project Instances")
+parser = argparse.ArgumentParser(
+    description="Get a user token. SQUONK2_KEYCLOAK_USER and"
+    " SQUONK2_KEYCLOAK_USER_PASSWORD must be set."
+)
 parser.add_argument(
     "--keycloak-hostname", "-k", help='The API URL, i.e. "example.com"', required=True
 )
@@ -21,10 +28,6 @@ parser.add_argument(
     required=True,
 )
 args = parser.parse_args()
-
-# Username and password are taken from environment variables...
-keycloak_user: str = os.environ["DMAPI_USERNAME"]
-keycloak_user_password: str = os.environ["DMAPI_PASSWORD"]
 
 # Now get an API token.
 # It should be valid for the remainder of the utility...

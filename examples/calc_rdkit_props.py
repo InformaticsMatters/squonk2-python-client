@@ -13,25 +13,26 @@ import time
 
 from squonk2.dm_api import DmApi, DmApiRv
 
-# Token and project id are taken from environment variables...
+# Squonk2 authentication token, project id and the job's input file
+# are taken from environment variables...
 token: str = os.environ.get("KEYCLOAK_TOKEN")
 project_id: str = os.environ.get("PROJECT_ID")
 job_input: str = os.environ.get("JOB_INPUT")
 
 if token:
-    print("TOKEN OK")
+    print("TOKEN Pesent")
 else:
     print("No token provided")
     sys.exit(1)
 
 if project_id:
-    print("PROJECT_ID OK")
+    print("PROJECT_ID present")
 else:
     print("No project_id provided")
     sys.exit(1)
 
 if job_input:
-    print("JOB_INPUT OK")
+    print("JOB_INPUT present")
 else:
     print("No job_input provided")
     sys.exit(1)
@@ -80,7 +81,7 @@ rv = DmApi.start_job_instance(
 if rv.success:
     instance_id = rv.msg["instance_id"]
     task_id = rv.msg["task_id"]
-    print("JOB STARTED. ID=" + instance_id)
+    print(f"JOB STARTED (instance_id={instance_id})")
 else:
     print("JOB FAILED")
     sys.exit(1)
@@ -116,7 +117,7 @@ else:
     print(rv)
 
 # Now, as the Job remains in the DM until deleted
-# we tidy up by removing the Job using the instace ID we were given.
+# we tidy up by removing the Job using the instance ID we were given.
 rv = DmApi.delete_instance(token, instance_id=instance_id)
 if rv.success:
     print("CLEANUP OK")

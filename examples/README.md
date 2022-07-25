@@ -7,12 +7,12 @@ First create and activate a virtual environment: -
     ~/venvs/squonk2-client/bin/activate
 
 If you are working from a clone of this repository you can use the Python code
-directly  by setting PYTHONPATH (although this approach is discouraged, unless
+directly  by setting PYTHONPATH (**this approach is discouraged**, unless
 you're actually developing new Squonk2 client code): -
 
     export PYTHONPATH=./src
 
-or, install the Squonk2 client from PyPI (preferred): -
+or, install the Squonk2 client from PyPI (**preferred**): -
 
     pip install squonk2-client
 
@@ -22,7 +22,7 @@ Check it all works by running one of the examples: -
 
 ## Typical usage
 
-1. Set the `SQUONK2_API_URL` environment variable to point to the Squonk2
+1. Set the `SQUONK2_DMAPI_URL` environment variable to point to the Squonk2
    Data Manager API e.g. `https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api`
    See https://data-manager-api.readthedocs.io/en/latest/url.html
 2. Set the necessary environment variables for the example.
