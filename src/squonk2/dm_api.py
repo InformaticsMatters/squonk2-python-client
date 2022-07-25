@@ -3,7 +3,7 @@ interact with **Projects**, **Instances** (**Jobs**) and **Files**.
 
 .. note::
     The URL to the DM API is picked automatically up from the environment variable
-    ``SQUONK2_API_URL``, expected to be of the form **https://example.com/data-manager-api**.
+    ``SQUONK2_DMAPI_URL``, expected to be of the form **https://example.com/data-manager-api**.
     If the variable isn't set the user must set it programmatically
     using :py:meth:`DmApi.set_api_url()`.
 """
@@ -27,7 +27,7 @@ DmApiRv: namedtuple = namedtuple("DmApiRv", "success msg")
 """
 
 TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
-"""A test AS Product ID, This ID does not actually exist but is accepted
+"""A test AS Product ID. This ID does not actually exist but is accepted
 as valid by the Data Manager for Administrative users and used for
 testing purposes.
 """
@@ -248,7 +248,7 @@ class DmApi:
     @synchronized
     def set_api_url(cls, url: str, *, verify_ssl_cert: bool = True) -> None:
         """Replaces the API URL value, which is otherwise set using
-        the ``SQUONK2_API_URL`` environment variable.
+        the ``SQUONK2_DMAPI_URL`` environment variable.
 
         :param url: The API endpoint, typically **https://example.com/data-manager-api**
         :param verify_ssl_cert: Use False to avoid SSL verification in request calls
