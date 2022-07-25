@@ -88,7 +88,7 @@ def main():
     api_rv: DmApiRv = DmApi.ping(token)
     if not api_rv.success:
         fail("ping()", api_rv)
-    print("DM-API ping (SUCCESS)")
+    print("DM-API ping() (SUCCESS)")
 
     api_rv = DmApi.get_version(token)
     if not api_rv.success:
@@ -148,7 +148,8 @@ def main():
     # Get a list of project files on the root
     print("Listing project files")
     api_rv = DmApi.list_project_files(token, project_id=project_id, project_path="/")
-    assert api_rv.success
+    if not api_rv.success:
+        fail(f"list_project_files({project_id}, '/')", api_rv)
     num_project_files = 0
     if api_rv.msg["files"]:
         for project_file in api_rv.msg["files"]:
@@ -194,17 +195,18 @@ def main():
     job_collection = "im-test"
     job_job = "nop"
     job_version = "1.0.0"
-    api_rv = DmApi.get_job_by_name(
+    api_rv = DmApi.get_job_by_version(
         token, job_collection=job_collection, job_job=job_job, job_version=job_version
     )
     if not api_rv.success:
-        fail("get_job_by_name()", api_rv)
+        fail(f"get_job_by_version({job_collection}, {job_job}, {job_version})", api_rv)
     spec = {"collection": job_collection, "job": job_job, "version": job_version}
+    job_name: str = "DmApi Test Job"
     api_rv = DmApi.start_job_instance(
-        token, project_id=project_id, name="DmApi Test Job", specification=spec
+        token, project_id=project_id, name=job_name, specification=spec
     )
     if not api_rv.success:
-        fail("start_job_instance()", api_rv)
+        fail(f"start_job_instance({project_id})", api_rv)
     job_task_id = api_rv.msg["task_id"]
     job_instance_id = api_rv.msg["instance_id"]
     print(f"Started (task_id={job_task_id} instance_id={job_instance_id})")
@@ -217,7 +219,8 @@ def main():
     done = False
     while not done and wait_seconds < max_wait_seconds:
         api_rv = DmApi.get_instance(token, instance_id=job_instance_id)
-        assert api_rv.success
+        if not api_rv.success:
+            fail(f"get_instance({job_instance_id})", api_rv)
         job_phase = api_rv.msg["phase"]
         if job_phase == "COMPLETED":
             print(f"Done ({job_phase})")

@@ -156,8 +156,11 @@ class DmApi:
             except:
                 pass
 
-        if resp and _DEBUG_REQUEST:
-            print(f"# request() status_code={resp.status_code} json={msg}")
+        if _DEBUG_REQUEST:
+            if resp is not None:
+                print(f"# request() status_code={resp.status_code} msg={msg}")
+            else:
+                print("# request() resp=None")
 
         if _DEBUG_REQUEST_TIME:
             assert request_start
@@ -970,7 +973,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_job_by_name(
+    def get_job_by_version(
         cls,
         access_token: str,
         *,
@@ -980,11 +983,11 @@ class DmApi:
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets detailed information about a specific Job
-        using its ``collection``, ``name`` and ``version``
+        using its ``collection``, ``job`` and ``version``
 
         :param access_token: A valid DM API access token.
         :param job_collection: The Job collection, e.g. ``im-test``
-        :param job_job: The Job name, e.g. ``nop``
+        :param job_job: The Job, e.g. ``nop``
         :param job_version: The Job version, e.g. ``1.0.0``
         :param timeout_s: The API request timeout
         """
@@ -1000,7 +1003,7 @@ class DmApi:
         }
         return DmApi._request(
             "GET",
-            "/job/get-by-name",
+            "/job/get-by-version",
             access_token=access_token,
             params=params,
             error_message="Failed to get job",

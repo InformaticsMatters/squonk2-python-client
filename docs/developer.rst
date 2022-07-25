@@ -39,7 +39,7 @@ the Keycloak server, its realm and client and a user's credentials.
     export SQUONK2_DMAPI_URL='https://example.com/data-manager-api'
     export SQUONK2_DMAPI_URL_VALIDATION='true'
     export SQUONK2_KEYCLOAK_URL='https://example.com/auth'
-    export SQUONK2_KEYCLOAK_REALM='squonk'
+    export SQUONK2_KEYCLOAK_REALM='squonk2'
     export SQUONK2_KEYCLOAK_DM_CLIENT_ID='data-manager-api-test'
     export SQUONK2_KEYCLOAK_USER='dmit-user-admin'
     export SQUONK2_KEYCLOAK_USER_PASSWORD='blob1234'

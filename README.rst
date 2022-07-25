@@ -38,7 +38,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_available_jobs()``
 - ``DmApi.get_available_projects()``
 - ``DmApi.get_job()``
-- ``DmApi.get_job_by_name()``
+- ``DmApi.get_job_by_version()``
 - ``DmApi.get_instance()``
 - ``DmApi.get_project()``
 - ``DmApi.get_project_instances()``
@@ -66,7 +66,6 @@ Simplified Account Server API
 
 Installation
 ============
-
 The Squonk2 package is published on `PyPI`_ and can be installed from
 there::
 
@@ -74,7 +73,6 @@ there::
 
 Documentation
 =============
-
 Documentation is available in the `squonk2-python-client`_ project on
 **Read the Docs**
 
