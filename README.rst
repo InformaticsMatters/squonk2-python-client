@@ -1,8 +1,8 @@
 Informatics Matters Squonk2 Python Client
 =========================================
 
-.. image:: https://badge.fury.io/py/squonk2-client.svg
-   :target: https://badge.fury.io/py/squonk2-client
+.. image:: https://badge.fury.io/py/im-squonk2-client.svg
+   :target: https://badge.fury.io/py/im-squonk2-client
    :alt: PyPI package (latest)
 
 .. image:: https://readthedocs.org/projects/squonk2-python-client/badge/?version=latest
@@ -84,4 +84,4 @@ Get in touch
 .. _on GitHub: https://github.com/informaticsmatters/squonk2-python-client
 .. _backend: https://github.com/xchem/fragalysis-backend
 .. _squonk2-python-client: https://squonk2-python-client.readthedocs.io/en/latest/
-.. _PyPI: https://pypi.org/project/squonk2-python-client
+.. _PyPI: https://pypi.org/project/im-squonk2-client
