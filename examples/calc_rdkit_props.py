@@ -2,7 +2,7 @@
 """An example that illustrates how to use the client to run a job that
 calculates molecular properties using RDKit.
 
-Remember that you need to have the SQUONK2_API_URL environment variable set to
+Remember that you need to have the SQUONK2_DMAPI_URL environment variable set to
 the Squonk2 Data Manager API URL, e.g.
 'https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api' or set the
 API URL programmatically with a call to DmApi.set_api_url().
