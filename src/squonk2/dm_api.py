@@ -286,14 +286,13 @@ class DmApi:
     @classmethod
     @synchronized
     def get_version(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Returns the DM-API service version.
 
-        :param access_token: A valid DM API access token
+        :param access_token: An optional valid DM API access token (deprecated)
         :param timeout_s: The underlying request timeout
         """
-        assert access_token
 
         return DmApi.__request(
             "GET",
