@@ -61,8 +61,22 @@ It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 
 Simplified Account Server API
 =============================
-..  note::
-    The Squonk2 Account Server API is not currently supported.
+The following Squonk2 Account Server API functions are available: -
+
+- ``AsApi.set_api_url()``
+- ``AsApi.get_api_url()``
+
+- ``AsApi.ping()``
+
+- ``AsApi.get_version()``
+
+A ``namedtuple`` is used as the return value for many of the methods: -
+
+- ``AsApiRv``
+
+It contains a boolean ``success`` field and a dictionary ``msg`` field. The
+``msg`` typically contains the underlying REST API response content
+(rendered as a Python dictionary), or an error message if the call failed.
 
 Installation
 ============
