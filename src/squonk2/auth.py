@@ -124,7 +124,7 @@ class Auth:
                 resp.status_code,
                 resp.text,
             )
-            assert False
+            return None
 
         assert "access_token" in resp.json()
         return resp.json()["access_token"]
