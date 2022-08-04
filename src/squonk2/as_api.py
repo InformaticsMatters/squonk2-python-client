@@ -8,11 +8,10 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
     using :py:meth:`AsApi.set_api_url()`.
 """
 from collections import namedtuple
-import json
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
@@ -193,15 +192,12 @@ class AsApi:
 
         :param timeout_s: The underlying request timeout
         """
-        assert access_token
 
         return AsApi.get_version(timeout_s=timeout_s)
 
     @classmethod
     @synchronized
-    def get_version(
-        cls, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> AsApiRv:
+    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
         """Returns the AS-API service version.
 
         :param timeout_s: The underlying request timeout
