@@ -1051,3 +1051,63 @@ class DmApi:
             error_message="Failed to set the admin state",
             timeout=timeout_s,
         )[0]
+
+    @classmethod
+    @synchronized
+    def get_service_errors(
+        cls,
+        access_token: str,
+        *,
+        include_acknowleged: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets service errors. You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :parem include_acknowleged: True to include acknowledged errors
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if include_acknowleged:
+            params["include_acknowleged"] = True
+
+        return DmApi.__request(
+            "GET",
+            "/admin/service-error",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get service errors",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_job_exchange_rates(
+        cls,
+        access_token: str,
+        *,
+        only_undefined: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets exchange rates for Jobs.
+
+        :param access_token: A valid DM API access token
+        :parem only_undefined: True to only include jobs that have no exchange rate
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if only_undefined:
+            params["only_undefined"] = True
+
+        return DmApi.__request(
+            "GET",
+            "/job/exchange-rate",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get exchange rates",
+            timeout=timeout_s,
+        )[0]

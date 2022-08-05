@@ -38,18 +38,20 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_available_jobs()``
 - ``DmApi.get_available_projects()``
 - ``DmApi.get_job()``
+- ``DmApi.get_job_exchange_rates()``
 - ``DmApi.get_job_by_version()``
 - ``DmApi.get_instance()``
 - ``DmApi.get_project()``
 - ``DmApi.get_project_instances()``
+- ``DmApi.get_service_errors()``
 - ``DmApi.get_task()``
 - ``DmApi.get_unmanaged_project_file()``
 - ``DmApi.get_unmanaged_project_file_with_token()``
 - ``DmApi.get_version()``
 - ``DmApi.list_project_files()``
 - ``DmApi.put_unmanaged_project_files()``
-- ``DmApi.start_job_instance()``
 - ``DmApi.set_admin_state()``
+- ``DmApi.start_job_instance()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
 
