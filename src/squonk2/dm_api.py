@@ -1111,3 +1111,26 @@ class DmApi:
             error_message="Failed to get exchange rates",
             timeout=timeout_s,
         )[0]
+
+    @classmethod
+    @synchronized
+    def get_available_datasets(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets Datasets availab le to the caller.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/dataset",
+            access_token=access_token,
+            error_message="Failed to get datasets",
+            timeout=timeout_s,
+        )[0]
