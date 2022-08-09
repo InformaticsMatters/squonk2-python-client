@@ -914,6 +914,26 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def get_all_instances(
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> DmApiRv:
+        """Gets information about all instances available to you.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/instance",
+            access_token=access_token,
+            error_message="Failed to get instances",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def delete_instance(
         cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
