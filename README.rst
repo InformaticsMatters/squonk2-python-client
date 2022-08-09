@@ -52,6 +52,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.list_project_files()``
 - ``DmApi.put_unmanaged_project_files()``
 - ``DmApi.set_admin_state()``
+- ``DmApi.set_job_exchange_rates()``
 - ``DmApi.start_job_instance()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -

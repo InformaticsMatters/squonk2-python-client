@@ -20,7 +20,7 @@ project_id: str = os.environ.get("PROJECT_ID")
 job_input: str = os.environ.get("JOB_INPUT")
 
 if token:
-    print("TOKEN Pesent")
+    print("TOKEN present")
 else:
     print("No token provided")
     sys.exit(1)

@@ -8,6 +8,7 @@ interact with **Projects**, **Instances** (**Jobs**) and **Files**.
     using :py:meth:`DmApi.set_api_url()`.
 """
 from collections import namedtuple
+import decimal
 import json
 import logging
 import os
@@ -238,6 +239,72 @@ class DmApi:
                 project_path,
                 resp,
                 project_id,
+            )
+        return ret_val
+
+    @classmethod
+    def __set_job_exchange_rate(
+        cls,
+        access_token: str,
+        *,
+        rate: Dict[str, str],
+        timeout_s: int = 120,
+    ) -> DmApiRv:
+        """Sets a single Job exchange rate."""
+        assert isinstance(rate, dict)
+        assert "collection" in rate
+        assert "job" in rate
+        assert "version" in rate
+        assert "rate" in rate
+
+        # The rate must be a decimal string.
+        # Convert it to test this.
+        rate_value = decimal.Decimal(rate["rate"])
+        assert isinstance(rate_value, decimal.Decimal)
+
+        # We're given a collection/job/version.
+        # Try to get the Job ID from this information.
+        collection: str = rate["collection"]
+        job: str = rate["job"]
+        version: str = rate["version"]
+        ret_val, resp = DmApi.__request(
+            "GET",
+            "/job/get-by-version",
+            access_token=access_token,
+            expected_response_codes=[200],
+            error_message=f"Failed getting job by version {collection}/{job}/{version}",
+            timeout=timeout_s,
+        )
+        if not ret_val.success:
+            _LOGGER.warning(
+                "Failed to get Job ID %s (resp=%s)",
+                rate,
+                resp,
+            )
+            return ret_val
+
+        assert resp
+        assert resp.json()
+        job_id: int = resp.json()["id"]
+        data: Dict[str, str] = {"rate": rate["rate"]}
+        if "comment" in rate:
+            data["comment"] = rate["comment"]
+        ret_val, resp = DmApi.__request(
+            "PUT",
+            f"/job/{job_id}/exchange_rate",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[204],
+            error_message=f"Failed setting rate for job {job_id} ({collection}/{job}/{version})"
+            f" rate={rate}",
+            timeout=timeout_s,
+        )
+
+        if not ret_val.success:
+            _LOGGER.warning(
+                "Failed putting rate %s (resp=%s)",
+                rate,
+                resp,
             )
         return ret_val
 
@@ -1094,7 +1161,7 @@ class DmApi:
         """Gets exchange rates for Jobs.
 
         :param access_token: A valid DM API access token
-        :parem only_undefined: True to only include jobs that have no exchange rate
+        :param only_undefined: True to only include jobs that have no exchange rate
         :param timeout_s: The underlying request timeout
         """
         assert access_token
@@ -1114,13 +1181,53 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def set_job_exchange_rates(
+        cls,
+        access_token: str,
+        *,
+        rates: Union[Dict[str, str], List[Dict[str, str]]],
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Sets exchange rates for Jobs, given one rate or a list of rates.
+
+        A rate is a dictionary with keys 'collection', 'job', 'version', and 'rate'.
+        An optional 'comment' can also be provided. The rate is expected to be a string
+        representation of a decimal, i.e. '0.05'.
+
+        :param access_token: A valid DM API access token
+        :param rates: A rate or a list of rates
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert isinstance(rates, (dict, list))
+
+        put_rates: List[Dict[str, str]] = []
+        if isinstance(rates, dict):
+            put_rates.append(rates)
+        else:
+            put_rates = rates
+
+        for put_rate in put_rates:
+            ret_val = DmApi.__set_job_exchange_rate(
+                access_token,
+                rate=put_rate,
+                timeout_s=timeout_s,
+            )
+            if not ret_val.success:
+                return ret_val
+
+        # OK if we get here
+        return DmApiRv(success=True, msg={})
+
+    @classmethod
+    @synchronized
     def get_available_datasets(
         cls,
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
-        """Gets Datasets availab le to the caller.
+        """Gets Datasets available to the caller.
 
         :param access_token: A valid DM API access token
         :param timeout_s: The underlying request timeout

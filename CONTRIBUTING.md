@@ -1,4 +1,4 @@
-## Contributing
+# Contributing
 The project uses: -
 
 - [pre-commit] to enforce linting of files prior to committing them to the
@@ -20,6 +20,18 @@ Now the project's rules will run on every commit, and you can check the
 current health of your clone with: -
 
     pre-commit run --all-files
+
+## Local Development
+You can build and install the package locally using the same process used
+by the GitHib Actions: -
+
+    rm -rf /dist/*
+    python -m build --sdist --wheel --outdir dist/
+    pip install dist/im-squonk2-client-*.tar.gz
+
+And then uninstall using pip: -
+
+    pip uninstall im-squonk2-client
 
 ---
 
