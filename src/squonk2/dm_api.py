@@ -914,7 +914,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_all_instances(
+    def get_available_instances(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about all instances available to you.
