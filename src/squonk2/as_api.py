@@ -318,7 +318,7 @@ class AsApi:
 
         return AsApi.__request(
             "GET",
-            "/merchants",
+            "/merchant",
             access_token=access_token,
             error_message="Failed getting merchants",
             timeout=timeout_s,
