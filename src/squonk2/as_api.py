@@ -219,30 +219,40 @@ class AsApi:
 
     @classmethod
     @synchronized
-    def get_available_products(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+    def get_available_products(
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> AsApiRv:
         """Returns Products you have access to.
 
+        :param access_token: A valid AS API access token
         :param timeout_s: The underlying request timeout
         """
+        assert access_token
 
         return AsApi.__request(
             "GET",
             "/product",
+            access_token=access_token,
             error_message="Failed getting products",
             timeout=timeout_s,
         )[0]
 
     @classmethod
     @synchronized
-    def get_available_units(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+    def get_available_units(
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> AsApiRv:
         """Returns Units (and their Organisations) you have access to.
 
+        :param access_token: A valid AS API access token
         :param timeout_s: The underlying request timeout
         """
+        assert access_token
 
         return AsApi.__request(
             "GET",
             "/unit",
+            access_token=access_token,
             error_message="Failed getting units",
             timeout=timeout_s,
         )[0]
@@ -250,15 +260,21 @@ class AsApi:
     @classmethod
     @synchronized
     def get_available_assets(
-        cls, *, scope_id: Optional[str] = None, timeout_s: int = _READ_TIMEOUT_S
+        cls,
+        access_token: str,
+        *,
+        scope_id: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> AsApiRv:
         """Returns Assets you have access to. If you provide a scope ID
         (a username or a product, unit or org UUID) only assets available in that
         scope will be returned.
 
+        :param access_token: A valid AS API access token
         :param scope_id: Optional scope identity (User or Product, Unit or Org UUID)
         :param timeout_s: The underlying request timeout
         """
+        assert access_token
 
         # Has the user provided a scope ID for the Asset search?
         params: Dict[str, str] = {}
@@ -279,6 +295,7 @@ class AsApi:
         return AsApi.__request(
             "GET",
             "/asset",
+            access_token=access_token,
             params=params,
             error_message="Failed getting assets",
             timeout=timeout_s,
