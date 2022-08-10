@@ -300,3 +300,26 @@ class AsApi:
             error_message="Failed getting assets",
             timeout=timeout_s,
         )[0]
+
+    @classmethod
+    @synchronized
+    def get_merchants(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns Merchants known (registered) with the Account Server.
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "GET",
+            "/merchants",
+            access_token=access_token,
+            error_message="Failed getting merchants",
+            timeout=timeout_s,
+        )[0]

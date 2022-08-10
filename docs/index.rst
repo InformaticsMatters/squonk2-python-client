@@ -9,6 +9,7 @@ and the Data Manager, and Account Server APIs.
 
     connecting
     auth
+    asapi
     dmapi
     examples
     developer
