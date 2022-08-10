@@ -1261,3 +1261,49 @@ class DmApi:
             error_message="Failed to get datasets",
             timeout=timeout_s,
         )[0]
+
+    @classmethod
+    @synchronized
+    def get_account_server_registration(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets Datasets available to the caller.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/account-server/registration",
+            access_token=access_token,
+            error_message="Failed to get AS registration",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_account_server_namespace(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets Datasets available to the caller.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/account-server/namespace",
+            access_token=access_token,
+            error_message="Failed to get AS namespace",
+            timeout=timeout_s,
+        )[0]
