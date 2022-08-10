@@ -60,7 +60,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class DmApi:
-    """The DmAPI class provides high-level, simplified access to the DM API.
+    """The DmAPI class provides high-level, simplified access to the DM REST API.
     You can use the request module directly for finer control. This module
     provides a wrapper around the handling of the request, returning a simplified
     namedtuple response value ``DmApiRv``

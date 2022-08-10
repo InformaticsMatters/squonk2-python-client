@@ -74,6 +74,9 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.ping()``
 
 - ``AsApi.get_version()``
+- ``AsApi.get_available_assets()``
+- ``AsApi.get_available_units()``
+- ``AsApi.get_available_products()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
 

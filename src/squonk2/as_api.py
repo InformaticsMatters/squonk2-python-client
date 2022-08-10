@@ -11,6 +11,7 @@ from collections import namedtuple
 import logging
 import os
 import time
+import re
 from typing import Any, Dict, List, Optional, Tuple
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
@@ -48,9 +49,15 @@ _DEBUG_REQUEST: bool = False
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
+# A regular expression for an AS UUID,
+# i.e. a UUID for org/unit/product/assets etc.
+_RE_UUID: re.Pattern = re.compile(
+    "^[a-z]{3,}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+)
+
 
 class AsApi:
-    """The AsAPI class provides high-level, simplified access to the AS API.
+    """The AsApi class provides high-level, simplified access to the AS REST API.
     You can use the request module directly for finer control. This module
     provides a wrapper around the handling of the request, returning a simplified
     namedtuple response value ``AsApiRv``
@@ -207,5 +214,72 @@ class AsApi:
             "GET",
             "/version",
             error_message="Failed getting version",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_available_products(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+        """Returns Products you have access to.
+
+        :param timeout_s: The underlying request timeout
+        """
+
+        return AsApi.__request(
+            "GET",
+            "/product",
+            error_message="Failed getting products",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_available_units(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+        """Returns Units (and their Organisations) you have access to.
+
+        :param timeout_s: The underlying request timeout
+        """
+
+        return AsApi.__request(
+            "GET",
+            "/unit",
+            error_message="Failed getting units",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_available_assets(
+        cls, *, scope_id: Optional[str] = None, timeout_s: int = _READ_TIMEOUT_S
+    ) -> AsApiRv:
+        """Returns Assets you have access to. If you provide a scope ID
+        (a username or a product, unit or org UUID) only assets available in that
+        scope will be returned.
+
+        :param scope_id: Optional scope identity (User or Product, Unit or Org UUID)
+        :param timeout_s: The underlying request timeout
+        """
+
+        # Has the user provided a scope ID for the Asset search?
+        params: Dict[str, str] = {}
+        if scope_id:
+            scope: Optional[str] = None
+            if _RE_UUID.match(scope_id):
+                if scope_id.startswith("product-"):
+                    scope = "product_id"
+                elif scope_id.startswith("unit-"):
+                    scope = "unit_id"
+                elif scope_id.startswith("org-"):
+                    scope = "org_id"
+            else:
+                scope = "user_id"
+            assert scope
+            params[scope] = scope_id
+
+        return AsApi.__request(
+            "GET",
+            "/asset",
+            params=params,
+            error_message="Failed getting assets",
             timeout=timeout_s,
         )[0]
