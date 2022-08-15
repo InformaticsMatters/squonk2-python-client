@@ -38,6 +38,7 @@ _DM_JOB_APPLICATION_ID: str = "datamanagerjobs.squonk.it"
 # The Data Manager API URL environment variable,
 # You can set the API manually with set_apu_url() if this is not defined.
 _API_URL_ENV_NAME: str = "SQUONK2_DMAPI_URL"
+_API_VERIFY_SSL_CERT_ENV_NAME: str = "SQUONK2_DMAPI_VERIFY_SSL_CERT"
 
 # How old do tokens need to be to re-use them?
 # If less than the value provided here, we get a new one.
@@ -71,7 +72,9 @@ class DmApi:
     __dm_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
     # Do we expect the DM API to be secure?
     # Normally yes, but this can be disabled using 'set_api_url()'
-    __verify_ssl_cert: bool = True
+    __verify_ssl_cert: bool = (
+        os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
+    )
 
     @classmethod
     def __request(

@@ -7,7 +7,11 @@ A module providing simplified assess to the Squonk2 Account Server API.
 The API URL
 ***********
 The URL to the Account Server API is taken from the environment variable
-``SQUONK2_ASAPI_URL`` if it exists. If you haven't set this variable you need
+``SQUONK2_ASAPI_URL`` if it exists. If you do not want to verify the
+SSL certificate you can also set ``SQUONK2_ASAPI_VERIFY_SSL_CERT`` to
+anything other than ``"yes"``, its default value.
+
+If you haven't set the API URL variables you need
 to set the Account Server API URL before you can use any API method.
 
 .. code-block:: python

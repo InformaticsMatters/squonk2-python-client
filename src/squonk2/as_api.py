@@ -29,6 +29,7 @@ AsApiRv: namedtuple = namedtuple("AsApiRv", "success msg")
 # The Account Server API URL environment variable,
 # You can set the API manually with set_apu_url() if this is not defined.
 _API_URL_ENV_NAME: str = "SQUONK2_ASAPI_URL"
+_API_VERIFY_SSL_CERT_ENV_NAME: str = "SQUONK2_ASAPI_VERIFY_SSL_CERT"
 
 # How old do tokens need to be to re-use them?
 # If less than the value provided here, we get a new one.
@@ -68,7 +69,9 @@ class AsApi:
     __as_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
     # Do we expect the AS API to be secure?
     # Normally yes, but this can be disabled using 'set_api_url()'
-    __verify_ssl_cert: bool = True
+    __verify_ssl_cert: bool = (
+        os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
+    )
 
     @classmethod
     def __request(
