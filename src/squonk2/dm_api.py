@@ -951,7 +951,7 @@ class DmApi:
         :param access_token: A valid DM API access token
         :param exclude_done: Set if you want to omit tasks that are 'done'
         :param exclude_purpose: A comma-separated list of purposes to exclude.
-                          Any of INSTANCE, FILE, DATASET
+                          Any supported, e.g. DATASET, FILE, INSTANCE, PROJECT
         :param project_id: An optional project ID to limit tasks to
         :param timeout_s: The underlying request timeout
         """
