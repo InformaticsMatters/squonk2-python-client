@@ -41,6 +41,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_available_datasets()``
 - ``DmApi.get_available_jobs()``
 - ``DmApi.get_available_projects()``
+- ``DmApi.get_available_tasks()``
 - ``DmApi.get_job()``
 - ``DmApi.get_job_exchange_rates()``
 - ``DmApi.get_job_by_version()``

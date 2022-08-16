@@ -937,6 +937,44 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def get_available_tasks(
+        cls,
+        access_token: str,
+        *,
+        exclude_done: bool = False,
+        exclude_purpose: Optional[str] = None,
+        project_id: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets information about all tasks available to you.
+
+        :param access_token: A valid DM API access token
+        :param exclude_done: Set if you want to omit tasks that are 'done'
+        :param exclude_purpose: A comma-separated list of purposes to exclude.
+                          Any of INSTANCE, FILE, DATASET
+        :param project_id: An optional project ID to limit tasks to
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if exclude_done:
+            params["exclude_done"] = True
+        if exclude_purpose:
+            params["exclude_purpose"] = exclude_purpose
+        if project_id:
+            params["project_id"] = project_id
+        return DmApi.__request(
+            "GET",
+            "/task",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get tasks",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def delete_instance(
         cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
