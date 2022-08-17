@@ -8,6 +8,7 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
     using :py:meth:`AsApi.set_api_url()`.
 """
 from collections import namedtuple
+from datetime import date
 import logging
 import os
 import time
@@ -324,5 +325,71 @@ class AsApi:
             "/merchant",
             access_token=access_token,
             error_message="Failed getting merchants",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_product(
+        cls,
+        access_token: str,
+        *,
+        product_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns details for a given Product.
+
+        :param access_token: A valid AS API access token
+        :product_id: The UUID of the Product
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert product_id
+
+        return AsApi.__request(
+            "GET",
+            f"/product/{product_id}",
+            access_token=access_token,
+            error_message="Failed getting product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_product_charges(
+        cls,
+        access_token: str,
+        *,
+        product_id: str,
+        from_: Optional[date] = None,
+        until: Optional[date] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns charges for a given Product. If from and until are omitted
+        charges for the current billing period are returned.
+
+        You will need admin rights on the Account Server to use this method.
+
+        :param access_token: A valid AS API access token
+        :product_id: The UUID of the Product
+        :from_: An option date where charges are to start (inclusive)
+        :until: An option date where charges are to end (exclusive)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert product_id
+
+        params: Dict[str, Any] = {}
+        if from_:
+            params["from"] = str(from_)
+        if until:
+            params["until"] = str(until)
+
+        return AsApi.__request(
+            "GET",
+            f"/product/{product_id}/charges",
+            access_token=access_token,
+            params=params,
+            error_message="Failed getting product",
             timeout=timeout_s,
         )[0]
