@@ -37,9 +37,12 @@ else:
     print("No job_input provided")
     sys.exit(1)
 
+# The DmApi object...
+dm_api: DmApi = DmApi()
+
 # The 'ping()' is a handy, simple, API method
 # to check the Data Manager is responding.
-rv: DmApiRv = DmApi.ping(token)
+rv: DmApiRv = dm_api.ping(token)
 if rv.success:
     print("API OK")
 else:
@@ -50,7 +53,7 @@ else:
 # The project is identified by the project_id.
 # We simply name the file (or files) and the project-relative
 # destination path.
-rv = DmApi.put_unmanaged_project_files(
+rv = dm_api.put_unmanaged_project_files(
     token, project_id=project_id, project_files=job_input, project_path="/work"
 )
 if rv.success:
@@ -72,7 +75,7 @@ spec = {
         "inputFile": "work/100.smi",
     },
 }
-rv = DmApi.start_job_instance(
+rv = dm_api.start_job_instance(
     token, project_id=project_id, name="My Job", specification=spec
 )
 # If successful the DM returns an instance ID
@@ -93,7 +96,7 @@ while True:
     if ITERATIONS > 10:
         print("TIMEOUT")
         sys.exit(1)
-    rv = DmApi.get_task(token, task_id=task_id)
+    rv = dm_api.get_task(token, task_id=task_id)
     if rv.msg["done"]:
         break
     print("waiting ...")
@@ -103,7 +106,7 @@ print("DONE")
 
 # Here we get Files from the project.
 # These might be files the Job's created.
-rv = DmApi.get_unmanaged_project_file(
+rv = dm_api.get_unmanaged_project_file(
     token,
     project_id=project_id,
     project_file="foo.smi",
@@ -118,7 +121,7 @@ else:
 
 # Now, as the Job remains in the DM until deleted
 # we tidy up by removing the Job using the instance ID we were given.
-rv = DmApi.delete_instance(token, instance_id=instance_id)
+rv = dm_api.delete_instance(token, instance_id=instance_id)
 if rv.success:
     print("CLEANUP OK")
 else:

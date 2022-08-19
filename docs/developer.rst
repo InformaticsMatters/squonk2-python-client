@@ -13,7 +13,7 @@ You can build and install the package locally with the following::
 
 And uninstall with::
 
-    pip uninstall im-squonk2-client
+    pip uninstall im-squonk2-client~=2.0
 
 .. note::
     If you've set ``PYTHONPATH`` (see testing below) you will need to unset it

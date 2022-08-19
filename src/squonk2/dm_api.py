@@ -67,18 +67,20 @@ class DmApi:
     namedtuple response value ``DmApiRv``
     """
 
-    # The default DM API is extracted from the environment,
-    # otherwise it can be set using 'set_api_url()'
-    __dm_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
-    # Do we expect the DM API to be secure?
-    # Normally yes, but this can be disabled using 'set_api_url()'
-    __verify_ssl_cert: bool = (
-        os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
-    )
+    def __init__(self):
+        """Constructor"""
 
-    @classmethod
+        # The default DM API is extracted from the environment,
+        # otherwise it can be set using 'set_api_url()'
+        self.__dm_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
+        # Do we expect the DM API to be secure?
+        # Normally yes, but this can be disabled using 'set_api_url()'
+        self.__verify_ssl_cert: bool = (
+            os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
+        )
+
     def __request(
-        cls,
+        self,
         method: str,
         endpoint: str,
         *,
@@ -103,10 +105,10 @@ class DmApi:
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
-        if not DmApi.__dm_api_url:
+        if not self.__dm_api_url:
             return DmApiRv(success=False, msg={"error": "No API URL defined"}), None
 
-        url: str = DmApi.__dm_api_url + endpoint
+        url: str = self.__dm_api_url + endpoint
 
         # if we have it, add the access token to the headers,
         # or create a headers block
@@ -125,7 +127,7 @@ class DmApi:
             print(f"# params={params}")
             print(f"# data={data}")
             print(f"# timeout={timeout}")
-            print(f"# verify={DmApi.__verify_ssl_cert}")
+            print(f"# verify={self.__verify_ssl_cert}")
 
         expected_codes = expected_response_codes if expected_response_codes else [200]
         resp: Optional[requests.Response] = None
@@ -143,7 +145,7 @@ class DmApi:
                 data=data,
                 files=files,
                 timeout=timeout,
-                verify=DmApi.__verify_ssl_cert,
+                verify=self.__verify_ssl_cert,
             )
         except:
             _LOGGER.exception("Request failed")
@@ -176,9 +178,8 @@ class DmApi:
 
         return DmApiRv(success=True, msg=msg), resp
 
-    @classmethod
     def __get_latest_job_operator_version(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> Optional[str]:
         """Gets Job application data from the DM API.
         We'll get and return the latest version found so that we can launch
@@ -187,7 +188,7 @@ class DmApi:
         """
         assert access_token
 
-        ret_val, resp = DmApi.__request(
+        ret_val, resp = self.__request(
             "GET",
             f"/application/{_DM_JOB_APPLICATION_ID}",
             access_token=access_token,
@@ -206,9 +207,8 @@ class DmApi:
         _LOGGER.warning("No versions returned for Job application info - no operator?")
         return ""
 
-    @classmethod
     def __put_unmanaged_project_file(
-        cls,
+        self,
         access_token: str,
         *,
         project_id: str,
@@ -224,7 +224,7 @@ class DmApi:
             "file": open(project_file, "rb")  # pylint: disable=consider-using-with
         }
 
-        ret_val, resp = DmApi.__request(
+        ret_val, resp = self.__request(
             "PUT",
             f"/project/{project_id}/file",
             access_token=access_token,
@@ -245,9 +245,8 @@ class DmApi:
             )
         return ret_val
 
-    @classmethod
     def __set_job_exchange_rate(
-        cls,
+        self,
         access_token: str,
         *,
         rate: Dict[str, str],
@@ -270,7 +269,7 @@ class DmApi:
         collection: str = rate["collection"]
         job: str = rate["job"]
         version: str = rate["version"]
-        ret_val, resp = DmApi.__request(
+        ret_val, resp = self.__request(
             "GET",
             "/job/get-by-version",
             access_token=access_token,
@@ -292,7 +291,7 @@ class DmApi:
         data: Dict[str, str] = {"rate": rate["rate"]}
         if "comment" in rate:
             data["comment"] = rate["comment"]
-        ret_val, resp = DmApi.__request(
+        ret_val, resp = self.__request(
             "PUT",
             f"/job/{job_id}/exchange_rate",
             access_token=access_token,
@@ -311,9 +310,8 @@ class DmApi:
             )
         return ret_val
 
-    @classmethod
     @synchronized
-    def set_api_url(cls, url: str, *, verify_ssl_cert: bool = True) -> None:
+    def set_api_url(self, url: str, *, verify_ssl_cert: bool = True) -> None:
         """Replaces the API URL value, which is otherwise set using
         the ``SQUONK2_DMAPI_URL`` environment variable.
 
@@ -321,22 +319,20 @@ class DmApi:
         :param verify_ssl_cert: Use False to avoid SSL verification in request calls
         """
         assert url
-        DmApi.__dm_api_url = url
-        DmApi.__verify_ssl_cert = verify_ssl_cert
+        self.__dm_api_url = url
+        self.__verify_ssl_cert = verify_ssl_cert
 
         # Disable the 'InsecureRequestWarning'?
         if not verify_ssl_cert:
             disable_warnings(InsecureRequestWarning)
 
-    @classmethod
     @synchronized
-    def get_api_url(cls) -> Tuple[str, bool]:
+    def get_api_url(self) -> Tuple[str, bool]:
         """Return the API URL and whether validating the SSL layer."""
-        return DmApi.__dm_api_url, DmApi.__verify_ssl_cert
+        return self.__dm_api_url, self.__verify_ssl_cert
 
-    @classmethod
     @synchronized
-    def ping(cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S) -> DmApiRv:
+    def ping(self, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S) -> DmApiRv:
         """A handy API method that calls the DM API to ensure the server is
         responding.
 
@@ -345,7 +341,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/account-server/namespace",
             access_token=access_token,
@@ -353,10 +349,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_version(
-        cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Returns the DM-API service version.
 
@@ -364,7 +359,7 @@ class DmApi:
         :param timeout_s: The underlying request timeout
         """
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/version",
             access_token=access_token,
@@ -372,10 +367,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def create_project(
-        cls,
+        self,
         access_token: str,
         *,
         project_name: str,
@@ -403,7 +397,7 @@ class DmApi:
             "tier_product_id": as_tier_product_id,
             "name": project_name,
         }
-        return DmApi.__request(
+        return self.__request(
             "POST",
             "/project",
             access_token=access_token,
@@ -413,10 +407,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def delete_project(
-        cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Deletes a project.
 
@@ -427,7 +420,7 @@ class DmApi:
         assert access_token
         assert project_id
 
-        return DmApi.__request(
+        return self.__request(
             "DELETE",
             f"/project/{project_id}",
             access_token=access_token,
@@ -435,10 +428,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def put_unmanaged_project_files(
-        cls,
+        self,
         access_token: str,
         *,
         project_id: str,
@@ -475,7 +467,7 @@ class DmApi:
             and project_path.startswith("/")
         )
 
-        if not DmApi.__dm_api_url:
+        if not self.__dm_api_url:
             return DmApiRv(success=False, msg={"error": "No API URL defined"})
 
         # If we're not forcing the files collect the names
@@ -491,7 +483,7 @@ class DmApi:
             if project_path:
                 params["path"] = project_path
 
-            ret_val, resp = DmApi.__request(
+            ret_val, resp = self.__request(
                 "GET",
                 "/file",
                 access_token=access_token,
@@ -520,7 +512,7 @@ class DmApi:
                     success=False, msg={"error": f"No such file ({src_file})"}
                 )
             if os.path.basename(src_file) not in existing_path_files:
-                ret_val = DmApi.__put_unmanaged_project_file(
+                ret_val = self.__put_unmanaged_project_file(
                     access_token,
                     project_id=project_id,
                     project_file=src_file,
@@ -534,10 +526,9 @@ class DmApi:
         # OK if we get here
         return DmApiRv(success=True, msg={})
 
-    @classmethod
     @synchronized
     def delete_unmanaged_project_files(
-        cls,
+        self,
         access_token: str,
         *,
         project_id: str,
@@ -577,7 +568,7 @@ class DmApi:
                 "path": project_path,
                 "file": file_to_delete,
             }
-            ret_val, _ = DmApi.__request(
+            ret_val, _ = self.__request(
                 "DELETE",
                 "/file",
                 access_token=access_token,
@@ -592,10 +583,9 @@ class DmApi:
         # OK if we get here
         return DmApiRv(success=True, msg={})
 
-    @classmethod
     @synchronized
     def list_project_files(
-        cls,
+        self,
         access_token: str,
         *,
         project_id: str,
@@ -625,7 +615,7 @@ class DmApi:
             "path": project_path,
             "include_hidden": include_hidden,
         }
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/file",
             access_token=access_token,
@@ -634,10 +624,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_unmanaged_project_file(
-        cls,
+        self,
         access_token: str,
         *,
         project_id: str,
@@ -668,7 +657,7 @@ class DmApi:
         )
 
         params: Dict[str, Any] = {"path": project_path, "file": project_file}
-        ret_val, resp = DmApi.__request(
+        ret_val, resp = self.__request(
             "GET",
             f"/project/{project_id}/file",
             access_token=access_token,
@@ -685,10 +674,9 @@ class DmApi:
             file_handle.write(resp.content)
         return ret_val
 
-    @classmethod
     @synchronized
     def get_unmanaged_project_file_with_token(
-        cls,
+        self,
         *,
         token: str,
         project_id: str,
@@ -697,7 +685,7 @@ class DmApi:
         project_path: str = "/",
         timeout_s: int = _READ_LONG_TIMEOUT_S,
     ) -> DmApiRv:
-        """Like :py:meth:`~DmApi.get_unmanaged_project_file()`, this method
+        """Like :py:meth:`~self.get_unmanaged_project_file()`, this method
         gets a single unmanaged file from a project path. The method uses an
         Instance-generated callback token rather than a user-access token.
 
@@ -730,7 +718,7 @@ class DmApi:
             "file": project_file,
             "token": token,
         }
-        ret_val, resp = DmApi.__request(
+        ret_val, resp = self.__request(
             "GET",
             f"/project/{project_id}/file-with-token",
             params=params,
@@ -746,10 +734,9 @@ class DmApi:
             file_handle.write(resp.content)
         return ret_val
 
-    @classmethod
     @synchronized
     def start_job_instance(
-        cls,
+        self,
         access_token: str,
         *,
         project_id: str,
@@ -789,9 +776,9 @@ class DmApi:
 
         # Get the latest Job operator version.
         # If there isn't one the DM can't run Jobs.
-        job_application_version: Optional[
-            str
-        ] = DmApi.__get_latest_job_operator_version(access_token)
+        job_application_version: Optional[str] = self.__get_latest_job_operator_version(
+            access_token
+        )
         if job_application_version is None:
             # Failed calling the server.
             # Incorrect URL, bad token or server out of action?
@@ -817,7 +804,7 @@ class DmApi:
             if generate_callback_token:
                 data["generate_callback_token"] = True
 
-        return DmApi.__request(
+        return self.__request(
             "POST",
             "/instance",
             access_token=access_token,
@@ -827,10 +814,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_available_projects(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about all projects available to you.
 
@@ -839,7 +825,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/project",
             access_token=access_token,
@@ -847,10 +833,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_project(
-        cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets detailed information about a specific project.
 
@@ -861,7 +846,7 @@ class DmApi:
         assert access_token
         assert project_id
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             f"/project/{project_id}",
             access_token=access_token,
@@ -869,10 +854,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_instance(
-        cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about an instance (Application or Job).
 
@@ -883,7 +867,7 @@ class DmApi:
         assert access_token
         assert instance_id
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             f"/instance/{instance_id}",
             access_token=access_token,
@@ -891,10 +875,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_project_instances(
-        cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about all instances available to you.
 
@@ -906,7 +889,7 @@ class DmApi:
         assert project_id
 
         params: Dict[str, Any] = {"project_id": project_id}
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/instance",
             access_token=access_token,
@@ -915,10 +898,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_available_instances(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets information about all instances available to you.
 
@@ -927,7 +909,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/instance",
             access_token=access_token,
@@ -935,10 +917,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_available_tasks(
-        cls,
+        self,
         access_token: str,
         *,
         exclude_done: bool = False,
@@ -964,7 +945,7 @@ class DmApi:
             params["exclude_purpose"] = exclude_purpose
         if project_id:
             params["project_id"] = project_id
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/task",
             access_token=access_token,
@@ -973,10 +954,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def delete_instance(
-        cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Deletes an Instance (Application or Job).
 
@@ -992,7 +972,7 @@ class DmApi:
         assert access_token
         assert instance_id
 
-        return DmApi.__request(
+        return self.__request(
             "DELETE",
             f"/instance/{instance_id}",
             access_token=access_token,
@@ -1000,14 +980,13 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def delete_instance_token(
-        cls, *, instance_id: str, token: str, timeout_s: int = _READ_TIMEOUT_S
+        self, *, instance_id: str, token: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Deletes a DM API Instance **callback token**. This API method is not
         authenticated and therefore does not need an access token. Once the token is
-        deleted no further calls to :py:meth:`DmApi.get_unmanaged_project_file_with_token()`
+        deleted no further calls to :py:meth:`self.get_unmanaged_project_file_with_token()`
         will be possible. Once deleted the token cannot be re-instantiated.
 
         :param instance_id: A valid DM API instance
@@ -1017,17 +996,16 @@ class DmApi:
         assert instance_id
         assert token
 
-        return DmApi.__request(
+        return self.__request(
             "DELETE",
             f"/instance/{instance_id}/token/{token}",
             error_message="Failed to delete instance token",
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_task(
-        cls,
+        self,
         access_token: str,
         *,
         task_id: str,
@@ -1054,7 +1032,7 @@ class DmApi:
             params["event_prior_ordinal"] = event_prior_ordinal
         if event_limit:
             params["event_limit"] = event_limit
-        return DmApi.__request(
+        return self.__request(
             "GET",
             f"/task/{task_id}",
             access_token=access_token,
@@ -1063,10 +1041,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_available_jobs(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets a summary list of available Jobs.
 
@@ -1075,7 +1052,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/job",
             access_token=access_token,
@@ -1083,10 +1060,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_job(
-        cls, access_token: str, *, job_id: int, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, job_id: int, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
         """Gets detailed information about a specific Job
         using the numeric Job record identity
@@ -1098,7 +1074,7 @@ class DmApi:
         assert access_token
         assert job_id > 0
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             f"/job/{job_id}",
             access_token=access_token,
@@ -1106,10 +1082,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_job_by_version(
-        cls,
+        self,
         access_token: str,
         *,
         job_collection: str,
@@ -1136,7 +1111,7 @@ class DmApi:
             "job": job_job,
             "version": job_version,
         }
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/job/get-by-version",
             access_token=access_token,
@@ -1145,10 +1120,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def set_admin_state(
-        cls,
+        self,
         access_token: str,
         *,
         admin: bool,
@@ -1170,7 +1144,7 @@ class DmApi:
         if impersonate:
             data["impersonate"] = impersonate
 
-        return DmApi.__request(
+        return self.__request(
             "PATCH",
             "/user/account",
             access_token=access_token,
@@ -1180,10 +1154,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_service_errors(
-        cls,
+        self,
         access_token: str,
         *,
         include_acknowleged: bool = False,
@@ -1201,7 +1174,7 @@ class DmApi:
         if include_acknowleged:
             params["include_acknowleged"] = True
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/admin/service-error",
             access_token=access_token,
@@ -1210,10 +1183,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_job_exchange_rates(
-        cls,
+        self,
         access_token: str,
         *,
         only_undefined: bool = False,
@@ -1231,7 +1203,7 @@ class DmApi:
         if only_undefined:
             params["only_undefined"] = True
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/job/exchange-rate",
             access_token=access_token,
@@ -1240,10 +1212,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def set_job_exchange_rates(
-        cls,
+        self,
         access_token: str,
         *,
         rates: Union[Dict[str, str], List[Dict[str, str]]],
@@ -1269,7 +1240,7 @@ class DmApi:
             put_rates = rates
 
         for put_rate in put_rates:
-            ret_val = DmApi.__set_job_exchange_rate(
+            ret_val = self.__set_job_exchange_rate(
                 access_token,
                 rate=put_rate,
                 timeout_s=timeout_s,
@@ -1280,10 +1251,9 @@ class DmApi:
         # OK if we get here
         return DmApiRv(success=True, msg={})
 
-    @classmethod
     @synchronized
     def get_available_datasets(
-        cls,
+        self,
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
@@ -1295,7 +1265,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/dataset",
             access_token=access_token,
@@ -1303,10 +1273,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_account_server_registration(
-        cls,
+        self,
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
@@ -1318,7 +1287,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/account-server/registration",
             access_token=access_token,
@@ -1326,10 +1295,9 @@ class DmApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_account_server_namespace(
-        cls,
+        self,
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
@@ -1341,7 +1309,7 @@ class DmApi:
         """
         assert access_token
 
-        return DmApi.__request(
+        return self.__request(
             "GET",
             "/account-server/namespace",
             access_token=access_token,

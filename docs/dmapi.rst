@@ -16,15 +16,16 @@ to set the Data Manager API URL before you can use any API method.
 
 .. code-block:: python
 
+    dm_api: DmApi = DmApi()
     url = 'https://example.com/data-manager-api'
-    DmApi.set_api_url(url)
+    dm_api.set_api_url(url)
 
 If the Data Manager API is not secure (e.g. you're developing locally)
 you can disable the automatic SSL authentication when you set the URL.
 
 .. code-block:: python
 
-    DmApi.set_api_url(url, verify_ssl_cert=False)
+    dm_api.set_api_url(url, verify_ssl_cert=False)
 
 *******
 The API

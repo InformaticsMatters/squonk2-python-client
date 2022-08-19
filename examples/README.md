@@ -14,7 +14,7 @@ you're actually developing new Squonk2 client code): -
 
 or, install the Squonk2 client from PyPI (**preferred**): -
 
-    pip install squonk2-client
+    pip install squonk2-client~=2.0
 
 Check it all works by running one of the examples: -
 
