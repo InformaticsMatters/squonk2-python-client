@@ -231,7 +231,7 @@ class DmApi:
             data=data,
             files=files,
             expected_response_codes=[201],
-            error_message=f"Failed putting file {project_path}/{project_file}",
+            error_message=f"Failed putting file {project_file} -> {project_path}",
             timeout=timeout_s,
         )
 
@@ -474,9 +474,7 @@ class DmApi:
         # of every file on the path - we use this to skip files that
         # are already present.
         existing_path_files: List[str] = []
-        if force:
-            _LOGGER.warning("Putting files (force=true project_id=%s)", project_id)
-        else:
+        if not force:
             # What files already exist on the path?
             # To save time we avoid putting files that appear to exist.
             params: Dict[str, Any] = {"project_id": project_id}
