@@ -270,10 +270,16 @@ class DmApi:
         collection: str = rate["collection"]
         job: str = rate["job"]
         version: str = rate["version"]
+        params: Dict[str, str] = {
+            "collection": collection,
+            "job": job,
+            "version": version,
+        }
         ret_val, resp = DmApi.__request(
             "GET",
             "/job/get-by-version",
             access_token=access_token,
+            params=params,
             expected_response_codes=[200],
             error_message=f"Failed getting job by version {collection}/{job}/{version}",
             timeout=timeout_s,
