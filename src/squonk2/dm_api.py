@@ -300,7 +300,7 @@ class DmApi:
             data["comment"] = rate["comment"]
         ret_val, resp = DmApi.__request(
             "PUT",
-            f"/job/{job_id}/exchange_rate",
+            f"/job/{job_id}/exchange-rate",
             access_token=access_token,
             data=data,
             expected_response_codes=[204],

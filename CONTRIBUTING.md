@@ -25,6 +25,7 @@ current health of your clone with: -
 You can build and install the package locally using the same process used
 by the GitHib Actions: -
 
+    pip install build
     rm -rf /dist/*
     python -m build --sdist --wheel --outdir dist/
     pip install dist/im-squonk2-client-*.tar.gz
