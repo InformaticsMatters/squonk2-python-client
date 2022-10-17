@@ -31,12 +31,12 @@ Check it all works by running one of the examples: -
 
 ## Examples
 
-### GetToken.py
+### get_token.py
 Illustrates how to get an access token from Keycloak
 (see the project `README.rst` on requiring a Keycloak password).
 That token can then be passed or used in the other examples.
 
-### CalcRDkitProps.py
+### calc_rdkit_props.py
 Illustrates how to: -
 
 - upload a file
@@ -44,3 +44,10 @@ Illustrates how to: -
 - wait for the job to complete
 - download the results and, finally...
 - cleanup (delete) the job instance
+
+### units_products_and_projects.py
+Illustrates how to: -
+
+- create an Account Server (AS) organisational unit
+- create AS storage and data-tier products
+- create a project using an AS project

@@ -47,7 +47,9 @@ _READ_LONG_TIMEOUT_S: int = 12
 _DEBUG_REQUEST_TIME: bool = False
 # Debug request calls?
 # If set the arguments and response of each request call is logged.
-_DEBUG_REQUEST: bool = False
+_DEBUG_REQUEST: bool = (
+    os.environ.get("SQUONK2_API_DEBUG_REQUESTS", "no").lower() == "yes"
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -136,7 +138,7 @@ class AsApi:
                 url,
                 headers=use_headers,
                 params=params,
-                data=data,
+                json=data,
                 files=files,
                 timeout=timeout,
                 verify=AsApi.__verify_ssl_cert,
@@ -155,7 +157,10 @@ class AsApi:
 
         if _DEBUG_REQUEST:
             if resp is not None:
-                print(f"# request() status_code={resp.status_code} msg={msg}")
+                print(
+                    f"# request() status_code={resp.status_code} msg={msg}"
+                    f" resp.text={resp.text}"
+                )
             else:
                 print("# request() resp=None")
 
@@ -545,5 +550,63 @@ class AsApi:
             data=data,
             expected_response_codes=[201],
             error_message="Failed to create product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_product(
+        cls,
+        access_token: str,
+        *,
+        product_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Deletes a Product in a Unit.
+
+        You will need to be a member of the Organisation or Unit to use this method.
+
+        :param access_token: A valid AS API access token
+        :param product_id: The Unit UUID for the Product
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert product_id
+
+        return AsApi.__request(
+            "DELETE",
+            f"/product/{product_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_unit(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Deletes a Product in a Unit.
+
+        You will need to be a member of the Organisation or Unit to use this method.
+
+        :param access_token: A valid AS API access token
+        :param unit_id: The Unit UUID for the Product
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert unit_id
+
+        return AsApi.__request(
+            "DELETE",
+            f"/unit/{unit_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete product",
             timeout=timeout_s,
         )[0]

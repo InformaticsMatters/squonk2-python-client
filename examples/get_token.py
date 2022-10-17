@@ -24,7 +24,8 @@ parser.add_argument(
 parser.add_argument(
     "--keycloak-client-id",
     "-i",
-    help='The Keycloak client ID, i.e. "data-manager-api-dev"',
+    help='The Keycloak client ID, i.e. "data-manager-api-dev"'
+    ' or "account-server-api-dev"',
     required=True,
 )
 args = parser.parse_args()
