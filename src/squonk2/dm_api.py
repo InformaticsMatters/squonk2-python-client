@@ -269,10 +269,16 @@ class DmApi:
         collection: str = rate["collection"]
         job: str = rate["job"]
         version: str = rate["version"]
+        params: Dict[str, str] = {
+            "collection": collection,
+            "job": job,
+            "version": version,
+        }
         ret_val, resp = self.__request(
             "GET",
             "/job/get-by-version",
             access_token=access_token,
+            params=params,
             expected_response_codes=[200],
             error_message=f"Failed getting job by version {collection}/{job}/{version}",
             timeout=timeout_s,
@@ -293,7 +299,7 @@ class DmApi:
             data["comment"] = rate["comment"]
         ret_val, resp = self.__request(
             "PUT",
-            f"/job/{job_id}/exchange_rate",
+            f"/job/{job_id}/exchange-rate",
             access_token=access_token,
             data=data,
             expected_response_codes=[204],
@@ -1059,23 +1065,67 @@ class DmApi:
         )[0]
 
     @synchronized
+    def get_jobs(
+        self,
+        access_token: str,
+        *,
+        project_id: str = "",
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets summary information about all Jobs.
+
+        :param access_token: A valid DM API access token.
+        :param project_id: An optional Project the Job is to be run in, e.g. ``project-0000``
+        :param timeout_s: The API request timeout
+        """
+        assert access_token
+
+        params: Optional[Dict[str, Any]] = None
+        if project_id:
+            params = {
+                "project_id": project_id,
+            }
+
+        return self.__request(
+            "GET",
+            "/job",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get jobs",
+            timeout=timeout_s,
+        )[0]
+
+    @synchronized
     def get_job(
-        self, access_token: str, *, job_id: int, timeout_s: int = _READ_TIMEOUT_S
+        self,
+        access_token: str,
+        *,
+        job_id: int,
+        project_id: str = "",
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets detailed information about a specific Job
-        using the numeric Job record identity
+        using the numeric Job record identity.
 
         :param access_token: A valid DM API access token.
         :param job_id: The numeric Job identity
+        :param project_id: An optional Project the Job is to be run in, e.g. ``project-0000``
         :param timeout_s: The API request timeout
         """
         assert access_token
         assert job_id > 0
 
+        params: Optional[Dict[str, Any]] = None
+        if project_id:
+            params = {
+                "project_id": project_id,
+            }
+
         return self.__request(
             "GET",
             f"/job/{job_id}",
             access_token=access_token,
+            params=params,
             error_message="Failed to get job",
             timeout=timeout_s,
         )[0]
@@ -1088,15 +1138,18 @@ class DmApi:
         job_collection: str,
         job_job: str,
         job_version: str,
+        project_id: str = "",
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets detailed information about a specific Job
-        using its ``collection``, ``job`` and ``version``
+        using its ``collection``, ``job`` and ``version``, using an optional
+        target ``project_id``.
 
         :param access_token: A valid DM API access token.
         :param job_collection: The Job collection, e.g. ``im-test``
         :param job_job: The Job, e.g. ``nop``
         :param job_version: The Job version, e.g. ``1.0.0``
+        :param project_id: An optional Project the Job is to be run in, e.g. ``project-0000``
         :param timeout_s: The API request timeout
         """
         assert access_token
@@ -1109,6 +1162,9 @@ class DmApi:
             "job": job_job,
             "version": job_version,
         }
+        if project_id:
+            params["project_id"] = project_id
+
         return self.__request(
             "GET",
             "/job/get-by-version",
