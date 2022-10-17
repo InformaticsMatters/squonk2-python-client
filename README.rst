@@ -76,13 +76,19 @@ The following Squonk2 Account Server API functions are available: -
 
 - ``AsApi.ping()``
 
-- ``AsApi.get_version()``
+- ``AsApi.create_product()``
+- ``AsApi.create_unit()``
+- ``AsApi.delete_product()``
+- ``AsApi.delete_unit()``
 - ``AsApi.get_available_assets()``
 - ``AsApi.get_available_units()``
 - ``AsApi.get_available_products()``
+- ``AsApi.get_merchants()``
 - ``AsApi.get_product()``
 - ``AsApi.get_product_charges()``
-- ``AsApi.get_merchants()``
+- ``AsApi.get_unit()``
+- ``AsApi.get_units()``
+- ``AsApi.get_version()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
 
@@ -91,6 +97,16 @@ A ``namedtuple`` is used as the return value for many of the methods: -
 It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
 (rendered as a Python dictionary), or an error message if the call failed.
+
+Debugging the API requests
+==========================
+For development purposes you can expose detailed debug information relating to
+the underlying API requests by setting the environment variable
+``SQUONK2_API_DEBUG_REQUESTS``::
+
+    export SQUONK2_API_DEBUG_REQUESTS=yes
+
+This will enable detailed debug of both the DM and AS API calls.
 
 Installation
 ============

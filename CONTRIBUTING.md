@@ -32,7 +32,7 @@ by the GitHib Actions: -
 
 And then uninstall using pip: -
 
-    pip uninstall im-squonk2-client
+    pip uninstall -y im-squonk2-client
 
 ---
 
