@@ -405,7 +405,7 @@ class AsApi:
         cls,
         access_token: str,
         *,
-        name: str,
+        unit_name: str,
         org_id: str,
         billing_day: int,
         timeout_s: int = _READ_TIMEOUT_S,
@@ -417,19 +417,19 @@ class AsApi:
         You will need to be a member of the Organisation to use this method.
 
         :param access_token: A valid AS API access token
-        :param name: The name to give the Unit
+        :param unit_name: The name to give the Unit
         :param org_id: The Organisation UUID for the Unit
         :param billing_day: A billing day (1..28)
         :param timeout_s: The underlying request timeout
         """
         assert access_token
-        assert name
+        assert unit_name
         assert org_id
         assert billing_day
 
         data: Dict[str, Any] = {
             "billing_day": billing_day,
-            "name": name,
+            "name": unit_name,
         }
 
         return AsApi.__request(
@@ -504,7 +504,7 @@ class AsApi:
         cls,
         access_token: str,
         *,
-        name: str,
+        product_name: str,
         unit_id: str,
         product_type: str,
         allowance: int = 0,
@@ -517,7 +517,7 @@ class AsApi:
         You will need to be a member of the Organisation or Unit to use this method.
 
         :param access_token: A valid AS API access token
-        :param name: The name to assign to the Product
+        :param product_name: The name to assign to the Product
         :param unit_id: The Unit UUID for the Product
         :param product_type: The product type, e.g. "DATA_MANAGER_PROJECT_TIER_SUBSCRIPTION"
         :param allowance: The coin allowance for the product
@@ -526,7 +526,7 @@ class AsApi:
         :param timeout_s: The underlying request timeout
         """
         assert access_token
-        assert name
+        assert product_name
         assert unit_id
         assert product_type
         assert allowance >= 0
@@ -534,7 +534,7 @@ class AsApi:
 
         data: Dict[str, Any] = {
             "type": product_type,
-            "name": name,
+            "name": product_name,
         }
         if flavour:
             data["flavour"] = flavour
