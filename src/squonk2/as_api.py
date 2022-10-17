@@ -340,7 +340,7 @@ class AsApi:
         """Returns details for a given Product.
 
         :param access_token: A valid AS API access token
-        :product_id: The UUID of the Product
+        :param product_id: The UUID of the Product
         :param timeout_s: The underlying request timeout
         """
         assert access_token
@@ -371,9 +371,9 @@ class AsApi:
         You will need admin rights on the Account Server to use this method.
 
         :param access_token: A valid AS API access token
-        :product_id: The UUID of the Product
-        :from_: An option date where charges are to start (inclusive)
-        :until: An option date where charges are to end (exclusive)
+        :param product_id: The UUID of the Product
+        :param from_: An option date where charges are to start (inclusive)
+        :param until: An option date where charges are to end (exclusive)
         :param timeout_s: The underlying request timeout
         """
         assert access_token
@@ -391,5 +391,159 @@ class AsApi:
             access_token=access_token,
             params=params,
             error_message="Failed getting product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_unit(
+        cls,
+        access_token: str,
+        *,
+        name: str,
+        org_id: str,
+        billing_day: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Creates a Unit for a given an Organisation. You need to provide a name
+        and billing day - a day in the month to bill all the subscription-based
+        products created for the Unit.
+
+        You will need to be a member of the Organisation to use this method.
+
+        :param access_token: A valid AS API access token
+        :param name: The name to give the Unit
+        :param org_id: The Organisation UUID for the Unit
+        :param billing_day: A billing day (1..28)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert name
+        assert org_id
+        assert billing_day
+
+        data: Dict[str, Any] = {
+            "billing_day": billing_day,
+            "name": name,
+        }
+
+        return AsApi.__request(
+            "POST",
+            f"/organisation/{org_id}/unit",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to create unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_unit(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets a Unit.
+
+        You will need to be a member of the Organisation or Unit to use this method.
+
+        :param access_token: A valid AS API access token
+        :param unit_id: The Organisation UUID for the Unit
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert unit_id
+
+        return AsApi.__request(
+            "GET",
+            f"/unit/{unit_id}",
+            access_token=access_token,
+            error_message="Failed to get unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_units(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets Units in an Organisation.
+
+        You will need to be a member of the Organisation to use this method.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The Organisation UUID for the Unit
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_id
+
+        return AsApi.__request(
+            "GET",
+            f"/organisation/{org_id}/unit",
+            access_token=access_token,
+            error_message="Failed to get organisation units",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_product(
+        cls,
+        access_token: str,
+        *,
+        name: str,
+        unit_id: str,
+        product_type: str,
+        allowance: int = 0,
+        limit: int = 0,
+        flavour: str = "",
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Creates a Product in a Unit.
+
+        You will need to be a member of the Organisation or Unit to use this method.
+
+        :param access_token: A valid AS API access token
+        :param name: The name to assign to the Product
+        :param unit_id: The Unit UUID for the Product
+        :param product_type: The product type, e.g. "DATA_MANAGER_PROJECT_TIER_SUBSCRIPTION"
+        :param allowance: The coin allowance for the product
+        :param limit: The coin limit for the product
+        :param flavour: The product flavour (for products that support flavours)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert name
+        assert unit_id
+        assert product_type
+        assert allowance >= 0
+        assert limit >= 0
+
+        data: Dict[str, Any] = {
+            "type": product_type,
+            "name": name,
+        }
+        if flavour:
+            data["flavour"] = flavour
+        if allowance:
+            data["allowance"] = allowance
+        if limit:
+            data["limit"] = limit
+
+        return AsApi.__request(
+            "POST",
+            f"/product/unit/{unit_id}",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to create product",
             timeout=timeout_s,
         )[0]
