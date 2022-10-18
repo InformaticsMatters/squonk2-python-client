@@ -84,6 +84,7 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.get_available_units()``
 - ``AsApi.get_available_products()``
 - ``AsApi.get_merchants()``
+- ``AsApi.get_organisation()``
 - ``AsApi.get_product()``
 - ``AsApi.get_product_charges()``
 - ``AsApi.get_unit()``

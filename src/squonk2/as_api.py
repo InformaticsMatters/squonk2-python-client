@@ -444,6 +444,34 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_organisation(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets an Organisation.
+
+        You will need to be a member of the Organisation to use this method.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The Organisation UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_id
+
+        return AsApi.__request(
+            "GET",
+            f"/organisation/{org_id}",
+            access_token=access_token,
+            error_message="Failed to get organisation",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_unit(
         cls,
         access_token: str,
@@ -456,7 +484,7 @@ class AsApi:
         You will need to be a member of the Organisation or Unit to use this method.
 
         :param access_token: A valid AS API access token
-        :param unit_id: The Organisation UUID for the Unit
+        :param unit_id: The UUID for the Unit
         :param timeout_s: The underlying request timeout
         """
         assert access_token
