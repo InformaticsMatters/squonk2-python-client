@@ -67,18 +67,20 @@ class AsApi:
     namedtuple response value ``AsApiRv``
     """
 
-    # The default AS API is extracted from the environment,
-    # otherwise it can be set using 'set_api_url()'
-    __as_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
-    # Do we expect the AS API to be secure?
-    # Normally yes, but this can be disabled using 'set_api_url()'
-    __verify_ssl_cert: bool = (
-        os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
-    )
+    def __init__(self):
+        """Constructor"""
 
-    @classmethod
+        # The default AS API is extracted from the environment,
+        # otherwise it can be set using 'set_api_url()'
+        self.__as_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
+        # Do we expect the AS API to be secure?
+        # Normally yes, but this can be disabled using 'set_api_url()'
+        self.__verify_ssl_cert: bool = (
+            os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
+        )
+
     def __request(
-        cls,
+        self,
         method: str,
         endpoint: str,
         *,
@@ -101,10 +103,10 @@ class AsApi:
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
-        if not AsApi.__as_api_url:
+        if not self.__as_api_url:
             return AsApiRv(success=False, msg={"error": "No API URL defined"}), None
 
-        url: str = AsApi.__as_api_url + endpoint
+        url: str = self.__as_api_url + endpoint
 
         # if we have it, add the access token to the headers,
         # or create a headers block
@@ -123,7 +125,7 @@ class AsApi:
             print(f"# params={params}")
             print(f"# data={data}")
             print(f"# timeout={timeout}")
-            print(f"# verify={AsApi.__verify_ssl_cert}")
+            print(f"# verify={self.__verify_ssl_cert}")
 
         expected_codes = expected_response_codes if expected_response_codes else [200]
         resp: Optional[requests.Response] = None
@@ -141,7 +143,7 @@ class AsApi:
                 json=data,
                 files=files,
                 timeout=timeout,
-                verify=AsApi.__verify_ssl_cert,
+                verify=self.__verify_ssl_cert,
             )
         except:
             _LOGGER.exception("Request failed")
@@ -177,9 +179,8 @@ class AsApi:
 
         return AsApiRv(success=True, msg=msg), resp
 
-    @classmethod
     @synchronized
-    def set_api_url(cls, url: str, *, verify_ssl_cert: bool = True) -> None:
+    def set_api_url(self, url: str, *, verify_ssl_cert: bool = True) -> None:
         """Replaces the API URL value, which is otherwise set using
         the ``SQUONK2_ASAPI_URL`` environment variable.
 
@@ -187,49 +188,45 @@ class AsApi:
         :param verify_ssl_cert: Use False to avoid SSL verification in request calls
         """
         assert url
-        AsApi.__as_api_url = url
-        AsApi.__verify_ssl_cert = verify_ssl_cert
+        self.__as_api_url = url
+        self.__verify_ssl_cert = verify_ssl_cert
 
         # Disable the 'InsecureRequestWarning'?
         if not verify_ssl_cert:
             disable_warnings(InsecureRequestWarning)
 
-    @classmethod
     @synchronized
-    def get_api_url(cls) -> Tuple[str, bool]:
+    def get_api_url(self) -> Tuple[str, bool]:
         """Return the API URL and whether validating the SSL layer."""
-        return AsApi.__as_api_url, AsApi.__verify_ssl_cert
+        return self.__as_api_url, self.__verify_ssl_cert
 
-    @classmethod
     @synchronized
-    def ping(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+    def ping(self, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
         """A handy API method that calls the AS API to ensure the server is
         responding.
 
         :param timeout_s: The underlying request timeout
         """
 
-        return AsApi.get_version(timeout_s=timeout_s)
+        return self.get_version(timeout_s=timeout_s)
 
-    @classmethod
     @synchronized
-    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+    def get_version(self, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
         """Returns the AS-API service version.
 
         :param timeout_s: The underlying request timeout
         """
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             "/version",
             error_message="Failed getting version",
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_available_products(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> AsApiRv:
         """Returns Products you have access to.
 
@@ -238,7 +235,7 @@ class AsApi:
         """
         assert access_token
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             "/product",
             access_token=access_token,
@@ -246,10 +243,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_available_units(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        self, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> AsApiRv:
         """Returns Units (and their Organisations) you have access to.
 
@@ -258,7 +254,7 @@ class AsApi:
         """
         assert access_token
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             "/unit",
             access_token=access_token,
@@ -266,10 +262,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_available_assets(
-        cls,
+        self,
         access_token: str,
         *,
         scope_id: Optional[str] = None,
@@ -301,7 +296,7 @@ class AsApi:
             assert scope
             params[scope] = scope_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             "/asset",
             access_token=access_token,
@@ -310,10 +305,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_merchants(
-        cls,
+        self,
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
@@ -325,7 +319,7 @@ class AsApi:
         """
         assert access_token
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             "/merchant",
             access_token=access_token,
@@ -333,10 +327,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_product(
-        cls,
+        self,
         access_token: str,
         *,
         product_id: str,
@@ -351,7 +344,7 @@ class AsApi:
         assert access_token
         assert product_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/product/{product_id}",
             access_token=access_token,
@@ -359,10 +352,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_product_charges(
-        cls,
+        self,
         access_token: str,
         *,
         product_id: str,
@@ -390,7 +382,7 @@ class AsApi:
         if until:
             params["until"] = str(until)
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/product/{product_id}/charges",
             access_token=access_token,
@@ -399,10 +391,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def create_unit(
-        cls,
+        self,
         access_token: str,
         *,
         unit_name: str,
@@ -432,7 +423,7 @@ class AsApi:
             "name": unit_name,
         }
 
-        return AsApi.__request(
+        return self.__request(
             "POST",
             f"/organisation/{org_id}/unit",
             access_token=access_token,
@@ -442,10 +433,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_organisation(
-        cls,
+        self,
         access_token: str,
         *,
         org_id: str,
@@ -462,7 +452,7 @@ class AsApi:
         assert access_token
         assert org_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/organisation/{org_id}",
             access_token=access_token,
@@ -470,10 +460,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_unit(
-        cls,
+        self,
         access_token: str,
         *,
         unit_id: str,
@@ -490,7 +479,7 @@ class AsApi:
         assert access_token
         assert unit_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/unit/{unit_id}",
             access_token=access_token,
@@ -498,10 +487,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_units(
-        cls,
+        self,
         access_token: str,
         *,
         org_id: str,
@@ -518,7 +506,7 @@ class AsApi:
         assert access_token
         assert org_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/organisation/{org_id}/unit",
             access_token=access_token,
@@ -526,10 +514,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def create_product(
-        cls,
+        self,
         access_token: str,
         *,
         product_name: str,
@@ -571,7 +558,7 @@ class AsApi:
         if limit:
             data["limit"] = limit
 
-        return AsApi.__request(
+        return self.__request(
             "POST",
             f"/product/unit/{unit_id}",
             access_token=access_token,
@@ -581,10 +568,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def delete_product(
-        cls,
+        self,
         access_token: str,
         *,
         product_id: str,
@@ -601,7 +587,7 @@ class AsApi:
         assert access_token
         assert product_id
 
-        return AsApi.__request(
+        return self.__request(
             "DELETE",
             f"/product/{product_id}",
             access_token=access_token,
@@ -610,10 +596,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def delete_unit(
-        cls,
+        self,
         access_token: str,
         *,
         unit_id: str,
@@ -630,7 +615,7 @@ class AsApi:
         assert access_token
         assert unit_id
 
-        return AsApi.__request(
+        return self.__request(
             "DELETE",
             f"/unit/{unit_id}",
             access_token=access_token,
