@@ -59,6 +59,7 @@ class Environment:
         """Load the environments file.
         This is done simply to provide the caller with the list
         of environments that can be used, returning their names.
+        The default environment is the first in the list.
         """
         # Return names if we've already loaded them.
         if Environment.__environment_names:
@@ -90,9 +91,19 @@ class Environment:
                 f"{Environment.__environments_file} does not have a '{_ENVIRONMENTS_KEY}' section"
             )
 
-        Environment.__environment_names = []
+        default_environment: str = Environment.__environments_config[_DEFAULT_KEY]
+        found_default: bool = False
+        Environment.__environment_names = [default_environment]
         for environment in Environment.__environments_config[_ENVIRONMENTS_KEY]:
-            Environment.__environment_names.append(environment)
+            if environment == default_environment:
+                found_default = True
+            else:
+                Environment.__environment_names.append(environment)
+
+        if not found_default:
+            raise Exception(
+                f"{Environment.__environments_file} default is not in '{_ENVIRONMENTS_KEY}'"
+            )
 
         assert Environment.__environment_names
         return Environment.__environment_names
