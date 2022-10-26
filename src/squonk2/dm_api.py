@@ -55,7 +55,9 @@ _READ_LONG_TIMEOUT_S: int = 12
 _DEBUG_REQUEST_TIME: bool = False
 # Debug request calls?
 # If set the arguments and response of each request call is logged.
-_DEBUG_REQUEST: bool = False
+_DEBUG_REQUEST: bool = (
+    os.environ.get("SQUONK2_API_DEBUG_REQUESTS", "no").lower() == "yes"
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -161,7 +163,10 @@ class DmApi:
 
         if _DEBUG_REQUEST:
             if resp is not None:
-                print(f"# request() status_code={resp.status_code} msg={msg}")
+                print(
+                    f"# request() status_code={resp.status_code} msg={msg}"
+                    f" resp.text={resp.text}"
+                )
             else:
                 print("# request() resp=None")
 

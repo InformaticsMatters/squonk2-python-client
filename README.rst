@@ -76,13 +76,20 @@ The following Squonk2 Account Server API functions are available: -
 
 - ``AsApi.ping()``
 
-- ``AsApi.get_version()``
+- ``AsApi.create_product()``
+- ``AsApi.create_unit()``
+- ``AsApi.delete_product()``
+- ``AsApi.delete_unit()``
 - ``AsApi.get_available_assets()``
 - ``AsApi.get_available_units()``
 - ``AsApi.get_available_products()``
+- ``AsApi.get_merchants()``
+- ``AsApi.get_organisation()``
 - ``AsApi.get_product()``
 - ``AsApi.get_product_charges()``
-- ``AsApi.get_merchants()``
+- ``AsApi.get_unit()``
+- ``AsApi.get_units()``
+- ``AsApi.get_version()``
 
 A ``namedtuple`` is used as the return value for many of the methods: -
 
@@ -92,12 +99,91 @@ It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
 (rendered as a Python dictionary), or an error message if the call failed.
 
+Debugging the API requests
+==========================
+For development purposes you can expose detailed debug information relating to
+the underlying API requests by setting the environment variable
+``SQUONK2_API_DEBUG_REQUESTS``::
+
+    export SQUONK2_API_DEBUG_REQUESTS=yes
+
+This will enable detailed debug of both the DM and AS API calls.
+
 Installation
 ============
 The Squonk2 package is published on `PyPI`_ and can be installed from
 there::
 
     pip install im-squonk2-client~=2.0
+
+Environment module
+==================
+The API contains a convenient ``Environment`` module that allows you to
+keep your environment variables in a file so that you don't need to
+declare them in the shell. The default location of the file is
+``~/.squonk2/environments``. If you have multiple installations this
+allows you to keep all your environment settings together in one file.
+
+You can use an alternative file  by setting ``SQUONK2_ENVIRONMENT_FILE``,
+e.g. ``export SQUONK2_ENVIRONMENT_FILE=~/my-env'``
+
+..  code-block:: yaml
+
+    ---
+
+    # An example Squeck environments file.
+    #
+    # It provides all the connection details for one or more Squonk2 environments.
+    # It is expected to be found in the user's home directory
+    # as '~/.squonk2/environments' or the user can 'point' to it by setting
+    # 'SQUONK2_ENVIRONMENT_FILE', e.g. 'export SQUONK2_ENVIRONMENT_FILE=~/my-env'
+
+    # The 'environments' block defines one or more environments.
+    # Each has a name. Here we define an environment called 'site-a'
+    # but environments can be called anything YAML accepts as a key,
+    # although it would aid consistency if you restrict your names to letters
+    # and hyphens.
+    environments:
+      site-a:
+        # The hostname of the keycloak server, without a 'http' prefix
+        # and without a '/auth' suffix.
+        keycloak-hostname: example.com
+        # The realm name used for the Squonk2 environment.
+        keycloak-realm: squonk2
+        # The Keycloak client IDs of the Account Server and Data Manager.
+        # The Account Server client ID is optional.
+        keycloak-as-client-id: account-server-api
+        keycloak-dm-client-id: data-manager-api
+        # The hostnames of the Account Server and Data Manager APIs,
+        # without a 'http' prefix and without an 'api' suffix.
+        # If you have not provided an Account Server client ID its
+        # hostname value is not required.
+        as-hostname: as.example.com
+        dm-hostname: dm.example.com
+        # The username and password of an admin user that has access
+        # to the Account Server and Data Manager.
+        # The user *MUST* have admin rights.
+        admin-user: dlister
+        admin-password: blob1234
+
+    # The final part of the file is a 'default' property,
+    # which Squeck uses to select the an environment from the block above
+    # when all else fails. It's simply the name of one of the environment
+    # declarations above.
+    default: site-a
+
+
+**Using the Environment**
+
+..  code-block:: python
+
+    from squonk2.environment import Environment
+
+    environment: Environment = Environment('site-a')
+    # Get the AS API for 'local'
+    # The hostname is augmented so you will get (for the above example)
+    # the value 'https://as.example.com/account-server-api'
+    as_api: str = environment.as_api()
 
 Documentation
 =============
