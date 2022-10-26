@@ -164,16 +164,19 @@ class Environment:
             _AS_HOSTNAME_KEY, optional=True
         )
 
+    @property
     def environment(self) -> str:
         """Return the environment name."""
         return self.__environment
 
+    @property
     def keycloak_hostname(self) -> str:
         """Return the keycloak hostname. This is the unmodified
         value found in the environment.
         """
         return self.__keycloak_hostname
 
+    @property
     def keycloak_url(self) -> str:
         """Return the keycloak URL. This is the hostname
         plus the 'http' prefix and '/auth' postfix.
@@ -186,32 +189,39 @@ class Environment:
             ret_val += "/auth"
         return ret_val
 
+    @property
     def keycloak_realm(self) -> str:
         """Return the keycloak realm."""
         return self.__keycloak_realm
 
+    @property
     def keycloak_as_client_id(self) -> Optional[str]:
         """Return the keycloak Account Server client ID."""
         return self.__keycloak_as_client_id
 
+    @property
     def keycloak_dm_client_id(self) -> str:
         """Return the keycloak Data Manager client ID."""
         return self.__keycloak_dm_client_id
 
+    @property
     def admin_user(self) -> str:
         """Return the keycloak username."""
         return self.__admin_user
 
+    @property
     def admin_password(self) -> str:
         """Return the keycloak user's password."""
         return self.__admin_password
 
+    @property
     def as_hostname(self) -> Optional[str]:
         """Return the keycloak hostname. This is the unmodified
         value found in the environment but can be None
         """
         return self.__as_hostname
 
+    @property
     def as_api(self) -> Optional[str]:
         """Return the AS API. This is the environment hostname
         with a 'http' prefix and '/account-server-api' postfix.
@@ -226,12 +236,14 @@ class Environment:
             ret_val += "/account-server-api"
         return ret_val
 
+    @property
     def dm_hostname(self) -> str:
         """Return the keycloak hostname. This is the unmodified
         value found in the environment.
         """
         return self.__dm_hostname
 
+    @property
     def dm_api(self) -> str:
         """Return the DM API. This is the environment hostname
         with a 'http' prefix and '/data-manager-api' postfix.
