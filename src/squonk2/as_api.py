@@ -391,10 +391,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def create_unit(
-        cls,
+        self,
         access_token: str,
         *,
         unit_name: str,
@@ -424,7 +423,7 @@ class AsApi:
             "name": unit_name,
         }
 
-        return AsApi.__request(
+        return self.__request(
             "POST",
             f"/organisation/{org_id}/unit",
             access_token=access_token,
@@ -434,10 +433,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_organisation(
-        cls,
+        self,
         access_token: str,
         *,
         org_id: str,
@@ -454,7 +452,7 @@ class AsApi:
         assert access_token
         assert org_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/organisation/{org_id}",
             access_token=access_token,
@@ -462,10 +460,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_unit(
-        cls,
+        self,
         access_token: str,
         *,
         unit_id: str,
@@ -482,7 +479,7 @@ class AsApi:
         assert access_token
         assert unit_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/unit/{unit_id}",
             access_token=access_token,
@@ -490,10 +487,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def get_units(
-        cls,
+        self,
         access_token: str,
         *,
         org_id: str,
@@ -510,7 +506,7 @@ class AsApi:
         assert access_token
         assert org_id
 
-        return AsApi.__request(
+        return self.__request(
             "GET",
             f"/organisation/{org_id}/unit",
             access_token=access_token,
@@ -518,10 +514,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def create_product(
-        cls,
+        self,
         access_token: str,
         *,
         product_name: str,
@@ -563,7 +558,7 @@ class AsApi:
         if limit:
             data["limit"] = limit
 
-        return AsApi.__request(
+        return self.__request(
             "POST",
             f"/product/unit/{unit_id}",
             access_token=access_token,
@@ -573,10 +568,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def delete_product(
-        cls,
+        self,
         access_token: str,
         *,
         product_id: str,
@@ -593,7 +587,7 @@ class AsApi:
         assert access_token
         assert product_id
 
-        return AsApi.__request(
+        return self.__request(
             "DELETE",
             f"/product/{product_id}",
             access_token=access_token,
@@ -602,10 +596,9 @@ class AsApi:
             timeout=timeout_s,
         )[0]
 
-    @classmethod
     @synchronized
     def delete_unit(
-        cls,
+        self,
         access_token: str,
         *,
         unit_id: str,
@@ -622,7 +615,7 @@ class AsApi:
         assert access_token
         assert unit_id
 
-        return AsApi.__request(
+        return self.__request(
             "DELETE",
             f"/unit/{unit_id}",
             access_token=access_token,
