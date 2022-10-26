@@ -179,6 +179,7 @@ e.g. ``export SQUONK2_ENVIRONMENT_FILE=~/my-env'``
 
     from squonk2.environment import Environment
 
+    _ = Environment.load()
     environment: Environment = Environment('site-a')
     # Get the AS API for 'local'
     # The hostname is augmented so you will get (for the above example)
