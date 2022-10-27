@@ -66,9 +66,8 @@ the assigned **Task** and **Instance** identities.
 
 .. code-block:: python
 
-    dm_api: DmApi = DmApi()
     spec = {'collection': 'im-test', 'job': 'nop', 'version': '1.0.0'}
-    rv: DmApiRv = dm_api.start_job_instance(
+    rv: DmApiRv = v.start_job_instance(
         token,
         project_id=project_id,
         name='My Job',

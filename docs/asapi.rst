@@ -16,16 +16,15 @@ to set the Account Server API URL before you can use any API method.
 
 .. code-block:: python
 
-    as_api: AsApi = AsApi()
     url = 'https://example.com/account-server-api'
-    as_api.set_api_url(url)
+    AsApi.set_api_url(url)
 
 If the Account Server API is not secure (e.g. you're developing locally)
 you can disable the automatic SSL authentication when you set the URL.
 
 .. code-block:: python
 
-    as_api.set_api_url(url, verify_ssl_cert=False)
+    AsApi.set_api_url(url, verify_ssl_cert=False)
 
 *******
 The API

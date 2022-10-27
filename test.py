@@ -55,9 +55,8 @@ def main():
     # Configure the URL.
     # Depending on keycloak configuration
     # you may only have 5 minutes before the token expires.
-    dm_api: DmApi = DmApi()
-    dm_api.set_api_url(DMAPI_URL, verify_ssl_cert=API_URL_VALIDATION)
-    url, _ = dm_api.get_api_url()
+    DmApi.set_api_url(DMAPI_URL, verify_ssl_cert=API_URL_VALIDATION)
+    url, _ = DmApi.get_api_url()
     assert url == DMAPI_URL
     print(f"DM-API url={url}")
 
@@ -86,18 +85,18 @@ def main():
     assert token == first_token
 
     # Basic ping/version
-    api_rv: DmApiRv = dm_api.ping(token)
+    api_rv: DmApiRv = DmApi.ping(token)
     if not api_rv.success:
         fail("ping()", api_rv)
     print("DM-API ping() (SUCCESS)")
 
-    api_rv = dm_api.get_version(token)
+    api_rv = DmApi.get_version(token)
     if not api_rv.success:
         fail("get_version()", api_rv)
     print(f"DM-API version='{api_rv.msg['version']}'")
 
     # Get existing projects
-    rv_projects = dm_api.get_available_projects(token)
+    rv_projects = DmApi.get_available_projects(token)
     if not rv_projects.success:
         fail("get_available_projects()", api_rv)
 
@@ -137,7 +136,7 @@ def main():
             # we create one using a build-in Account Server "Product"
             # specifically designed for testing.
             print(f'Creating new Project ("{new_project_name}", "{TEST_PRODUCT_ID})...')
-            api_rv = dm_api.create_project(
+            api_rv = DmApi.create_project(
                 token, project_name=new_project_name, as_tier_product_id=TEST_PRODUCT_ID
             )
             if not api_rv.success:
@@ -148,7 +147,7 @@ def main():
 
     # Get a list of project files on the root
     print("Listing project files")
-    api_rv = dm_api.list_project_files(token, project_id=project_id, project_path="/")
+    api_rv = DmApi.list_project_files(token, project_id=project_id, project_path="/")
     if not api_rv.success:
         fail(f"list_project_files({project_id}, '/')", api_rv)
     num_project_files = 0
@@ -165,7 +164,7 @@ def main():
     # Put a simple file into the project, get it back and delete it
     local_file = "LICENSE"
     project_path = "/license"
-    api_rv = dm_api.put_unmanaged_project_files(
+    api_rv = DmApi.put_unmanaged_project_files(
         token,
         project_id=project_id,
         project_files=local_file,
@@ -173,7 +172,7 @@ def main():
     )
     if not api_rv.success:
         fail(f"put_unmanaged_project_files({project_id})", api_rv)
-    api_rv = dm_api.get_unmanaged_project_file(
+    api_rv = DmApi.get_unmanaged_project_file(
         token,
         project_id=project_id,
         project_file=local_file,
@@ -182,7 +181,7 @@ def main():
     )
     if not api_rv.success:
         fail(f"get_unmanaged_project_file({project_id})", api_rv)
-    api_rv = dm_api.delete_unmanaged_project_files(
+    api_rv = DmApi.delete_unmanaged_project_files(
         token,
         project_id=project_id,
         project_files=local_file,
@@ -196,14 +195,14 @@ def main():
     job_collection = "im-test"
     job_job = "nop"
     job_version = "1.0.0"
-    api_rv = dm_api.get_job_by_version(
+    api_rv = DmApi.get_job_by_version(
         token, job_collection=job_collection, job_job=job_job, job_version=job_version
     )
     if not api_rv.success:
         fail(f"get_job_by_version({job_collection}, {job_job}, {job_version})", api_rv)
     spec = {"collection": job_collection, "job": job_job, "version": job_version}
     job_name: str = "DmApi Test Job"
-    api_rv = dm_api.start_job_instance(
+    api_rv = DmApi.start_job_instance(
         token, project_id=project_id, name=job_name, specification=spec
     )
     if not api_rv.success:
@@ -219,7 +218,7 @@ def main():
     wait_seconds = 0
     done = False
     while not done and wait_seconds < max_wait_seconds:
-        api_rv = dm_api.get_instance(token, instance_id=job_instance_id)
+        api_rv = DmApi.get_instance(token, instance_id=job_instance_id)
         if not api_rv.success:
             fail(f"get_instance({job_instance_id})", api_rv)
         job_phase = api_rv.msg["phase"]
@@ -232,13 +231,13 @@ def main():
             wait_seconds += 2
     assert done
     print("Job events...")
-    api_rv = dm_api.get_task(token, task_id=job_task_id)
+    api_rv = DmApi.get_task(token, task_id=job_task_id)
     if not api_rv.success:
         fail(f"get_task({job_task_id})", api_rv)
     for event in api_rv.msg["events"]:
         print(f"# {event['time']} {event['level']} {event['message']}")
     print("Deleting Job...")
-    api_rv = dm_api.delete_instance(token, instance_id=job_instance_id)
+    api_rv = DmApi.delete_instance(token, instance_id=job_instance_id)
     if not api_rv.success:
         fail(f"delete_instance({job_instance_id})", api_rv)
     print("Deleted")
@@ -247,7 +246,7 @@ def main():
     if not args.project_id:
         print("Deleting project I created...")
         print(f"Deleting project_id={project_id}...")
-        api_rv = dm_api.delete_project(token, project_id=project_id)
+        api_rv = DmApi.delete_project(token, project_id=project_id)
         if not api_rv.success:
             fail(f"delete_project({project_id})", api_rv)
         print("Deleted")

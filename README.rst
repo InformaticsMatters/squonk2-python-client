@@ -114,7 +114,7 @@ Installation
 The Squonk2 package is published on `PyPI`_ and can be installed from
 there::
 
-    pip install im-squonk2-client~=2.0
+    pip install im-squonk2-client
 
 Environment module
 ==================
