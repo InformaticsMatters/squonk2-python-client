@@ -448,6 +448,66 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def add_project_editor(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        editor: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Adds a user to a Project as an Editor.
+
+        :param access_token: A valid DM API access token.
+        :param project_id: The Project UUID.
+        :param editor: The username to add.
+        :param timeout_s: The API request timeout
+        """
+        assert access_token
+        assert project_id
+        assert editor
+
+        return DmApi.__request(
+            "PUT",
+            f"/project/{project_id}/editor/{editor}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed adding project editor",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def remove_project_editor(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        editor: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Removes a user as an Editor from a Project.
+
+        :param access_token: A valid DM API access token.
+        :param project_id: The Project UUID.
+        :param editor: The username to remove.
+        :param timeout_s: The API request timeout
+        """
+        assert access_token
+        assert project_id
+        assert editor
+
+        return DmApi.__request(
+            "DELETE",
+            f"/project/{project_id}/editor/{editor}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed removing project editor",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def put_unmanaged_project_files(
         cls,
         access_token: str,
