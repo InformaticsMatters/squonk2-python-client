@@ -817,6 +817,89 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def dry_run_job_instance(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        name: str,
+        specification: Dict[str, Any],
+        callback_url: Optional[str] = None,
+        callback_context: Optional[str] = None,
+        generate_callback_token: bool = False,
+        debug: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Optionally used prior to starting a Job instance, this method
+        checks that Job Instance can be started in a Project, returning the
+        Job command.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The project where the files are present
+        :param name: A name to associate with the Job
+        :param specification: The Job specification, it must contain
+            keys that define the Job's ``collection``, ``job name`` and
+            ``version``. Job-specific variables are passed in using a ``variables``
+            map in the specification
+        :param callback_url: An optional URL capable of handling Job callbacks.
+            Must be set if ``generate_callback_token`` is used
+        :param callback_context: An optional context string passed to the
+            callback URL
+        :param generate_callback_token: True to instruct the DM to generate
+            a token that can be used with some methods instead of a
+            user access token
+        :param debug: Used to prevent the automatic removal of the Job instance.
+            Only use this if you need to
+        :param timeout_s: The underlying request timeout
+        """
+
+        assert access_token
+        assert project_id
+        assert name
+        assert isinstance(specification, (type(None), dict))
+
+        # Get the latest Job operator version.
+        # If there isn't one the DM can't run Jobs.
+        job_application_version: Optional[
+            str
+        ] = DmApi.__get_latest_job_operator_version(access_token)
+        if job_application_version is None:
+            # Failed calling the server.
+            # Incorrect URL, bad token or server out of action?
+            return DmApiRv(
+                success=False, msg={"error": "Failed getting Job operator version"}
+            )
+        if not job_application_version:
+            return DmApiRv(success=False, msg={"error": "No Job operator installed"})
+
+        data: Dict[str, Any] = {
+            "application_id": _DM_JOB_APPLICATION_ID,
+            "application_version": job_application_version,
+            "as_name": name,
+            "project_id": project_id,
+            "specification": json.dumps(specification),
+        }
+        if debug:
+            data["debug"] = debug
+        if callback_url:
+            data["callback_url"] = callback_url
+            if callback_context:
+                data["callback_context"] = callback_context
+            if generate_callback_token:
+                data["generate_callback_token"] = True
+
+        return DmApi.__request(
+            "POST",
+            "/instance/dry-run",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed to start instance",
+            data=data,
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def start_job_instance(
         cls,
         access_token: str,

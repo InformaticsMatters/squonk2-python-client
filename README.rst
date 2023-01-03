@@ -36,6 +36,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.delete_instance_token()``
 - ``DmApi.delete_project()``
 - ``DmApi.delete_unmanaged_project_files()``
+- ``DmApi.dry_run_job_instance()``
 - ``DmApi.get_account_server_namespace()``
 - ``DmApi.get_account_server_registration()``
 - ``DmApi.get_available_instances()``
