@@ -825,6 +825,7 @@ class DmApi:
         name: str,
         specification: Dict[str, Any],
         callback_url: Optional[str] = None,
+        callback_token: Optional[str] = None,
         callback_context: Optional[str] = None,
         generate_callback_token: bool = False,
         debug: Optional[str] = None,
@@ -843,6 +844,8 @@ class DmApi:
             map in the specification
         :param callback_url: An optional URL capable of handling Job callbacks.
             Must be set if ``generate_callback_token`` is used
+        :param callback_token: An optional callback token as an alternative to
+            using ``generate_callback_token``
         :param callback_context: An optional context string passed to the
             callback URL
         :param generate_callback_token: True to instruct the DM to generate
@@ -887,6 +890,8 @@ class DmApi:
                 data["callback_context"] = callback_context
             if generate_callback_token:
                 data["generate_callback_token"] = True
+            if callback_token:
+                data["callback_token"] = callback_token
 
         return DmApi.__request(
             "POST",
@@ -908,6 +913,7 @@ class DmApi:
         name: str,
         specification: Dict[str, Any],
         callback_url: Optional[str] = None,
+        callback_token: Optional[str] = None,
         callback_context: Optional[str] = None,
         generate_callback_token: bool = False,
         debug: Optional[str] = None,
@@ -924,6 +930,8 @@ class DmApi:
             map in the specification
         :param callback_url: An optional URL capable of handling Job callbacks.
             Must be set if ``generate_callback_token`` is used
+        :param callback_token: An optional callback token as an alternative to
+            using ``generate_callback_token``
         :param callback_context: An optional context string passed to the
             callback URL
         :param generate_callback_token: True to instruct the DM to generate
@@ -968,6 +976,8 @@ class DmApi:
                 data["callback_context"] = callback_context
             if generate_callback_token:
                 data["generate_callback_token"] = True
+            if callback_token:
+                data["callback_token"] = callback_token
 
         return DmApi.__request(
             "POST",
