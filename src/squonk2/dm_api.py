@@ -200,7 +200,7 @@ class DmApi:
             timeout=timeout_s,
         )
         if not ret_val.success:
-            _LOGGER.error("Failed getting Job application info [%s]", resp)
+            _LOGGER.debug("Failed getting Job application info [%s]", resp)
             return None
 
         # If there are versions, return the first in the list
@@ -208,7 +208,7 @@ class DmApi:
         if "versions" in resp.json() and len(resp.json()["versions"]):
             return resp.json()["versions"][0]
 
-        _LOGGER.warning("No versions returned for Job application info - no operator?")
+        _LOGGER.debug("No versions returned for Job application info - no operator?")
         return ""
 
     @classmethod
@@ -241,7 +241,7 @@ class DmApi:
         )
 
         if not ret_val.success:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Failed putting file %s -> %s (resp=%s project_id=%s)",
                 project_file,
                 project_path,
@@ -290,7 +290,7 @@ class DmApi:
             timeout=timeout_s,
         )
         if not ret_val.success:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Failed to get Job ID %s (resp=%s)",
                 rate,
                 resp,
@@ -315,7 +315,7 @@ class DmApi:
         )
 
         if not ret_val.success:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Failed putting rate %s (resp=%s)",
                 rate,
                 resp,
