@@ -136,9 +136,9 @@ def run(
         )
     else:
         # Given a raw token (and DM API)
-        token = api_token
+        api_token = token
         DmApi.set_api_url(dm_api_url)
-    assert token
+    assert api_token
 
     # A lit of Job instances we'll create.
     # Used to delete them when all is  done.
@@ -150,7 +150,7 @@ def run(
         job_name: Any = job["name"]
         print(f'Running Job instance "{job_name}"...')
         job_instance_id: str = run_a_job(
-            token,
+            api_token,
             project=project,
             name=job_name,
             specification=job["specification"],
@@ -164,7 +164,7 @@ def run(
     print("Deleting Job instances...")
     for job_instance in job_instances:
         print(f' Deleting Job instance "{job_instance_id}"...')
-        dm_rv: DmApiRv = DmApi.delete_instance(token, instance_id=job_instance)
+        dm_rv: DmApiRv = DmApi.delete_instance(api_token, instance_id=job_instance)
         handle_dmapirv(dm_rv)
 
     print("Done [SUCCESS]")
