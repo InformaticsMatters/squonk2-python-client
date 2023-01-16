@@ -1,8 +1,24 @@
 #!/usr/bin/env python
 """Runs two Jobs, one after the other.
+
 The jobs executed in the example file (jobs.yaml) are jobs that are often built into
 the DM deployment, and are part of the im-test collection. The Jobs may not be
 available to you in your installation.
+
+The Job file is a YAML file and typically looks like this: -
+
+    ---
+    # A chain of Jobs
+    - name: Job A
+      specification:
+        collection: im-test
+        job: event-test
+        version: '1.0.0'
+    - name: Job B
+      specification:
+        collection: im-test
+        job: coin-test
+        version: '1.0.0'
 
 You are expected to have an existing project.
 
@@ -90,35 +106,38 @@ def run_a_job(
     return job_instance_id
 
 
-def main(c_args: argparse.Namespace) -> None:
-    """Run two Jobs, back-to-back."""
+def run(
+    *,
+    project: str,
+    jobs: List[Dict[str, Any]],
+    environment: Optional[str] = None,
+    token: Optional[str] = None,
+    dm_api_url: Optional[str] = None,
+) -> None:
+    """Run Jobs,in sequence."""
 
     # The user's either provided a name of an Environment,
     # or a Token (and DM API URL)...
-    token: Optional[str] = None
-    if c_args.environment:
+    api_token: Optional[str] = None
+    if environment:
         # Load the client Environment.
         # This gives us many things, like the DM API URL
         _ = Environment.load()
-        env: Environment = Environment(c_args.environment)
+        env: Environment = Environment(environment)
         DmApi.set_api_url(env.dm_api)
-        print(env.dm_api)
 
         # Now get a DM API access token, using the environment material
-        token = Auth.get_access_token(
+        api_token = Auth.get_access_token(
             keycloak_url=env.keycloak_url,
             keycloak_realm=env.keycloak_realm,
             keycloak_client_id=env.keycloak_dm_client_id,
             username=env.admin_user,
             password=env.admin_password,
         )
-        print("---")
-        print(token)
-        print("---")
     else:
         # Given a raw token (and DM API)
-        token = c_args.token
-        DmApi.set_api_url(c_args.dm_api_url)
+        token = api_token
+        DmApi.set_api_url(dm_api_url)
     assert token
 
     # A lit of Job instances we'll create.
@@ -127,14 +146,12 @@ def main(c_args: argparse.Namespace) -> None:
 
     # Start the Jobs - in return we're given an instance ID
     # --------------
-    job_file_content: str = Path(c_args.job_file).read_text(encoding="utf8")
-    jobs: List[Dict[str, Any]] = yaml.load(job_file_content, Loader=yaml.FullLoader)
     for job in jobs:
-        job_name: str = job["name"]
+        job_name: Any = job["name"]
         print(f'Running Job instance "{job_name}"...')
         job_instance_id: str = run_a_job(
             token,
-            project=args.project,
+            project=project,
             name=job_name,
             specification=job["specification"],
         )
@@ -194,4 +211,15 @@ if __name__ == "__main__":
     if args.token and not args.dm_api_url:
         parser.error("Cannot provide a token without a DM API URL")
 
-    main(args)
+    job_file_content: str = Path(job_file).read_text(encoding="utf8")
+    job_file_jobs: List[Dict[str, Any]] = yaml.load(
+        job_file_content, Loader=yaml.FullLoader
+    )
+
+    run(
+        project=args.project,
+        jobs=job_file_jobs,
+        environment=args.environment,
+        token=args.token,
+        dm_api_url=args.dm_api_url,
+    )
