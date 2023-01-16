@@ -113,6 +113,7 @@ def run(
     environment: Optional[str] = None,
     token: Optional[str] = None,
     dm_api_url: Optional[str] = None,
+    delete: bool = True,
 ) -> None:
     """Run Jobs,in sequence."""
 
@@ -155,17 +156,18 @@ def run(
             name=job_name,
             specification=job["specification"],
         )
-        print(f' Started Job instance "{job_instance_id}"')
+        print(f' Completed Job instance "{job_instance_id}"')
         job_instances.append(job_instance_id)
 
     # Housekeeping
     # ------------
-    # Now, let's be 'tidy' and delete the Job instances
-    print("Deleting Job instances...")
-    for job_instance in job_instances:
-        print(f' Deleting Job instance "{job_instance_id}"...')
-        dm_rv: DmApiRv = DmApi.delete_instance(api_token, instance_id=job_instance)
-        handle_dmapirv(dm_rv)
+    # Now, let's be 'tidy' and delete the Job instances?
+    if delete:
+        print("Deleting Job instances...")
+        for job_instance in job_instances:
+            print(f' Deleting Job instance "{job_instance_id}"...')
+            dm_rv: DmApiRv = DmApi.delete_instance(api_token, instance_id=job_instance)
+            handle_dmapirv(dm_rv)
 
     print("Done [SUCCESS]")
 
