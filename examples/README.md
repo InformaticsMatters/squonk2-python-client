@@ -45,10 +45,6 @@ Illustrates how to: -
 - download the results and, finally...
 - cleanup (delete) the job instance
 
-## job_chain.py
-Illustrates how to run a chain of Jobs, one after the successful completion of another.
-The example can be used with a Token or a Squonk2 Environment file.
-
 ### units_products_and_projects.py
 Illustrates how to: -
 

@@ -102,6 +102,14 @@ It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
 (rendered as a Python dictionary), or an error message if the call failed.
 
+Examples
+========
+The package ships with some API examples that might be useful for your own work.
+They are located in the package ``examples`` module, where the following imports
+should be available: -
+
+- ``from squonk2.examples.data_manager import job_chain``
+
 Debugging the API requests
 ==========================
 For development purposes you can expose detailed debug information relating to
