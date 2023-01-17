@@ -10,4 +10,5 @@ _readthedocs/
 build/
 dist/
 
+**/environments
 examples/foo.smi

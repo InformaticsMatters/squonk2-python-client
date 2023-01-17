@@ -10,17 +10,30 @@ The Job file is a YAML file and typically looks like this: -
     ---
     # A chain of Jobs
     - name: Job A
+      wait_time_m: 45.0
       specification:
         collection: im-test
         job: event-test
         version: '1.0.0'
     - name: Job B
+      wait_time_m: 45.0
       specification:
         collection: im-test
         job: coin-test
         version: '1.0.0'
 
+Where: -
+    "name" is the name given to the Job
+    "wait_m" is the period to wait for job execution
+        If not provided we wait forever
+    "specification" is the Job specification, which will include the
+        collection, job, version and (probably) some variables.
+
 You are expected to have an existing project.
+
+This code does not clean up and job failures will result in Instances left
+in the Data Manager. To avoid accumulating 'clutter' you need to delete any
+Instances that you no longer need.
 
 You can use a token (and DM API URL) or an environment file
 (i.e. a ~/.squonk2/environments file)
@@ -50,7 +63,6 @@ from squonk2.auth import Auth
 from squonk2.dm_api import DmApi, DmApiRv
 from squonk2.environment import Environment
 
-_MAX_JOB_WAIT_S: float = 120.0
 _PER_QUERY_SLEEP_S: float = 1.0
 
 
@@ -66,41 +78,74 @@ def handle_dmapirv(api_rv: DmApiRv, *, quiet: bool = False) -> None:
 
 
 def run_a_job(
-    token: str, *, project: str, name: str, specification: Dict[str, Any]
+    token: str,
+    *,
+    project: str,
+    name: str,
+    specification: Dict[str, Any],
+    wait_time_m: Optional[float] = None,
 ) -> str:
-    """Runs a Job (as an Instance) using the provided 'spec'.
-    If successful the Instance ID is returned.
+    """Runs a Job (as an Instance) using the provided 'spec', while optionally
+    waiting for a period of time for it to finish. We block until the Job has completed,
+    or there's an error, and return the Instance ID on success.
     """
-    # Start Job A - in return we're given an Instance (and a Task)
-    # -----------
+    # Start Job - in return we're given an Instance (and a Task)
+    # ---------
     job_dm_rv: DmApiRv = DmApi.start_job_instance(
         token, project_id=project, name=name, specification=specification
     )
     handle_dmapirv(job_dm_rv)
     job_instance_id: str = job_dm_rv.msg["instance_id"]
 
-    # Wait for Job A (not forever)
-    # --------------
-    done: bool = False
-    job_start_s: float = time.time()
+    # Max wait-time (seconds)
+    # None if no wait-time is defined
+    wait_time_s: Optional[float] = wait_time_m * 60.0 if wait_time_m else None
+
+    # Wait for Job
+    # ------------
+    job_done: bool = False
+    job_launch_s: float = time.time()
+    job_started: bool = False
     job_success: bool = False
-    while not done:
+    while not job_done:
+
+        # Wait loop.
+
+        # Query the current Job instance state...
         job_dm_rv = DmApi.get_instance(token, instance_id=job_instance_id)
         handle_dmapirv(job_dm_rv)
-        # Wait until we see a stopped property
-        # and a phase that's not RUNNING!
+
+        # Started?
+        if "started" in job_dm_rv.msg and not job_started:
+            job_started = True
+            print(f' Started Job instance "{job_instance_id}"')
+            if wait_time_m:
+                print(f" Waiting {wait_time_m} minutes...")
+            else:
+                print(" Waiting until completed...")
+
+        # Stopped?
         if "stopped" in job_dm_rv.msg and job_dm_rv.msg["phase"] != "RUNNING":
             # Job's finished
-            done = True
+            job_done = True
             # Successful?
-            if job_dm_rv.msg["phase"] == "COMPLETED":
+            job_phase: str = job_dm_rv.msg["phase"]
+            if job_phase == "COMPLETED":
                 job_success = True
-        elif not done:
-            elapsed_s: float = time.time() - job_start_s
-            if elapsed_s > _MAX_JOB_WAIT_S:
-                done = True
+            else:
+                print(f" Oops! Stopped with phase {job_phase}!")
+
+        # If asked to wait have we waited too long?
+        if not job_done and wait_time_s:
+            # Not stopped and given a timeout -
+            # if too much time has elapsed then it's an error!
+            elapsed_s: float = time.time() - job_launch_s
+            if elapsed_s > wait_time_s:
+                print(" Waited too long!")
+                job_done = True
             else:
                 time.sleep(_PER_QUERY_SLEEP_S)
+
     assert job_success
 
     return job_instance_id
@@ -149,12 +194,14 @@ def run(
     # --------------
     for job in jobs:
         job_name: Any = job["name"]
-        print(f'Running Job instance "{job_name}"...')
+        print(f'Running Job "{job_name}"...')
+        wait_time_m: Optional[float] = float(str(job.get("wait_time_m")))
         job_instance_id: str = run_a_job(
             api_token,
             project=project,
             name=job_name,
             specification=job["specification"],
+            wait_time_m=wait_time_m,
         )
         print(f' Completed Job instance "{job_instance_id}"')
         job_instances.append(job_instance_id)
