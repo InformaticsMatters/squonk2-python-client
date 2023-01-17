@@ -214,7 +214,7 @@ def run(
     if delete:
         print("Deleting Job instances...")
         for job_instance in job_instances:
-            print(f' Deleting Job instance "{job_instance_id}"...')
+            print(f' Deleting Job instance "{job_instance}"...')
             dm_rv: DmApiRv = DmApi.delete_instance(api_token, instance_id=job_instance)
             handle_dmapirv(dm_rv)
 
