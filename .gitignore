@@ -12,3 +12,4 @@ dist/
 
 **/environments
 examples/foo.smi
+**/.ipynb_checkpoints
