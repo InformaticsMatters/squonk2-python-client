@@ -37,6 +37,7 @@ _KEYCLOAK_HOSTNAME_KEY: str = "keycloak-hostname"
 _KEYCLOAK_REALM_KEY: str = "keycloak-realm"
 _KEYCLOAK_DM_CLIENT_ID_KEY: str = "keycloak-dm-client-id"
 _DM_HOSTNAME_KEY: str = "dm-hostname"
+# Optional keys (extracted from ENV if not present)
 _ADMIN_USER_KEY: str = "admin-user"
 _ADMIN_PASSWORD_KEY: str = "admin-password"
 # Optional keys
@@ -108,29 +109,42 @@ class Environment:
         assert Environment.__environment_names
         return Environment.__environment_names
 
-    def __get_config_value(self, key: str, optional: bool = False) -> Optional[str]:
+    def __get_config_value(
+        self,
+        environment: str,
+        key: str,
+        optional: bool = False,
+        permit_environment_variable: bool = False,
+    ) -> Optional[str]:
         """Gets the configuration key's value for the configured environment.
-        If optional is False we assert if a value cannot be found or
-        return None if it cannot be found and is considered optional.
+        If optional is False we assert if a value cannot be found.
+
+        If 'permit_environment_variable' is True then if no key is found
+        in the file, a corresponding value will be sought from the environment.
+        If the config value is `admin-user` then the environment variable that will be
+        inspected will be SQUONK2_ENVIRONMENT_{name}_ADMIN_USER).
         """
         assert Environment.__environments_config
-        if (
-            not optional
-            and key
-            not in Environment.__environments_config[_ENVIRONMENTS_KEY][
-                self.__environment
-            ]
-        ):
-            raise Exception(
-                f"{Environment.__environments_file} '{self.__environment}'"
-                f" environment does not have a value for '{key}'"
-            )
         value: Any = Environment.__environments_config[_ENVIRONMENTS_KEY][
             self.__environment
         ].get(key)
-        if not value:
-            return None
-        return str(value)
+
+        if not value and permit_environment_variable:
+            # No key/value in the file but allowed to check the environment.
+            translated_environment: str = environment.upper().replace("-", "_")
+            translated_key: str = key.upper().replace("-", "_")
+            env_key: str = (
+                f"SQUONK2_ENVIRONMENT_{translated_environment}_{translated_key}"
+            )
+            value = os.environ.get(env_key)
+
+        if not optional and not value:
+            raise Exception(
+                f"{Environment.__environments_file} '{self.__environment}'"
+                f" could not determine value for '{key}'"
+            )
+
+        return str(value) if value else None
 
     def __init__(self, environment: str):
         """Loads the values from the environment file
@@ -146,22 +160,37 @@ class Environment:
         # Get the required key values...
         # We assert if these cannot be found.
         self.__keycloak_hostname: str = str(
-            self.__get_config_value(_KEYCLOAK_HOSTNAME_KEY)
+            self.__get_config_value(environment, _KEYCLOAK_HOSTNAME_KEY)
         )
-        self.__keycloak_realm: str = str(self.__get_config_value(_KEYCLOAK_REALM_KEY))
+        self.__keycloak_realm: str = str(
+            self.__get_config_value(environment, _KEYCLOAK_REALM_KEY)
+        )
         self.__keycloak_dm_client_id: str = str(
-            self.__get_config_value(_KEYCLOAK_DM_CLIENT_ID_KEY)
+            self.__get_config_value(environment, _KEYCLOAK_DM_CLIENT_ID_KEY)
         )
-        self.__dm_hostname: str = str(self.__get_config_value(_DM_HOSTNAME_KEY))
-        self.__admin_user: str = str(self.__get_config_value(_ADMIN_USER_KEY))
-        self.__admin_password = str(self.__get_config_value(_ADMIN_PASSWORD_KEY))
+        self.__dm_hostname: str = str(
+            self.__get_config_value(environment, _DM_HOSTNAME_KEY)
+        )
+
+        # Get required keys, but allowing environment variables
+        # if not present in the file...
+        self.__admin_user: str = str(
+            self.__get_config_value(
+                environment, _ADMIN_USER_KEY, permit_environment_variable=True
+            )
+        )
+        self.__admin_password = str(
+            self.__get_config_value(
+                environment, _ADMIN_PASSWORD_KEY, permit_environment_variable=True
+            )
+        )
 
         # Get the optional key values...
         self.__keycloak_as_client_id: Optional[str] = self.__get_config_value(
-            _KEYCLOAK_AS_CLIENT_ID_KEY, optional=True
+            environment, _KEYCLOAK_AS_CLIENT_ID_KEY, optional=True
         )
         self.__as_hostname: Optional[str] = self.__get_config_value(
-            _AS_HOSTNAME_KEY, optional=True
+            environment, _AS_HOSTNAME_KEY, optional=True
         )
 
     @property

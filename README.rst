@@ -178,11 +178,18 @@ e.g. ``export SQUONK2_ENVIRONMENT_FILE=~/my-env'``
         admin-password: blob1234
 
     # The final part of the file is a 'default' property,
-    # which Squeck uses to select the an environment from the block above
+    # which Squeck (Squonk Deck) uses to select the an environment from the block above
     # when all else fails. It's simply the name of one of the environment
     # declarations above.
     default: site-a
 
+To avoid placing ``admin-user`` and ``admin-password`` values into the Environment file
+you can provide them through environment variables that are scoped to the
+environment name. For example, in the above you could omit them both
+and provide them as values using the following variables: -
+
+- ``SQUONK2_ENVIRONMENT_SITE_A_ADMIN_USER``
+- ``SQUONK2_ENVIRONMENT_SITE_A_ADMIN_PASSWORD``
 
 **Using the Environment**
 
