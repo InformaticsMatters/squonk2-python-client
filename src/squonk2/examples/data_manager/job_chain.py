@@ -160,7 +160,9 @@ def run(
     dm_api_url: Optional[str] = None,
     delete: bool = True,
 ) -> None:
-    """Run Jobs,in sequence."""
+    """Run Jobs,in sequence. The user can provide an environment name
+    or a token and Data Manager URL. If both are provided the environment is used.
+    """
 
     # The user's either provided a name of an Environment,
     # or a Token (and DM API URL)...
@@ -221,10 +223,14 @@ def run(
 
 if __name__ == "__main__":
 
-    # Parse command line arguments
+    # Setup a command-line parser
+    # and parse command line arguments
     parser = argparse.ArgumentParser(
         prog="job_chain",
-        description="Demonstrates the chained execution of two DM Jobs",
+        description="Demonstrates the chained execution of one or more Jobs"
+        " given a Data Manager Project and a YAML file defining"
+        " the Jobs to be executed. The jobs are run sequentially"
+        " with any errors resulting in the termination of the program.",
     )
     parser.add_argument(
         "project", type=str, help="The Project UUID where Jobs are to be run"
@@ -232,20 +238,28 @@ if __name__ == "__main__":
     parser.add_argument(
         "job_file",
         type=str,
-        help="A YAML file with a list of job specs (and their names)",
+        help="A YAML file with a list of job names, specs, and optional wait times",
     )
     parser.add_argument(
-        "-e", "--environment", type=str, nargs="?", help="The environment name"
+        "-e",
+        "--environment",
+        type=str,
+        nargs="?",
+        help="The environment name. Use this if you have a Squonk2 'environments' file.",
     )
     parser.add_argument(
-        "-t", "--token", type=str, nargs="?", help="The environment name"
+        "-t",
+        "--token",
+        type=str,
+        nargs="?",
+        help="An access token for the Data Manager API",
     )
     parser.add_argument(
         "-d",
         "--dm-api-url",
         type=str,
         nargs="?",
-        help="The DM API. Required if you use a token",
+        help="The DM API URL (including https://). Required if you provide a token",
     )
     args: argparse.Namespace = parser.parse_args()
 
