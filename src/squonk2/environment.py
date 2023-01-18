@@ -54,6 +54,8 @@ class Environment:
     __environments_config: Dict[str, Any] = {}
     # List of names in the configuration
     __environment_names: List[str] = []
+    # The default environment, set during a call to load()
+    __default_environment: Optional[str] = None
 
     @classmethod
     def load(cls) -> List[str]:
@@ -92,11 +94,14 @@ class Environment:
                 f"{Environment.__environments_file} does not have a '{_ENVIRONMENTS_KEY}' section"
             )
 
-        default_environment: str = Environment.__environments_config[_DEFAULT_KEY]
+        Environment.__default_environment = Environment.__environments_config[
+            _DEFAULT_KEY
+        ]
+        assert Environment.__default_environment
         found_default: bool = False
-        Environment.__environment_names = [default_environment]
+        Environment.__environment_names = [Environment.__default_environment]
         for environment in Environment.__environments_config[_ENVIRONMENTS_KEY]:
-            if environment == default_environment:
+            if environment == Environment.__default_environment:
                 found_default = True
             else:
                 Environment.__environment_names.append(environment)
@@ -111,7 +116,6 @@ class Environment:
 
     def __get_config_value(
         self,
-        environment: str,
         key: str,
         optional: bool = False,
         permit_environment_variable: bool = False,
@@ -131,7 +135,7 @@ class Environment:
 
         if not value and permit_environment_variable:
             # No key/value in the file but allowed to check the environment.
-            translated_environment: str = environment.upper().replace("-", "_")
+            translated_environment: str = self.__environment.upper().replace("-", "_")
             translated_key: str = key.upper().replace("-", "_")
             env_key: str = (
                 f"SQUONK2_ENVIRONMENT_{translated_environment}_{translated_key}"
@@ -146,51 +150,52 @@ class Environment:
 
         return str(value) if value else None
 
-    def __init__(self, environment: str):
-        """Loads the values from the environment file
-        for the given environment.
+    def __init__(self, environment: Optional[str]):
+        """Prepare the environment object. The user is expected to have called
+        'Environment.load()' first. If an environment is not named the default is used.
         """
-        self.__environment: str = environment
-        if not environment in Environment.__environment_names:
-            raise Exception(
-                f"{Environment.__environments_file} '{environment}'"
-                " environment does not exist"
-            )
+        if environment:
+            # User has named an environment,
+            # use it
+            self.__environment: str = environment
+            if not environment in Environment.__environment_names:
+                raise Exception(
+                    f"{Environment.__environments_file} '{environment}'"
+                    " environment does not exist"
+                )
+        else:
+            # Nothing named - use the default
+            assert Environment.__default_environment
+            self.__environment = Environment.__default_environment
 
         # Get the required key values...
         # We assert if these cannot be found.
         self.__keycloak_hostname: str = str(
-            self.__get_config_value(environment, _KEYCLOAK_HOSTNAME_KEY)
+            self.__get_config_value(_KEYCLOAK_HOSTNAME_KEY)
         )
-        self.__keycloak_realm: str = str(
-            self.__get_config_value(environment, _KEYCLOAK_REALM_KEY)
-        )
+        self.__keycloak_realm: str = str(self.__get_config_value(_KEYCLOAK_REALM_KEY))
         self.__keycloak_dm_client_id: str = str(
-            self.__get_config_value(environment, _KEYCLOAK_DM_CLIENT_ID_KEY)
+            self.__get_config_value(_KEYCLOAK_DM_CLIENT_ID_KEY)
         )
-        self.__dm_hostname: str = str(
-            self.__get_config_value(environment, _DM_HOSTNAME_KEY)
-        )
+        self.__dm_hostname: str = str(self.__get_config_value(_DM_HOSTNAME_KEY))
 
         # Get required keys, but allowing environment variables
         # if not present in the file...
         self.__admin_user: str = str(
-            self.__get_config_value(
-                environment, _ADMIN_USER_KEY, permit_environment_variable=True
-            )
+            self.__get_config_value(_ADMIN_USER_KEY, permit_environment_variable=True)
         )
         self.__admin_password = str(
             self.__get_config_value(
-                environment, _ADMIN_PASSWORD_KEY, permit_environment_variable=True
+                _ADMIN_PASSWORD_KEY, permit_environment_variable=True
             )
         )
 
         # Get the optional key values...
         self.__keycloak_as_client_id: Optional[str] = self.__get_config_value(
-            environment, _KEYCLOAK_AS_CLIENT_ID_KEY, optional=True
+            _KEYCLOAK_AS_CLIENT_ID_KEY, optional=True
         )
         self.__as_hostname: Optional[str] = self.__get_config_value(
-            environment, _AS_HOSTNAME_KEY, optional=True
+            _AS_HOSTNAME_KEY, optional=True
         )
 
     @property
