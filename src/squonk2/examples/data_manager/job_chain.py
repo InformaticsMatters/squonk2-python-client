@@ -55,7 +55,7 @@ https://data-manager.example.com/data-manager-api run: -
 import argparse
 from pathlib import Path
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
@@ -66,15 +66,9 @@ from squonk2.environment import Environment
 _PER_QUERY_SLEEP_S: float = 1.0
 
 
-def handle_dmapirv(api_rv: DmApiRv, *, quiet: bool = False) -> None:
-    """Given a DmAPiRv value this code asserts it's successful
-    and prints the error if it's not.
-    """
-    if not api_rv.success:
-        print(api_rv)
-        assert api_rv.success
-    if quiet:
-        print(api_rv)
+def error(dm_rv: DmApiRv) -> None:
+    """Prints a simple error line using the DmApiRv message."""
+    print(f"ERROR: API error {dm_rv.msg}")
 
 
 def run_a_job(
@@ -84,18 +78,26 @@ def run_a_job(
     name: str,
     specification: Dict[str, Any],
     wait_time_m: Optional[float] = None,
-) -> str:
+    delete: bool = True,
+) -> Tuple[bool, Optional[str]]:
     """Runs a Job (as an Instance) using the provided 'spec', while optionally
     waiting for a period of time for it to finish. We block until the Job has completed,
-    or there's an error, and return the Instance ID on success.
+    or there's an error.
+
+    We return True and the Instance ID on success or False (and an undefined string)
+    on failure.
     """
     # Start Job - in return we're given an Instance (and a Task)
     # ---------
     job_dm_rv: DmApiRv = DmApi.start_job_instance(
         token, project_id=project, name=name, specification=specification
     )
-    handle_dmapirv(job_dm_rv)
-    job_instance_id: str = job_dm_rv.msg["instance_id"]
+    if not job_dm_rv.success:
+        print("Failed to start the Job")
+        error(job_dm_rv)
+        return False, None
+
+    job_instance_id: Optional[str] = job_dm_rv.msg["instance_id"]
 
     # Max wait-time (seconds)
     # None if no wait-time is defined
@@ -113,7 +115,14 @@ def run_a_job(
 
         # Query the current Job instance state...
         job_dm_rv = DmApi.get_instance(token, instance_id=job_instance_id)
-        handle_dmapirv(job_dm_rv)
+        if not job_dm_rv.success:
+            error(job_dm_rv)
+            if job_dm_rv.success:
+                print(f"Deleted instance {job_instance_id}")
+            else:
+                print(f"Failed to delete instance {job_instance_id}")
+                error(job_dm_rv)
+            return False, None
 
         # Started?
         if "started" in job_dm_rv.msg and not job_started:
@@ -146,9 +155,20 @@ def run_a_job(
             else:
                 time.sleep(_PER_QUERY_SLEEP_S)
 
-    assert job_success
+    if not job_success:
+        print("Job failed")
+        if delete:
+            print(f"Deleting instance {job_instance_id}...")
+            job_dm_rv = DmApi.delete_instance(token, instance_id=job_instance_id)
+            if job_dm_rv.success:
+                print(f"Deleted instance {job_instance_id}")
+            else:
+                print(f"Failed to delete instance {job_instance_id}")
+                error(job_dm_rv)
+            return False, None
 
-    return job_instance_id
+    # Job ran (and finished) if we get here
+    return True, job_instance_id
 
 
 def run(
@@ -160,15 +180,19 @@ def run(
     dm_api_url: Optional[str] = None,
     delete: bool = True,
 ) -> None:
-    """Run Jobs,in sequence. The user can provide an environment name
-    or a token and Data Manager URL. If both are provided the environment is used.
+    """Run Jobs, in sequence. The user can optionally provide an environment name
+    or a token and Data Manager URL. If a token is not provided the environment is used,
+    where a None value is interpreted as the default environment.
+
+    If delete is set the Jobs are always deleted, including on failure.
+    If delete is not set Job are never deleted.
     """
 
     # The user's either provided a name of an Environment,
     # or a Token (and DM API URL)...
     api_token: Optional[str] = None
-    if environment:
-        # Load the client Environment.
+    if not token:
+        # Load the client Environment (if one is not named the default will be used).
         # This gives us many things, like the DM API URL
         _ = Environment.load()
         env: Environment = Environment(environment)
@@ -194,6 +218,7 @@ def run(
 
     # Start the Jobs - in return we're given an instance ID
     # --------------
+    success: bool = False
     for job in jobs:
         job_name: Any = job["name"]
         print(f'Running Job "{job_name}"...')
@@ -203,13 +228,18 @@ def run(
             float(str(job_wait_time_m)) if job_wait_time_m else None
         )
         # Go...
-        job_instance_id: str = run_a_job(
+        success, job_instance_id = run_a_job(
             api_token,
             project=project,
             name=job_name,
             specification=job["specification"],
             wait_time_m=wait_time_m,
         )
+        if not success:
+            # Log and leave the loop
+            print("Job failed (aborting chain)")
+            break
+        assert job_instance_id
         print(f' Completed Job instance "{job_instance_id}"')
         job_instances.append(job_instance_id)
 
@@ -221,9 +251,18 @@ def run(
         for job_instance in job_instances:
             print(f' Deleting Job instance "{job_instance}"...')
             dm_rv: DmApiRv = DmApi.delete_instance(api_token, instance_id=job_instance)
-            handle_dmapirv(dm_rv)
+            if dm_rv.success:
+                print(f" Deleted instance {job_instance}")
+            else:
+                # Failed to delete but continue with others.
+                print(f" Failed to delete instance {job_instance}")
+                error(dm_rv)
+                success = False
 
-    print("Done [SUCCESS]")
+    if success:
+        print("Done [SUCCESS]")
+    else:
+        print("Done [FAILED]")
 
 
 if __name__ == "__main__":
@@ -250,7 +289,8 @@ if __name__ == "__main__":
         "--environment",
         type=str,
         nargs="?",
-        help="The environment name. Use this if you have a Squonk2 'environments' file.",
+        help="The environment name. Use this if you have a Squonk2 'environments' file"
+        " and you want to use an environment that is not the default.",
     )
     parser.add_argument(
         "-t",
@@ -272,8 +312,6 @@ if __name__ == "__main__":
     if not Path(job_file).is_file():
         parser.error(f"File '{job_file}' does not exist")
 
-    if not args.token and not args.environment:
-        parser.error("Must provide a token or an environment name")
     if args.token and args.environment:
         parser.error("Cannot provide a token and an environment name")
     if args.token and not args.dm_api_url:
