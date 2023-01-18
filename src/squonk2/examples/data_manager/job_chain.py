@@ -199,7 +199,8 @@ def run(
         print(f'Running Job "{job_name}"...')
         # Has the user provided a wait-time?
         wait_time_m: Optional[float] = None
-        job_wait_time_m: str = str(job.get("wait_time_m"))
+        if job.get("wait_time_m"):
+            job_wait_time_m: str = str(job.get("wait_time_m"))
         wait_time_m = float(job_wait_time_m) if job_wait_time_m else None
         # Go...
         job_instance_id: str = run_a_job(
