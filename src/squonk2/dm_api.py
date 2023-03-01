@@ -391,6 +391,7 @@ class DmApi:
         *,
         project_name: str,
         as_tier_product_id: str,
+        private: bool = False,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Creates a Project, which requires a name and a Product ID
@@ -414,6 +415,9 @@ class DmApi:
             "tier_product_id": as_tier_product_id,
             "name": project_name,
         }
+        if private:
+            data["private"] = True
+
         return DmApi.__request(
             "POST",
             "/project",
