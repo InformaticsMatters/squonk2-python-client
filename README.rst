@@ -31,6 +31,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.ping()``
 
 - ``DmApi.add_project_editor()``
+- ``DmApi.add_project_observer()``
 - ``DmApi.create_project()``
 - ``DmApi.delete_instance()``
 - ``DmApi.delete_instance_token()``
@@ -58,6 +59,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.list_project_files()``
 - ``DmApi.put_unmanaged_project_files()``
 - ``DmApi.remove_project_editor()``
+- ``DmApi.remove_project_observer()``
 - ``DmApi.set_admin_state()``
 - ``DmApi.set_job_exchange_rates()``
 - ``DmApi.start_job_instance()``

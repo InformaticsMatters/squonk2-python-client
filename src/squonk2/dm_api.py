@@ -512,6 +512,66 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def add_project_observer(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        observer: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Adds a user to a Project as an Observer.
+
+        :param access_token: A valid DM API access token.
+        :param project_id: The Project UUID.
+        :param editor: The username to add.
+        :param timeout_s: The API request timeout
+        """
+        assert access_token
+        assert project_id
+        assert observer
+
+        return DmApi.__request(
+            "PUT",
+            f"/project/{project_id}/observer/{observer}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed adding project observer",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def remove_project_observer(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        observer: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Removes a user as an Observer from a Project.
+
+        :param access_token: A valid DM API access token.
+        :param project_id: The Project UUID.
+        :param observer: The username to remove.
+        :param timeout_s: The API request timeout
+        """
+        assert access_token
+        assert project_id
+        assert observer
+
+        return DmApi.__request(
+            "DELETE",
+            f"/project/{project_id}/observer/{observer}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed removing project observer",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def put_unmanaged_project_files(
         cls,
         access_token: str,
