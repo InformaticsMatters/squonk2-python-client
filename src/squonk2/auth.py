@@ -39,6 +39,7 @@ class Auth:
         keycloak_client_id: str,
         username: str,
         password: str,
+        keycloak_client_secret: str = None,
         prior_token: Optional[str] = None,
         timeout_s: int = 4,
     ) -> Optional[str]:
@@ -58,6 +59,7 @@ class Auth:
         :param keycloak_url: The keycloak server URL, typically **https://example.com/auth**
         :param keycloak_realm: The keycloak realm
         :param keycloak_client_id: The keycloak client ID (Data Manager or Account Server)
+        :param keycloak_client_secret: The keycloak client secret (if required by the client)
         :param username: A valid username
         :param password: A valid password
         :param prior_token: An optional prior token. If supplied it will be used
@@ -109,6 +111,8 @@ class Auth:
             f"&username={username}"
             f"&password={password}"
         )
+        if keycloak_client_secret:
+            data += f"&client_secret={keycloak_client_secret}"
         headers: Dict[str, Any] = {"Content-Type": "application/x-www-form-urlencoded"}
         url = f"{realm_url}/protocol/openid-connect/token"
 
