@@ -43,7 +43,9 @@ class Auth:
         timeout_s: int = 4,
     ) -> Optional[str]:
         """Gets an access token from the given Keycloak server, realm
-        and client ID.
+        and client ID. The returned token can then be used on the client
+        typically providing it in the client's REST header byt setting
+        the header's "Authorization" value, e.g. "Authorization: Bearer <token>".
 
         If keycloak fails to yield a token None is returned, with messages
         written to the log.
