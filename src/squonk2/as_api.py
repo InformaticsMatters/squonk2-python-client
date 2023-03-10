@@ -361,6 +361,58 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_products_for_unit(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns Products for a given Unit.
+
+        :param access_token: A valid AS API access token
+        :param unit_id: The UUID of the Unit
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert unit_id
+
+        return AsApi.__request(
+            "GET",
+            f"/product/unit/{unit_id}",
+            access_token=access_token,
+            error_message="Failed getting products",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_products_for_organisation(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns Products for a given Organisation.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The UUID of the Organisation
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_id
+
+        return AsApi.__request(
+            "GET",
+            f"/product/organisation/{org_id}",
+            access_token=access_token,
+            error_message="Failed getting products",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_product_charges(
         cls,
         access_token: str,
