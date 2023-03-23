@@ -53,6 +53,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_project_instances()``
 - ``DmApi.get_service_errors()``
 - ``DmApi.get_task()``
+- ``DmApi.get_tasks()``
 - ``DmApi.get_unmanaged_project_file()``
 - ``DmApi.get_unmanaged_project_file_with_token()``
 - ``DmApi.get_version()``
