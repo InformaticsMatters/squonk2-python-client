@@ -1296,6 +1296,7 @@ class DmApi:
         access_token: str,
         *,
         exclude_done: bool = False,
+        exclude_removal: bool = False,
         exclude_purpose: Optional[str] = None,
         project_id: Optional[str] = None,
         instance_callback_context: Optional[str] = None,
@@ -1304,10 +1305,13 @@ class DmApi:
         """Gets information about a range of Tasks
 
         :param access_token: A valid DM API access token
-        :param exclude_done: Set if you only want to see running Tasks
+        :param exclude_done: Set if you do not want to see completed Tasks
+        :param exclude_removal: Set if you do not want to see removal Tasks
         :param exclude_purpose: A dot-separated string of purposes to exclude.
                                 From INSTANCE, FILE or DATASET
         :param project_id: Limit tasks to the given Project
+        :param instance_callback_context: Limit tasks to those for Instances
+                                          with the given callback context
         :param timeout_s: The underlying request timeout
         """
         assert access_token
@@ -1315,6 +1319,8 @@ class DmApi:
         params: Dict[str, Any] = {}
         if exclude_done:
             params["exclude_done"] = True
+        if exclude_removal:
+            params["exclude_removal"] = True
         if exclude_purpose:
             params["exclude_purpose"] = exclude_purpose
         if project_id:
