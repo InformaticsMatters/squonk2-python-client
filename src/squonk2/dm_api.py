@@ -1298,6 +1298,7 @@ class DmApi:
         exclude_done: bool = False,
         exclude_purpose: Optional[str] = None,
         project_id: Optional[str] = None,
+        instance_callback_context: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets information about a range of Tasks
@@ -1318,6 +1319,8 @@ class DmApi:
             params["exclude_purpose"] = exclude_purpose
         if project_id:
             params["project_id"] = project_id
+        if instance_callback_context:
+            params["instance_callback_context"] = instance_callback_context
         return DmApi.__request(
             "GET",
             "/task",
