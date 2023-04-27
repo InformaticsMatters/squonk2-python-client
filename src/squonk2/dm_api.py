@@ -1056,19 +1056,28 @@ class DmApi:
     @classmethod
     @synchronized
     def get_available_projects(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+        cls,
+        access_token: str,
+        *,
+        project_name: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets information about all projects available to you.
 
         :param access_token: A valid DM API access token
+        :param project_name: An optional project name to use as a filter
         :param timeout_s: The underlying request timeout
         """
         assert access_token
 
+        params: Dict[str, Any] = {}
+        if project_name:
+            params["project_name"] = project_name
         return DmApi.__request(
             "GET",
             "/project",
             access_token=access_token,
+            params=params,
             error_message="Failed to get projects",
             timeout=timeout_s,
         )[0]
