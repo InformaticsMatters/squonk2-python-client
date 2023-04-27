@@ -1300,6 +1300,53 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def get_tasks(
+        cls,
+        access_token: str,
+        *,
+        exclude_done: bool = False,
+        exclude_removal: bool = False,
+        exclude_purpose: Optional[str] = None,
+        project_id: Optional[str] = None,
+        instance_callback_context: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Gets information about a range of Tasks
+
+        :param access_token: A valid DM API access token
+        :param exclude_done: Set if you do not want to see completed Tasks
+        :param exclude_removal: Set if you do not want to see removal Tasks
+        :param exclude_purpose: A dot-separated string of purposes to exclude.
+                                From INSTANCE, FILE or DATASET
+        :param project_id: Limit tasks to the given Project
+        :param instance_callback_context: Limit tasks to those for Instances
+                                          with the given callback context
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if exclude_done:
+            params["exclude_done"] = True
+        if exclude_removal:
+            params["exclude_removal"] = True
+        if exclude_purpose:
+            params["exclude_purpose"] = exclude_purpose
+        if project_id:
+            params["project_id"] = project_id
+        if instance_callback_context:
+            params["instance_callback_context"] = instance_callback_context
+        return DmApi.__request(
+            "GET",
+            "/task",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get tasks",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_available_jobs(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> DmApiRv:
