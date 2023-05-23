@@ -270,12 +270,12 @@ class Environment:
     @property
     def ui_api(self) -> Optional[str]:
         """Return the web/UI API. This is the UI hostname
-        with a 'http' prefix and '/api' postfix.
+        with a 'http' prefix and '/data-manager-ui/api' postfix.
         """
         if not self.__ui_hostname:
             return None
         if not self.__ui_hostname.startswith("http"):
-            ret_val: str = f"https://{self.__ui_hostname}/api"
+            ret_val: str = f"https://{self.__ui_hostname}/data-manager-ui/api"
         else:
             ret_val = self.__ui_hostname
         return ret_val
