@@ -60,6 +60,7 @@ class UiApi:
         data: Optional[Dict[str, Any]] = None,
         files: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
+        expect_json: bool = False,
         timeout: int = _READ_TIMEOUT_S,
     ) -> Tuple[UiApiRv, Optional[requests.Response]]:
         """Sends a request to the UI API endpoint.
@@ -115,10 +116,13 @@ class UiApi:
         # replacing with empty dictionary on failure.
         msg: Optional[Dict[Any, Any]] = None
         if resp:
-            try:
-                msg = resp.json()
-            except:
-                pass
+            if expect_json:
+                try:
+                    msg = resp.json()
+                except:
+                    pass
+            else:
+                msg = {"text": resp.text}
 
         if _DEBUG_REQUEST:
             if resp is not None:
