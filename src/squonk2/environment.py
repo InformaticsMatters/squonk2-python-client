@@ -42,6 +42,7 @@ _ADMIN_PASSWORD_KEY: str = "admin-password"
 # Optional keys
 _KEYCLOAK_AS_CLIENT_ID_KEY: str = "keycloak-as-client-id"
 _AS_HOSTNAME_KEY: str = "as-hostname"
+_UI_HOSTNAME_KEY: str = "ui-hostname"
 
 
 class Environment:
@@ -163,6 +164,9 @@ class Environment:
         self.__as_hostname: Optional[str] = self.__get_config_value(
             _AS_HOSTNAME_KEY, optional=True
         )
+        self.__ui_hostname: Optional[str] = self.__get_config_value(
+            _UI_HOSTNAME_KEY, optional=True
+        )
 
     @property
     def environment(self) -> str:
@@ -254,4 +258,24 @@ class Environment:
             ret_val = self.__dm_hostname
         if not ret_val.endswith("/data-manager-api"):
             ret_val += "/data-manager-api"
+        return ret_val
+
+    @property
+    def ui_hostname(self) -> Optional[str]:
+        """Return the web/UI hostname. This is the unmodified
+        value found in the environment.
+        """
+        return self.__ui_hostname
+
+    @property
+    def ui_api(self) -> Optional[str]:
+        """Return the web/UI API. This is the UI hostname
+        with a 'http' prefix and '/api' postfix.
+        """
+        if not self.__ui_hostname:
+            return None
+        if not self.__ui_hostname.startswith("http"):
+            ret_val: str = f"https://{self.__ui_hostname}/api"
+        else:
+            ret_val = self.__ui_hostname
         return ret_val

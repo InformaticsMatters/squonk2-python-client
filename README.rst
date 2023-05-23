@@ -99,6 +99,22 @@ It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
 (rendered as a Python dictionary), or an error message if the call failed.
 
+Simplified UI API
+=================
+The following Squonk2 UI API functions are available: -
+
+- ``UiApi.set_api_url()``
+
+- ``UiApi.get_version()``
+
+A ``namedtuple`` is used as the return value for many of the methods: -
+
+- ``UiApiRv``
+
+It contains a boolean ``success`` field and a dictionary ``msg`` field. The
+``msg`` typically contains the underlying REST API response content
+(rendered as a Python dictionary), or an error message if the call failed.
+
 Debugging the API requests
 ==========================
 For development purposes you can expose detailed debug information relating to
@@ -165,6 +181,9 @@ e.g. ``export SQUONK2_ENVIRONMENT_FILE=~/my-env'``
         # The user *MUST* have admin rights.
         admin-user: dlister
         admin-password: blob1234
+        # The hostname of the Squonk2 web application, without a 'http' prefix.
+        # if present, this is used to obtain the UI version.
+        ui-hostname: ui.example.com
 
     # The final part of the file is a 'default' property,
     # which Squeck uses to select the an environment from the block above
