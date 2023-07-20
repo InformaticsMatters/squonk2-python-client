@@ -9,6 +9,14 @@ Informatics Matters Squonk2 Python Client
    :target: https://squonk2-python-client.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
+.. image:: https://github.com/InformaticsMatters/squonk2-python-client/actions/workflows/build.yaml/badge.svg
+   :target: https://github.com/InformaticsMatters/squonk2-python-client/actions/workflows/build.yaml
+   :alt: Build
+
+.. image:: https://github.com/InformaticsMatters/squonk2-python-client/actions/workflows/publish.yaml/badge.svg
+   :target: https://github.com/InformaticsMatters/squonk2-python-client/actions/workflows/publish.yaml
+   :alt: Publish
+
 A Python 3 package that provides simplified access to key parts of the
 Informatics Matters Squonk2 service, consisting of the Authentication, and
 Data Manager and Account Server REST interfaces. The functions provide
