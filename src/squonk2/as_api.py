@@ -7,6 +7,7 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
     If the variable isn't set the user must set it programmatically
     using :py:meth:`AsApi.set_api_url()`.
 """
+
 from collections import namedtuple
 from datetime import date
 import logging

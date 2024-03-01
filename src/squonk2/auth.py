@@ -1,6 +1,7 @@
 """Python utilities to simplify calls to the authentication mechanism
 (Keycloak) for use with the Data Manager and Account Server APIs.
 """
+
 from datetime import datetime
 import json
 import logging
@@ -39,7 +40,7 @@ class Auth:
         keycloak_client_id: str,
         username: str,
         password: str,
-        keycloak_client_secret: str = None,
+        keycloak_client_secret: Optional[str] = None,
         prior_token: Optional[str] = None,
         timeout_s: int = 4,
     ) -> Optional[str]:

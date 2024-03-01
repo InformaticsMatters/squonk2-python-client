@@ -10,6 +10,7 @@ API. All you need to do, if you don't have your environment files
 in '~/.squonk2' is to set the variable SQUONK2_ENVIRONMENTS_FILE to identify
 your chosen file.
 """
+
 import os
 from typing import Any, Dict, List, Optional
 

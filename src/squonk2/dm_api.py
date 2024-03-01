@@ -7,6 +7,7 @@ interact with **Projects**, **Instances** (**Jobs**) and **Files**.
     If the variable isn't set the user must set it programmatically
     using :py:meth:`DmApi.set_api_url()`.
 """
+
 from collections import namedtuple
 import decimal
 import json
