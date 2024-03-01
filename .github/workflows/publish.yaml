@@ -7,11 +7,7 @@ name: publish
 # Control variables (GitHub Secrets)
 # -----------------
 #
-# At the GitHub 'organisation' or 'project' level you must have the following
-# GitHub 'Repository Secrets' defined (i.e. via 'Settings -> Secrets'): -
-#
-# PYPI_USERNAME
-# PYPI_TOKEN
+# None
 #
 # -----------
 # Environment (GitHub Environments)
@@ -27,6 +23,8 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -45,6 +43,3 @@ jobs:
         python -m build --sdist --wheel --outdir dist/
     - name: Publish
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: ${{ secrets.PYPI_USERNAME }}
-        password: ${{ secrets.PYPI_TOKEN }}
