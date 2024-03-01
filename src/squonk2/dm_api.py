@@ -182,36 +182,6 @@ class DmApi:
         return DmApiRv(success=True, msg=msg), resp
 
     @classmethod
-    def __get_latest_job_operator_version(
-        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> Optional[str]:
-        """Gets Job application data from the DM API.
-        We'll get and return the latest version found so that we can launch
-        Jobs. If the Job application info is not available it indicates
-        the server has no Job Operator installed.
-        """
-        assert access_token
-
-        ret_val, resp = DmApi.__request(
-            "GET",
-            f"/application/{_DM_JOB_APPLICATION_ID}",
-            access_token=access_token,
-            error_message="Failed getting Job application info",
-            timeout=timeout_s,
-        )
-        if not ret_val.success:
-            _LOGGER.debug("Failed getting Job application info [%s]", resp)
-            return None
-
-        # If there are versions, return the first in the list
-        assert resp is not None
-        if "versions" in resp.json() and len(resp.json()["versions"]):
-            return resp.json()["versions"][0]
-
-        _LOGGER.debug("No versions returned for Job application info - no operator?")
-        return ""
-
-    @classmethod
     def __put_unmanaged_project_file(
         cls,
         access_token: str,
@@ -925,23 +895,8 @@ class DmApi:
         assert name
         assert isinstance(specification, (type(None), dict))
 
-        # Get the latest Job operator version.
-        # If there isn't one the DM can't run Jobs.
-        job_application_version: Optional[
-            str
-        ] = DmApi.__get_latest_job_operator_version(access_token)
-        if job_application_version is None:
-            # Failed calling the server.
-            # Incorrect URL, bad token or server out of action?
-            return DmApiRv(
-                success=False, msg={"error": "Failed getting Job operator version"}
-            )
-        if not job_application_version:
-            return DmApiRv(success=False, msg={"error": "No Job operator installed"})
-
         data: Dict[str, Any] = {
             "application_id": _DM_JOB_APPLICATION_ID,
-            "application_version": job_application_version,
             "as_name": name,
             "project_id": project_id,
             "specification": json.dumps(specification),
@@ -1011,23 +966,8 @@ class DmApi:
         assert name
         assert isinstance(specification, (type(None), dict))
 
-        # Get the latest Job operator version.
-        # If there isn't one the DM can't run Jobs.
-        job_application_version: Optional[
-            str
-        ] = DmApi.__get_latest_job_operator_version(access_token)
-        if job_application_version is None:
-            # Failed calling the server.
-            # Incorrect URL, bad token or server out of action?
-            return DmApiRv(
-                success=False, msg={"error": "Failed getting Job operator version"}
-            )
-        if not job_application_version:
-            return DmApiRv(success=False, msg={"error": "No Job operator installed"})
-
         data: Dict[str, Any] = {
             "application_id": _DM_JOB_APPLICATION_ID,
-            "application_version": job_application_version,
             "as_name": name,
             "project_id": project_id,
             "specification": json.dumps(specification),
