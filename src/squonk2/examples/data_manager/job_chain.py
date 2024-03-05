@@ -96,7 +96,7 @@ def run_a_job(
         print("Failed to start the Job")
         error(job_dm_rv)
         return False, None
-
+    assert job_dm_rv.msg
     job_instance_id: Optional[str] = job_dm_rv.msg["instance_id"]
 
     # Max wait-time (seconds)
@@ -125,6 +125,7 @@ def run_a_job(
             return False, None
 
         # Started?
+        assert job_dm_rv.msg
         if "started" in job_dm_rv.msg and not job_started:
             job_started = True
             print(f' Started Job instance "{job_instance_id}"')
