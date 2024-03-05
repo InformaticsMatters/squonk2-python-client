@@ -31,7 +31,7 @@ class AsApiRv:
     """
 
     success: bool
-    msg: Optional[dict[Any, Any]]
+    msg: Dict[Any, Any]
 
 
 # The Account Server API URL environment variable,
@@ -155,7 +155,7 @@ class AsApi:
 
         # Try and decode the response,
         # replacing with empty dictionary on failure.
-        msg: Optional[Dict[Any, Any]] = None
+        msg: Dict[Any, Any] = {}
         if resp:
             try:
                 msg = resp.json()

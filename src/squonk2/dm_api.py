@@ -31,7 +31,7 @@ class DmApiRv:
     """
 
     success: bool
-    msg: Optional[dict[Any, Any]]
+    msg: Dict[Any, Any]
 
 
 TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
@@ -159,7 +159,7 @@ class DmApi:
 
         # Try and decode the response,
         # replacing with empty dictionary on failure.
-        msg: Optional[Dict[Any, Any]] = None
+        msg: Dict[Any, Any] = {}
         if resp:
             try:
                 msg = resp.json()
