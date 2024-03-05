@@ -148,8 +148,8 @@ declare them in the shell. The default location of the file is
 ``~/.squonk2/environments``. If you have multiple installations this
 allows you to keep all your environment settings together in one file.
 
-You can use an alternative file  by setting ``SQUONK2_ENVIRONMENT_FILE``,
-e.g. ``export SQUONK2_ENVIRONMENT_FILE=~/my-env'``
+You can use an alternative file  by setting ``SQUONK2_ENVIRONMENTS_FILE``,
+e.g. ``export SQUONK2_ENVIRONMENTS_FILE=~/my-env'``
 
 ..  code-block:: yaml
 
@@ -160,7 +160,7 @@ e.g. ``export SQUONK2_ENVIRONMENT_FILE=~/my-env'``
     # It provides all the connection details for one or more Squonk2 environments.
     # It is expected to be found in the user's home directory
     # as '~/.squonk2/environments' or the user can 'point' to it by setting
-    # 'SQUONK2_ENVIRONMENT_FILE', e.g. 'export SQUONK2_ENVIRONMENT_FILE=~/my-env'
+    # 'SQUONK2_ENVIRONMENTS_FILE', e.g. 'export SQUONK2_ENVIRONMENTS_FILE=~/my-env'
 
     # The 'environments' block defines one or more environments.
     # Each has a name. Here we define an environment called 'site-a'

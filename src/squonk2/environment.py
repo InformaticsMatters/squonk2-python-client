@@ -24,7 +24,7 @@ from yaml import FullLoader, load
 #
 # See the project's 'environments' file for an example of the content of the file.
 _ENVIRONMENT_DIRECTORY: str = "~/.squonk2"
-_ENVIRONMENT_FILE: str = os.environ.get(
+_ENVIRONMENTS_FILE: str = os.environ.get(
     "SQUONK2_ENVIRONMENTS_FILE", f"{_ENVIRONMENT_DIRECTORY}/environments"
 )
 
@@ -50,7 +50,9 @@ class Environment:
     """Loads the values from the environment file for the given environment."""
 
     # Location of the file
-    __environments_file: str = os.path.expandvars(os.path.expanduser(_ENVIRONMENT_FILE))
+    __environments_file: str = os.path.expandvars(
+        os.path.expanduser(_ENVIRONMENTS_FILE)
+    )
     # Dictionary-form of the entire file
     __environments_config: Dict[str, Any] = {}
     # List of names in the configuration
