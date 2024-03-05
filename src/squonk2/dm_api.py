@@ -8,7 +8,7 @@ interact with **Projects**, **Instances** (**Jobs**) and **Files**.
     using :py:meth:`DmApi.set_api_url()`.
 """
 
-from collections import namedtuple
+from dataclasses import dataclass
 import decimal
 import json
 import logging
@@ -21,12 +21,18 @@ from urllib3 import disable_warnings
 from wrapt import synchronized
 import requests
 
-DmApiRv: namedtuple = namedtuple("DmApiRv", "success msg")
-"""The return value from most of the the DmApi class public methods.
 
-:param success: True if the call was successful, False otherwise.
-:param msg: API request response content
-"""
+@dataclass
+class DmApiRv:
+    """The return value from most of the the DmApi class public methods.
+
+    :param success: True if the call was successful, False otherwise.
+    :param msg: API request response content
+    """
+
+    success: bool
+    msg: Optional[dict[Any, Any]]
+
 
 TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
 """A test Account Server (AS) Product ID. This ID does not actually exist in the AS
@@ -102,7 +108,7 @@ class DmApi:
         All the public API methods pass control to this method,
         returning its result to the user.
         """
-        assert method in ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        assert method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
@@ -116,9 +122,9 @@ class DmApi:
         use_headers = headers.copy() if headers else {}
         if access_token:
             if headers:
-                use_headers["Authorization"] = "Bearer " + access_token
+                use_headers["Authorization"] = f"Bearer {access_token}"
             else:
-                use_headers = {"Authorization": "Bearer " + access_token}
+                use_headers = {"Authorization": f"Bearer {access_token}"}
 
         if _DEBUG_REQUEST:
             print("# ---")
@@ -130,7 +136,7 @@ class DmApi:
             print(f"# timeout={timeout}")
             print(f"# verify={DmApi.__verify_ssl_cert}")
 
-        expected_codes = expected_response_codes if expected_response_codes else [200]
+        expected_codes = expected_response_codes or [200]
         resp: Optional[requests.Response] = None
 
         if _DEBUG_REQUEST_TIME:
@@ -1466,7 +1472,7 @@ class DmApi:
         """Gets service errors. You need admin rights to use this method.
 
         :param access_token: A valid DM API access token
-        :parem include_acknowleged: True to include acknowledged errors
+        :param include_acknowleged: True to include acknowledged errors
         :param timeout_s: The underlying request timeout
         """
         assert access_token
@@ -1553,6 +1559,45 @@ class DmApi:
 
         # OK if we get here
         return DmApiRv(success=True, msg={})
+
+    @classmethod
+    @synchronized
+    def put_job_manifest(
+        cls,
+        access_token: str,
+        *,
+        url: str,
+        header: Optional[str] = None,
+        params: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> DmApiRv:
+        """Puts a Job Manifest onto server. The action requires the token to be
+        that of an admin user.
+
+        :param access_token: A valid DM API access token
+        :param url: The location of the Manifest (typically a GitHub repository URL)
+        :param header: An optional JSON string of header keys and values
+        :param params: An optional JSON string of parameter keys and values
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert url
+
+        data: Dict[str, Any] = {"url": url}
+        if header:
+            data["header"] = header
+        if params:
+            data["params"] = params
+
+        return DmApi.__request(
+            "PUT",
+            "/admin/job-manifest",
+            data=data,
+            access_token=access_token,
+            expected_response_codes=[200],
+            error_message="Failed to put job manifest",
+            timeout=timeout_s,
+        )[0]
 
     @classmethod
     @synchronized

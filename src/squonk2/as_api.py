@@ -8,7 +8,7 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
     using :py:meth:`AsApi.set_api_url()`.
 """
 
-from collections import namedtuple
+from dataclasses import dataclass
 from datetime import date
 import logging
 import os
@@ -21,12 +21,18 @@ from urllib3 import disable_warnings
 from wrapt import synchronized
 import requests
 
-AsApiRv: namedtuple = namedtuple("AsApiRv", "success msg")
-"""The return value from most of the the AsApi class public methods.
 
-:param success: True if the call was successful, False otherwise.
-:param msg: API request response content
-"""
+@dataclass
+class AsApiRv:
+    """The return value from most of the the AsApi class public methods.
+
+    :param success: True if the call was successful, False otherwise.
+    :param msg: API request response content
+    """
+
+    success: bool
+    msg: Optional[dict[Any, Any]]
+
 
 # The Account Server API URL environment variable,
 # You can set the API manually with set_apu_url() if this is not defined.
@@ -98,7 +104,7 @@ class AsApi:
         All the public API methods pass control to this method,
         returning its result to the user.
         """
-        assert method in ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        assert method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
@@ -112,9 +118,9 @@ class AsApi:
         use_headers = headers.copy() if headers else {}
         if access_token:
             if headers:
-                use_headers["Authorization"] = "Bearer " + access_token
+                use_headers["Authorization"] = f"Bearer {access_token}"
             else:
-                use_headers = {"Authorization": "Bearer " + access_token}
+                use_headers = {"Authorization": f"Bearer {access_token}"}
 
         if _DEBUG_REQUEST:
             print("# ---")
@@ -126,7 +132,7 @@ class AsApi:
             print(f"# timeout={timeout}")
             print(f"# verify={AsApi.__verify_ssl_cert}")
 
-        expected_codes = expected_response_codes if expected_response_codes else [200]
+        expected_codes = expected_response_codes or [200]
         resp: Optional[requests.Response] = None
 
         if _DEBUG_REQUEST_TIME:

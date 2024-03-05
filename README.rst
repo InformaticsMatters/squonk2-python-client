@@ -67,13 +67,14 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_version()``
 - ``DmApi.list_project_files()``
 - ``DmApi.put_unmanaged_project_files()``
+- ``DmApi.put_job_manifest()``
 - ``DmApi.remove_project_editor()``
 - ``DmApi.remove_project_observer()``
 - ``DmApi.set_admin_state()``
 - ``DmApi.set_job_exchange_rates()``
 - ``DmApi.start_job_instance()``
 
-A ``namedtuple`` is used as the return value for many of the methods: -
+A ``dataclass`` is used as the return value for many of the methods: -
 
 - ``DmApiRv``
 
@@ -107,7 +108,7 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.get_units()``
 - ``AsApi.get_version()``
 
-A ``namedtuple`` is used as the return value for many of the methods: -
+A ``dataclass`` is used as the return value for many of the methods: -
 
 - ``AsApiRv``
 
