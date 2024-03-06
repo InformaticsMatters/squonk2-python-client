@@ -36,14 +36,14 @@ _DEFAULT_KEY: str = "default"
 # Keys required in each environment.
 _KEYCLOAK_HOSTNAME_KEY: str = "keycloak-hostname"
 _KEYCLOAK_REALM_KEY: str = "keycloak-realm"
-_KEYCLOAK_DM_CLIENT_ID_KEY: str = "keycloak-dm-client-id"
-_DM_HOSTNAME_KEY: str = "dm-hostname"
 # Optional keys (extracted from ENV if not present)
 _ADMIN_USER_KEY: str = "admin-user"
 _ADMIN_PASSWORD_KEY: str = "admin-password"
 # Optional keys
 _KEYCLOAK_AS_CLIENT_ID_KEY: str = "keycloak-as-client-id"
 _AS_HOSTNAME_KEY: str = "as-hostname"
+_KEYCLOAK_DM_CLIENT_ID_KEY: str = "keycloak-dm-client-id"
+_DM_HOSTNAME_KEY: str = "dm-hostname"
 
 
 class Environment:
@@ -177,10 +177,6 @@ class Environment:
             self.__get_config_value(_KEYCLOAK_HOSTNAME_KEY)
         )
         self.__keycloak_realm: str = str(self.__get_config_value(_KEYCLOAK_REALM_KEY))
-        self.__keycloak_dm_client_id: str = str(
-            self.__get_config_value(_KEYCLOAK_DM_CLIENT_ID_KEY)
-        )
-        self.__dm_hostname: str = str(self.__get_config_value(_DM_HOSTNAME_KEY))
 
         # Get required keys, but allowing environment variables
         # if not present in the file...
@@ -199,6 +195,12 @@ class Environment:
         )
         self.__as_hostname: Optional[str] = self.__get_config_value(
             _AS_HOSTNAME_KEY, optional=True
+        )
+        self.__keycloak_dm_client_id: Optional[str] = self.__get_config_value(
+            _KEYCLOAK_DM_CLIENT_ID_KEY, optional=True
+        )
+        self.__dm_hostname: Optional[str] = self.__get_config_value(
+            _DM_HOSTNAME_KEY, optional=True
         )
 
     @property
@@ -237,7 +239,7 @@ class Environment:
         return self.__keycloak_as_client_id
 
     @property
-    def keycloak_dm_client_id(self) -> str:
+    def keycloak_dm_client_id(self) -> Optional[str]:
         """Return the keycloak Data Manager client ID."""
         return self.__keycloak_dm_client_id
 
@@ -274,17 +276,19 @@ class Environment:
         return ret_val
 
     @property
-    def dm_hostname(self) -> str:
+    def dm_hostname(self) -> Optional[str]:
         """Return the keycloak hostname. This is the unmodified
         value found in the environment.
         """
         return self.__dm_hostname
 
     @property
-    def dm_api(self) -> str:
+    def dm_api(self) -> Optional[str]:
         """Return the DM API. This is the environment hostname
         with a 'http' prefix and '/data-manager-api' postfix.
         """
+        if not self.__dm_hostname:
+            return None
         if not self.__dm_hostname.startswith("http"):
             ret_val: str = f"https://{self.__dm_hostname}"
         else:
