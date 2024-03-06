@@ -39,15 +39,8 @@ class AsApiRv:
 _API_URL_ENV_NAME: str = "SQUONK2_ASAPI_URL"
 _API_VERIFY_SSL_CERT_ENV_NAME: str = "SQUONK2_ASAPI_VERIFY_SSL_CERT"
 
-# How old do tokens need to be to re-use them?
-# If less than the value provided here, we get a new one.
-# Used in get_access_token().
-_PRIOR_TOKEN_MIN_AGE_M: int = 1
-
 # A common read timeout
 _READ_TIMEOUT_S: int = 4
-# A longer timeout
-_READ_LONG_TIMEOUT_S: int = 12
 
 # Debug request times?
 # If set the duration of each request call is logged.
@@ -503,6 +496,45 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def create_organisation(
+        cls,
+        access_token: str,
+        *,
+        org_name: str,
+        org_owner: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Creates an Organisation. You need to provide a name and an owner.
+
+        You will need admin privileges to do this.
+
+        :param access_token: A valid AS API access token
+        :param org_name: The name to give the Organisation
+        :param org_owner: The Organisation owner
+        :param billing_day: A billing day (1..28)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_name
+        assert org_owner
+
+        data: Dict[str, Any] = {
+            "name": org_name,
+            "owner": org_owner,
+        }
+
+        return AsApi.__request(
+            "POST",
+            "/organisation",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to create organisation",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_organisation(
         cls,
         access_token: str,
@@ -582,6 +614,29 @@ class AsApi:
             f"/organisation/{org_id}/unit",
             access_token=access_token,
             error_message="Failed to get organisation units",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_organisations(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets all the Organisations you can see.
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "GET",
+            "/organisation",
+            access_token=access_token,
+            error_message="Failed to get organisations",
             timeout=timeout_s,
         )[0]
 

@@ -23,6 +23,13 @@ Data Manager and Account Server REST interfaces. The functions provide
 access to some of the key API methods, implemented initially to support
 execution of Jobs from a Fragalysis stack `backend`_.
 
+.. note::
+    Odd numbered *major* versions of the client are used for the *synchronous* API
+    and even-numbered *major* versions are used for the *asynchronous* API.
+    Version ``1.x.x`` of the client can only be used against the Data Manager
+    version ``1``. Version ``3.x.x`` must be used for Data Manager version ``2``
+    and later.
+
 Simplified Authentication
 =========================
 The following Squonk2 Authentication functions are available: -
@@ -93,6 +100,7 @@ The following Squonk2 Account Server API functions are available: -
 
 - ``AsApi.create_product()``
 - ``AsApi.create_unit()``
+- ``AsApi.create_organisation()``
 - ``AsApi.delete_product()``
 - ``AsApi.delete_unit()``
 - ``AsApi.get_available_assets()``
@@ -104,6 +112,7 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.get_products_for_unit()``
 - ``AsApi.get_products_for_organisation()``
 - ``AsApi.get_product_charges()``
+- ``AsApi.get_organisations()``
 - ``AsApi.get_unit()``
 - ``AsApi.get_units()``
 - ``AsApi.get_version()``

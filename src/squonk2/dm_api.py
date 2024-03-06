@@ -39,6 +39,8 @@ TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
 but is accepted as valid by the Data Manager for Administrative users and used for
 testing purposes. It allows the creation of Projects without the need of an AS Product.
 """
+TEST_ORG_ID: str = "org-11111111-1111-1111-1111-111111111111"
+TEST_UNIT_ID: str = "unit-11111111-1111-1111-1111-111111111111"
 
 # The Job instance Application ID - a 'well known' identity.
 _DM_JOB_APPLICATION_ID: str = "datamanagerjobs.squonk.it"
@@ -46,11 +48,6 @@ _DM_JOB_APPLICATION_ID: str = "datamanagerjobs.squonk.it"
 # You can set the API manually with set_apu_url() if this is not defined.
 _API_URL_ENV_NAME: str = "SQUONK2_DMAPI_URL"
 _API_VERIFY_SSL_CERT_ENV_NAME: str = "SQUONK2_DMAPI_VERIFY_SSL_CERT"
-
-# How old do tokens need to be to re-use them?
-# If less than the value provided here, we get a new one.
-# Used in get_access_token().
-_PRIOR_TOKEN_MIN_AGE_M: int = 1
 
 # A common read timeout
 _READ_TIMEOUT_S: int = 4
@@ -614,8 +611,9 @@ class DmApi:
 
             assert resp is not None
             if resp.status_code in [200]:
-                for item in resp.json()["files"]:
-                    existing_path_files.append(item["file_name"])
+                existing_path_files.extend(
+                    item["file_name"] for item in resp.json()["files"]
+                )
 
         # Now post every file that's not in the existing list
         if isinstance(project_files, str):
@@ -1318,7 +1316,7 @@ class DmApi:
         cls,
         access_token: str,
         *,
-        project_id: str = "",
+        project_id: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets summary information about all Jobs.
@@ -1329,12 +1327,13 @@ class DmApi:
         """
         assert access_token
 
-        params: Optional[Dict[str, Any]] = None
-        if project_id:
-            params = {
+        params = (
+            {
                 "project_id": project_id,
             }
-
+            if project_id
+            else None
+        )
         return DmApi.__request(
             "GET",
             "/job",
@@ -1351,7 +1350,7 @@ class DmApi:
         access_token: str,
         *,
         job_id: int,
-        project_id: str = "",
+        project_id: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets detailed information about a specific Job
@@ -1365,12 +1364,13 @@ class DmApi:
         assert access_token
         assert job_id > 0
 
-        params: Optional[Dict[str, Any]] = None
-        if project_id:
-            params = {
+        params = (
+            {
                 "project_id": project_id,
             }
-
+            if project_id
+            else None
+        )
         return DmApi.__request(
             "GET",
             f"/job/{job_id}",
@@ -1393,7 +1393,7 @@ class DmApi:
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets detailed information about a specific Job
-        using its ``collection``, ``job`` and ``version``, unsing an optional
+        using its ``collection``, ``job`` and ``version``, using an optional
         target ``project_id``.
 
         :param access_token: A valid DM API access token.
@@ -1466,20 +1466,20 @@ class DmApi:
         cls,
         access_token: str,
         *,
-        include_acknowleged: bool = False,
+        include_acknowledged: bool = False,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> DmApiRv:
         """Gets service errors. You need admin rights to use this method.
 
         :param access_token: A valid DM API access token
-        :param include_acknowleged: True to include acknowledged errors
+        :param include_acknowledged: True to include acknowledged errors
         :param timeout_s: The underlying request timeout
         """
         assert access_token
 
         params: Dict[str, Any] = {}
-        if include_acknowleged:
-            params["include_acknowleged"] = True
+        if include_acknowledged:
+            params["include_acknowledged"] = True
 
         return DmApi.__request(
             "GET",
