@@ -17,7 +17,7 @@ And uninstall with::
 
 .. note::
     If you've set ``PYTHONPATH`` (see testing below) you will need to unset it
-    (``unset PYTHONPATH``). Otherrwise you will get a
+    (``unset PYTHONPATH``). Otherwise you will get a
     **No files were found to uninstall.** error from ``pip``.
 
 *******
