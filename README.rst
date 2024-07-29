@@ -125,6 +125,22 @@ It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
 (rendered as a Python dictionary), or an error message if the call failed.
 
+Simplified UI API
+=================
+The following Squonk2 UI API functions are available: -
+
+- ``UiApi.set_api_url()``
+
+- ``UiApi.get_version()``
+
+A ``namedtuple`` is used as the return value for many of the methods: -
+
+- ``UiApiRv``
+
+It contains a boolean ``success`` field and a dictionary ``msg`` field. The
+``msg`` typically contains the underlying REST API response content
+(rendered as a Python dictionary), or an error message if the call failed.
+
 Examples
 ========
 The package ships with some API examples that might be useful for your own work.
