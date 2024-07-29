@@ -420,6 +420,7 @@ class AsApi:
         product_id: str,
         from_: Optional[date] = None,
         until: Optional[date] = None,
+        pbp: Optional[int] = None,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> AsApiRv:
         """Returns charges for a given Product. If from and until are omitted
@@ -429,8 +430,9 @@ class AsApi:
 
         :param access_token: A valid AS API access token
         :param product_id: The UUID of the Product
-        :param from_: An option date where charges are to start (inclusive)
-        :param until: An option date where charges are to end (exclusive)
+        :param from_: An optional date where charges are to start (inclusive)
+        :param until: An optional date where charges are to end (exclusive)
+        :param pbp: An optional prior billing period
         :param timeout_s: The underlying request timeout
         """
         assert access_token
@@ -441,6 +443,8 @@ class AsApi:
             params["from"] = str(from_)
         if until:
             params["until"] = str(until)
+        if pbp:
+            params["pbp"] = str(pbp)
 
         return AsApi.__request(
             "GET",
