@@ -448,7 +448,7 @@ class AsApi:
 
         return AsApi.__request(
             "GET",
-            f"/product/{product_id}/charges",
+            f"/charges/product/{product_id}",
             access_token=access_token,
             params=params,
             error_message="Failed getting product",
