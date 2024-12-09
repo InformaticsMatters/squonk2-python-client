@@ -650,7 +650,7 @@ class AsApi:
         cls,
         access_token: str,
         *,
-        organisation_id: str,
+        org_id: str,
         from_: Optional[date] = None,
         until: Optional[date] = None,
         pbp: Optional[int] = None,
@@ -662,14 +662,14 @@ class AsApi:
         You will need admin rights on the Account Server to use this method.
 
         :param access_token: A valid AS API access token
-        :param organisation_id: The UUID of the Organisation
+        :param org_id: The UUID of the Organisation
         :param from_: An optional date where charges are to start (inclusive)
         :param until: An optional date where charges are to end (exclusive)
         :param pbp: An optional prior billing period
         :param timeout_s: The underlying request timeout
         """
         assert access_token
-        assert organisation_id
+        assert org_id
 
         params: Dict[str, Any] = {}
         if from_:
@@ -681,7 +681,7 @@ class AsApi:
 
         return AsApi.__request(
             "GET",
-            f"/charges/organisation/{organisation_id}",
+            f"/charges/organisation/{org_id}",
             access_token=access_token,
             params=params,
             error_message="Failed getting product",
