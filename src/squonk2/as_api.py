@@ -646,6 +646,50 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_organisation_charges(
+        cls,
+        access_token: str,
+        *,
+        organisation_id: str,
+        from_: Optional[date] = None,
+        until: Optional[date] = None,
+        pbp: Optional[int] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns charges for a given Organisation. If from and until are omitted
+        charges for the current billing period are returned.
+
+        You will need admin rights on the Account Server to use this method.
+
+        :param access_token: A valid AS API access token
+        :param organisation_id: The UUID of the Organisation
+        :param from_: An optional date where charges are to start (inclusive)
+        :param until: An optional date where charges are to end (exclusive)
+        :param pbp: An optional prior billing period
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert organisation_id
+
+        params: Dict[str, Any] = {}
+        if from_:
+            params["from"] = str(from_)
+        if until:
+            params["until"] = str(until)
+        if pbp:
+            params["pbp"] = str(pbp)
+
+        return AsApi.__request(
+            "GET",
+            f"/charges/organisation/{organisation_id}",
+            access_token=access_token,
+            params=params,
+            error_message="Failed getting product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def create_product(
         cls,
         access_token: str,
