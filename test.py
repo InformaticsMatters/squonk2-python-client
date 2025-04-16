@@ -22,6 +22,10 @@ KEYCLOAK_USER_PASSWORD: str = os.environ["SQUONK2_KEYCLOAK_USER_PASSWORD"]
 API_URL_VALIDATION: bool = (
     os.environ.get("SQUONK2_DMAPI_URL_VALIDATION", "yes").lower() == "yes"
 )
+# In recent version of Python ypu may be forced to set SSL_CERT_FILE
+# from the command-line: -
+#
+#   export SSL_CERT_FILE=$(python -m certifi)
 
 
 def fail(msg: str, retval: Optional[DmApiRv] = None) -> NoReturn:
