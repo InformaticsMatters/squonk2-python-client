@@ -153,7 +153,7 @@ class Environment:
 
         return str(value) if value else None
 
-    def __init__(self, environment: Optional[str]):
+    def __init__(self, environment: Optional[str] = None):
         """Prepare the environment object. The user is expected to have called
         'Environment.load()' first. If an environment is not named the default is used.
         """
