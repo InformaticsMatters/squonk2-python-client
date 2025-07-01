@@ -357,6 +357,44 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def get_job_definition_schema_version(
+        cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> DmApiRv:
+        """Returns the DM-API Job Definition schema version.
+
+        :param access_token: An optional valid DM API access token (deprecated)
+        :param timeout_s: The underlying request timeout
+        """
+
+        return DmApi.__request(
+            "GET",
+            "/job-definition-schema/version",
+            access_token=access_token,
+            error_message="Failed getting version",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_workflow_engine_version(
+        cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> DmApiRv:
+        """Returns the DM-API workflow engine version.
+
+        :param access_token: An optional valid DM API access token (deprecated)
+        :param timeout_s: The underlying request timeout
+        """
+
+        return DmApi.__request(
+            "GET",
+            "/workflow-engine/version",
+            access_token=access_token,
+            error_message="Failed getting version",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def create_project(
         cls,
         access_token: str,
