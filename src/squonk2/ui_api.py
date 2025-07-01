@@ -20,10 +20,12 @@ class UiApiRv:
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
+    :param http_status_code: An HTTPS status code (if available)
     """
 
     success: bool
     msg: Dict[Any, Any]
+    http_status_code: int | None = None
 
 
 # A common read timeout
@@ -129,12 +131,14 @@ class UiApi:
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
+        http_status_code: int | None = None
         if resp:
             if expect_json:
                 with contextlib.suppress(Exception):
                     msg = resp.json()
             else:
                 msg = {"text": resp.text}
+            http_status_code = resp.status_code
 
         if _DEBUG_REQUEST:
             if resp is not None:
@@ -152,11 +156,15 @@ class UiApi:
 
         if resp is None or resp.status_code not in expected_codes:
             return (
-                UiApiRv(success=False, msg={"error": f"{error_message} (resp={resp})"}),
+                UiApiRv(
+                    success=False,
+                    msg={"error": f"{error_message} (resp={resp})"},
+                    http_status_code=http_status_code,
+                ),
                 resp,
             )
 
-        return UiApiRv(success=True, msg=msg), resp
+        return UiApiRv(success=True, msg=msg, http_status_code=http_status_code), resp
 
     @classmethod
     @synchronized

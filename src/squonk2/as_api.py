@@ -29,10 +29,12 @@ class AsApiRv:
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
+    :param http_status_code: An HTTPS status code (if available)
     """
 
     success: bool
     msg: Dict[Any, Any]
+    http_status_code: int | None = None
 
 
 # The Account Server API URL environment variable,
@@ -152,9 +154,11 @@ class AsApi:
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
+        http_status_code: int | None = None
         if resp:
             with contextlib.suppress(Exception):
                 msg = resp.json()
+            http_status_code = resp.status_code
         if _DEBUG_REQUEST:
             if resp is not None:
                 print(
@@ -171,11 +175,15 @@ class AsApi:
 
         if resp is None or resp.status_code not in expected_codes:
             return (
-                AsApiRv(success=False, msg={"error": f"{error_message} (resp={resp})"}),
+                AsApiRv(
+                    success=False,
+                    msg={"error": f"{error_message} (resp={resp})"},
+                    http_status_code=http_status_code,
+                ),
                 resp,
             )
 
-        return AsApiRv(success=True, msg=msg), resp
+        return AsApiRv(success=True, msg=msg, http_status_code=http_status_code), resp
 
     @classmethod
     @synchronized
