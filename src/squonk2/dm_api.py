@@ -167,18 +167,16 @@ class DmApi:
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
-        http_status_code: int = 0
         if resp:
             with contextlib.suppress(Exception):
                 msg = resp.json()
-            http_status_code = resp.status_code
+        http_status_code: int = 0 if resp is None else resp.status_code
         if _DEBUG_REQUEST:
             if resp is not None:
                 print(
                     f"# request() status_code={resp.status_code} msg={msg}"
                     f" resp.text={resp.text}"
                 )
-                print(f"# http_status_code={http_status_code}")
             else:
                 print("# request() resp=None")
 
