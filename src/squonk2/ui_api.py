@@ -20,12 +20,12 @@ class UiApiRv:
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
-    :param http_status_code: An HTTPS status code (if available)
+    :param http_status_code: An HTTPS status code (0 if not available)
     """
 
     success: bool
     msg: Dict[Any, Any]
-    http_status_code: int | None = None
+    http_status_code: int
 
 
 # A common read timeout
@@ -89,7 +89,14 @@ class UiApi:
         assert isinstance(expected_response_codes, (type(None), list))
 
         if not UiApi.__ui_api_url:
-            return UiApiRv(success=False, msg={"error": "No API URL defined"}), None
+            return (
+                UiApiRv(
+                    success=False,
+                    msg={"error": "No API URL defined"},
+                    http_status_code=0,
+                ),
+                None,
+            )
 
         url: str = UiApi.__ui_api_url + endpoint
 
@@ -131,7 +138,7 @@ class UiApi:
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
-        http_status_code: int | None = None
+        http_status_code: int = 0
         if resp:
             if expect_json:
                 with contextlib.suppress(Exception):
@@ -146,6 +153,7 @@ class UiApi:
                     f"# request() status_code={resp.status_code} msg={msg}"
                     f" resp.text={resp.text}"
                 )
+                print(f"# http_status_code={http_status_code}")
             else:
                 print("# request() resp=None")
 

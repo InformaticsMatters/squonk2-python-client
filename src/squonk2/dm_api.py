@@ -29,12 +29,12 @@ class DmApiRv:
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
-    :param http_status_code: An HTTPS status code (if available)
+    :param http_status_code: An HTTPS status code (0 if not available)
     """
 
     success: bool
     msg: Dict[Any, Any]
-    http_status_code: int | None = None
+    http_status_code: int
 
 
 TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
@@ -113,7 +113,14 @@ class DmApi:
         assert isinstance(expected_response_codes, (type(None), list))
 
         if not DmApi.__dm_api_url:
-            return DmApiRv(success=False, msg={"error": "No API URL defined"}), None
+            return (
+                DmApiRv(
+                    success=False,
+                    msg={"error": "No API URL defined"},
+                    http_status_code=0,
+                ),
+                None,
+            )
 
         url: str = DmApi.__dm_api_url + endpoint
 
@@ -160,7 +167,7 @@ class DmApi:
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
-        http_status_code: int | None = None
+        http_status_code: int = 0
         if resp:
             with contextlib.suppress(Exception):
                 msg = resp.json()
@@ -171,6 +178,7 @@ class DmApi:
                     f"# request() status_code={resp.status_code} msg={msg}"
                     f" resp.text={resp.text}"
                 )
+                print(f"# http_status_code={http_status_code}")
             else:
                 print("# request() resp=None")
 
@@ -629,12 +637,15 @@ class DmApi:
         )
 
         if not DmApi.__dm_api_url:
-            return DmApiRv(success=False, msg={"error": "No API URL defined"})
+            return DmApiRv(
+                success=False, msg={"error": "No API URL defined"}, http_status_code=0
+            )
 
         # If we're not forcing the files collect the names
         # of every file on the path - we use this to skip files that
         # are already present.
         existing_path_files: List[str] = []
+        http_status_code: int = 0
         if not force:
             # What files already exist on the path?
             # To save time we avoid putting files that appear to exist.
@@ -654,6 +665,7 @@ class DmApi:
                 return ret_val
 
             assert resp is not None
+            http_status_code = resp.status_code
             if resp.status_code in [200]:
                 existing_path_files.extend(
                     item["file_name"] for item in resp.json()["files"]
@@ -669,7 +681,9 @@ class DmApi:
             # whether we end up sending it or not.
             if not os.path.isfile(src_file):
                 return DmApiRv(
-                    success=False, msg={"error": f"No such file ({src_file})"}
+                    success=False,
+                    msg={"error": f"No such file ({src_file})"},
+                    http_status_code=http_status_code,
                 )
             if os.path.basename(src_file) not in existing_path_files:
                 ret_val = DmApi.__put_unmanaged_project_file(
@@ -684,7 +698,7 @@ class DmApi:
                     return ret_val
 
         # OK if we get here
-        return DmApiRv(success=True, msg={})
+        return DmApiRv(success=True, msg={}, http_status_code=http_status_code)
 
     @classmethod
     @synchronized
@@ -742,7 +756,7 @@ class DmApi:
                 return ret_val
 
         # OK if we get here
-        return DmApiRv(success=True, msg={})
+        return DmApiRv(success=True, msg={}, http_status_code=0)
 
     @classmethod
     @synchronized
@@ -1602,7 +1616,7 @@ class DmApi:
                 return ret_val
 
         # OK if we get here
-        return DmApiRv(success=True, msg={})
+        return DmApiRv(success=True, msg={}, http_status_code=0)
 
     @classmethod
     @synchronized

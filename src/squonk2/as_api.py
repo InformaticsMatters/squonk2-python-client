@@ -29,12 +29,12 @@ class AsApiRv:
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
-    :param http_status_code: An HTTPS status code (if available)
+    :param http_status_code: An HTTPS status code (0 if not available)
     """
 
     success: bool
     msg: Dict[Any, Any]
-    http_status_code: int | None = None
+    http_status_code: int
 
 
 # The Account Server API URL environment variable,
@@ -107,7 +107,14 @@ class AsApi:
         assert isinstance(expected_response_codes, (type(None), list))
 
         if not AsApi.__as_api_url:
-            return AsApiRv(success=False, msg={"error": "No API URL defined"}), None
+            return (
+                AsApiRv(
+                    success=False,
+                    msg={"error": "No API URL defined"},
+                    http_status_code=0,
+                ),
+                None,
+            )
 
         url: str = AsApi.__as_api_url + endpoint
 
@@ -154,7 +161,7 @@ class AsApi:
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
-        http_status_code: int | None = None
+        http_status_code: int = 0
         if resp:
             with contextlib.suppress(Exception):
                 msg = resp.json()
@@ -165,6 +172,7 @@ class AsApi:
                     f"# request() status_code={resp.status_code} msg={msg}"
                     f" resp.text={resp.text}"
                 )
+                print(f"# http_status_code={http_status_code}")
             else:
                 print("# request() resp=None")
 
