@@ -8,6 +8,7 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
     using :py:meth:`AsApi.set_api_url()`.
 """
 
+import contextlib
 from dataclasses import dataclass
 from datetime import date
 import logging
@@ -34,6 +35,8 @@ class AsApiRv:
     msg: Dict[Any, Any]
 
 
+# The Account Server API URL environment variable,
+# You can set the API manually with set_apu_url() if this is not defined.
 # The Account Server API URL environment variable,
 # You can set the API manually with set_apu_url() if this is not defined.
 _API_URL_ENV_NAME: str = "SQUONK2_ASAPI_URL"
@@ -143,18 +146,15 @@ class AsApi:
                 timeout=timeout,
                 verify=AsApi.__verify_ssl_cert,
             )
-        except:
+        except Exception:  # pylint: disable=broad-exception-caught
             _LOGGER.exception("Request failed")
 
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
         if resp:
-            try:
+            with contextlib.suppress(Exception):
                 msg = resp.json()
-            except:
-                pass
-
         if _DEBUG_REQUEST:
             if resp is not None:
                 print(

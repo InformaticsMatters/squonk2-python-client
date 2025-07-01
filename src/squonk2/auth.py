@@ -2,7 +2,7 @@
 (Keycloak) for use with the Data Manager and Account Server APIs.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import logging
 from typing import Any, Dict, Optional
@@ -97,7 +97,7 @@ class Auth:
             decoded_token: Dict[str, Any] = jwt.decode(
                 prior_token, Auth.__access_token_public_key
             )
-            utc_timestamp: int = int(datetime.utcnow().timestamp())
+            utc_timestamp: int = int(datetime.now(timezone.utc).timestamp())
             token_remaining_seconds: int = decoded_token["exp"] - utc_timestamp
             if token_remaining_seconds >= _PRIOR_TOKEN_MIN_AGE_M * 60:
                 # Plenty of time left on the prior token,
@@ -121,7 +121,7 @@ class Auth:
             resp: requests.Response = requests.post(
                 url, headers=headers, data=data, timeout=timeout_s
             )
-        except:
+        except Exception:  # pylint: disable=broad-exception-caught
             _LOGGER.exception("Failed to get response from Keycloak")
             return None
 

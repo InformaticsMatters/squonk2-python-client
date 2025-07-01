@@ -1,6 +1,7 @@
 """Python utilities to simplify calls to some parts of the Data Manager UI.
 """
 
+import contextlib
 from collections import namedtuple
 import logging
 import os
@@ -110,7 +111,7 @@ class UiApi:
                 timeout=timeout,
                 verify=self.__verify_ssl_cert,
             )
-        except:
+        except Exception:  # pylint: disable=broad-exception-caught
             _LOGGER.exception("Request failed")
 
         # Try and decode the response,
@@ -118,10 +119,8 @@ class UiApi:
         msg: Optional[Dict[Any, Any]] = None
         if resp:
             if expect_json:
-                try:
+                with contextlib.suppress(Exception):
                     msg = resp.json()
-                except:
-                    pass
             else:
                 msg = {"text": resp.text}
 

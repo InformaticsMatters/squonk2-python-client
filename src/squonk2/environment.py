@@ -19,7 +19,7 @@ from yaml import FullLoader, load
 # The environments file (YAML) is typically expected in the user's '~/.squonk2'
 # directory. It contains 'environments' that define the connection details
 # for the various Keycloak, Data Manager and Account Server services.
-# This default is replaced with the value of the environment variable
+# This location is replaced with the value of the environment variable
 # 'SQUONK2_ENVIRONMENTS_FILE'.
 #
 # See the project's 'environments' file for an example of the content of the file.
@@ -44,6 +44,7 @@ _KEYCLOAK_AS_CLIENT_ID_KEY: str = "keycloak-as-client-id"
 _AS_HOSTNAME_KEY: str = "as-hostname"
 _KEYCLOAK_DM_CLIENT_ID_KEY: str = "keycloak-dm-client-id"
 _DM_HOSTNAME_KEY: str = "dm-hostname"
+_UI_HOSTNAME_KEY: str = "ui-hostname"
 
 
 class Environment:
@@ -202,6 +203,9 @@ class Environment:
         self.__dm_hostname: Optional[str] = self.__get_config_value(
             _DM_HOSTNAME_KEY, optional=True
         )
+        self.__ui_hostname: Optional[str] = self.__get_config_value(
+            _UI_HOSTNAME_KEY, optional=True
+        )
 
     @property
     def environment(self) -> str:
@@ -245,17 +249,17 @@ class Environment:
 
     @property
     def admin_user(self) -> str:
-        """Return the keycloak username."""
+        """Return the application admin username."""
         return self.__admin_user
 
     @property
     def admin_password(self) -> str:
-        """Return the keycloak user's password."""
+        """Return the application admin user's password."""
         return self.__admin_password
 
     @property
     def as_hostname(self) -> Optional[str]:
-        """Return the keycloak hostname. This is the unmodified
+        """Return the AS hostname. This is the unmodified
         value found in the environment but can be None
         """
         return self.__as_hostname
@@ -277,7 +281,7 @@ class Environment:
 
     @property
     def dm_hostname(self) -> Optional[str]:
-        """Return the keycloak hostname. This is the unmodified
+        """Return the DM hostname. This is the unmodified
         value found in the environment.
         """
         return self.__dm_hostname
@@ -296,3 +300,23 @@ class Environment:
         if not ret_val.endswith("/data-manager-api"):
             ret_val += "/data-manager-api"
         return ret_val
+
+    @property
+    def ui_hostname(self) -> Optional[str]:
+        """Return the web/UI hostname. This is the unmodified
+        value found in the environment.
+        """
+        return self.__ui_hostname
+
+    @property
+    def ui_api(self) -> Optional[str]:
+        """Return the web/UI API. This is the UI hostname
+        with a 'http' prefix and '/data-manager-ui/api' postfix.
+        """
+        if not self.__ui_hostname:
+            return None
+        return (
+            self.__ui_hostname
+            if self.__ui_hostname.startswith("http")
+            else f"https://{self.__ui_hostname}/data-manager-ui/api"
+        )

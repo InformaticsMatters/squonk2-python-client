@@ -8,6 +8,7 @@ interact with **Projects**, **Instances** (**Jobs**) and **Files**.
     using :py:meth:`DmApi.set_api_url()`.
 """
 
+import contextlib
 from dataclasses import dataclass
 import decimal
 import json
@@ -151,18 +152,15 @@ class DmApi:
                 timeout=timeout,
                 verify=DmApi.__verify_ssl_cert,
             )
-        except:
+        except Exception:  # pylint: disable=broad-exception-caught
             _LOGGER.exception("Request failed")
 
         # Try and decode the response,
         # replacing with empty dictionary on failure.
         msg: Dict[Any, Any] = {}
         if resp:
-            try:
+            with contextlib.suppress(Exception):
                 msg = resp.json()
-            except:
-                pass
-
         if _DEBUG_REQUEST:
             if resp is not None:
                 print(
@@ -717,7 +715,7 @@ class DmApi:
         :param project_id: The project where the files are present
         :param project_path: The path in the project to search for files.
             The path is relative to the project root and must begin ``/``
-        :param include_hidden: Include hidden files in the reponse
+        :param include_hidden: Include hidden files in the response
         :param timeout_s: The underlying request timeout
         """
         assert access_token
