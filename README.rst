@@ -18,17 +18,10 @@ Informatics Matters Squonk2 Python Client
    :alt: Publish
 
 A Python 3 package that provides simplified access to key parts of the
-Informatics Matters Squonk2 service, consisting of the Authentication, and
-Data Manager and Account Server REST interfaces. The functions provide
+Informatics Matters Squonk2 applications, consisting of Authentication,
+Data Manager, Account Server and UI REST interfaces. The functions provide
 access to some of the key API methods, implemented initially to support
 execution of Jobs from a Fragalysis stack `backend`_.
-
-.. note::
-    Odd numbered *major* versions of the client are used for the *synchronous* API
-    and even-numbered *major* versions are used for the *asynchronous* API.
-    Version ``1.x.x`` of the client can only be used against the Data Manager
-    version ``1``. Version ``3.x.x`` must be used for Data Manager version ``2``
-    and later.
 
 Simplified Authentication
 =========================
@@ -135,7 +128,7 @@ The following Squonk2 UI API functions are available: -
 
 - ``UiApi.get_version()``
 
-A ``namedtuple`` is used as the return value for many of the methods: -
+A ``dataclass`` is used as the return value for many of the methods: -
 
 - ``UiApiRv``
 

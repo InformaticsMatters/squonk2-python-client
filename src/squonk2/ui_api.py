@@ -2,7 +2,7 @@
 """
 
 import contextlib
-from collections import namedtuple
+from dataclasses import dataclass
 import logging
 import os
 import time
@@ -13,15 +13,26 @@ from urllib3 import disable_warnings
 from wrapt import synchronized
 import requests
 
-UiApiRv: namedtuple = namedtuple("UiApiRv", "success msg")
-"""The return value from most of the the UiApi class public methods.
 
-:param success: True if the call was successful, False otherwise.
-:param msg: API request response content
-"""
+@dataclass
+class UiApiRv:
+    """The return value from most of the the UiApi class public methods.
+
+    :param success: True if the call was successful, False otherwise.
+    :param msg: API request response content
+    """
+
+    success: bool
+    msg: Dict[Any, Any]
+
 
 # A common read timeout
 _READ_TIMEOUT_S: int = 4
+
+# The UI API URL environment variable,
+# You can set the API manually with set_aiu_url() if this is not defined.
+_API_URL_ENV_NAME: str = "SQUONK2_UIAPI_URL"
+_API_VERIFY_SSL_CERT_ENV_NAME: str = "SQUONK2_UIAPI_VERIFY_SSL_CERT"
 
 # Debug request times?
 # If set the duration of each request call is logged.
@@ -42,17 +53,18 @@ class UiApi:
     namedtuple response value ``UiApiRv``
     """
 
-    def __init__(self):
-        """Constructor"""
+    # The default DM API is extracted from the environment,
+    # otherwise it can be set using 'set_api_url()'
+    __ui_api_url: str = os.environ.get(_API_URL_ENV_NAME, "")
+    # Do we expect the DM API to be secure?
+    # Normally yes, but this can be disabled using 'set_api_url()'
+    __verify_ssl_cert: bool = (
+        os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
+    )
 
-        # Set using 'set_api_url()'
-        self.__ui_api_url: str = ""
-        # Do we expect the DM API to be secure?
-        # Normally yes, but this can be disabled using 'set_api_url()'
-        self.__verify_ssl_cert: bool = True
-
+    @classmethod
     def __request(
-        self,
+        cls,
         method: str,
         endpoint: str,
         *,
@@ -70,14 +82,14 @@ class UiApi:
         All the public API methods pass control to this method,
         returning its result to the user.
         """
-        assert method in ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        assert method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
-        if not self.__ui_api_url:
+        if not UiApi.__ui_api_url:
             return UiApiRv(success=False, msg={"error": "No API URL defined"}), None
 
-        url: str = self.__ui_api_url + endpoint
+        url: str = UiApi.__ui_api_url + endpoint
 
         # if we have it, add the access token to the headers,
         # or create a headers block
@@ -91,9 +103,9 @@ class UiApi:
             print(f"# params={params}")
             print(f"# data={data}")
             print(f"# timeout={timeout}")
-            print(f"# verify={self.__verify_ssl_cert}")
+            print(f"# verify={UiApi.__verify_ssl_cert}")
 
-        expected_codes = expected_response_codes if expected_response_codes else [200]
+        expected_codes = expected_response_codes or [200]
         resp: Optional[requests.Response] = None
 
         if _DEBUG_REQUEST_TIME:
@@ -109,14 +121,14 @@ class UiApi:
                 data=data,
                 files=files,
                 timeout=timeout,
-                verify=self.__verify_ssl_cert,
+                verify=UiApi.__verify_ssl_cert,
             )
         except Exception:  # pylint: disable=broad-exception-caught
             _LOGGER.exception("Request failed")
 
         # Try and decode the response,
         # replacing with empty dictionary on failure.
-        msg: Optional[Dict[Any, Any]] = None
+        msg: Dict[Any, Any] = {}
         if resp:
             if expect_json:
                 with contextlib.suppress(Exception):
@@ -146,8 +158,9 @@ class UiApi:
 
         return UiApiRv(success=True, msg=msg), resp
 
+    @classmethod
     @synchronized
-    def set_api_url(self, url: str, *, verify_ssl_cert: bool = True) -> None:
+    def set_api_url(cls, url: str, *, verify_ssl_cert: bool = True) -> None:
         """Sets the API URL value. The user is required to call this before using the
         object.
 
@@ -155,26 +168,28 @@ class UiApi:
         :param verify_ssl_cert: Use False to avoid SSL verification in request calls
         """
         assert url
-        self.__ui_api_url = url
-        self.__verify_ssl_cert = verify_ssl_cert
+        UiApi.__ui_api_url = url
+        UiApi.__verify_ssl_cert = verify_ssl_cert
 
         # Disable the 'InsecureRequestWarning'?
         if not verify_ssl_cert:
             disable_warnings(InsecureRequestWarning)
 
+    @classmethod
     @synchronized
-    def get_api_url(self) -> Tuple[str, bool]:
+    def get_api_url(cls) -> Tuple[str, bool]:
         """Return the API URL and whether validating the SSL layer."""
-        return self.__ui_api_url, self.__verify_ssl_cert
+        return UiApi.__ui_api_url, UiApi.__verify_ssl_cert
 
+    @classmethod
     @synchronized
-    def get_version(self, *, timeout_s: int = _READ_TIMEOUT_S) -> UiApiRv:
+    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> UiApiRv:
         """Returns the UI service version.
 
         :param timeout_s: The underlying request timeout
         """
 
-        return self.__request(
+        return UiApi.__request(
             "GET",
             "/configuration/ui-version",
             error_message="Failed getting version",
