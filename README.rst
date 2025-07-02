@@ -93,9 +93,14 @@ The following Squonk2 Account Server API functions are available: -
 
 - ``AsApi.ping()``
 
+- ``AsApi.add_user_to_organisation()``
+- ``AsApi.add_user_to_unit()``
+- ``AsApi.create_event_stream()``
+- ``AsApi.create_organisation()``
 - ``AsApi.create_product()``
 - ``AsApi.create_unit()``
-- ``AsApi.create_organisation()``
+- ``AsApi.delete_event_stream()``
+- ``AsApi.delete_organisation()``
 - ``AsApi.delete_product()``
 - ``AsApi.delete_unit()``
 - ``AsApi.get_available_assets()``
@@ -111,6 +116,7 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.get_unit()``
 - ``AsApi.get_units()``
 - ``AsApi.get_version()``
+- ``AsApi.get_event_stream_version()``
 
 A ``dataclass`` is used as the return value for many of the methods: -
 

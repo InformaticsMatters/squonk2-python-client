@@ -11,6 +11,7 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
 import contextlib
 from dataclasses import dataclass
 from datetime import date
+from enum import Enum
 import logging
 import os
 import time
@@ -35,6 +36,13 @@ class AsApiRv:
     success: bool
     msg: Dict[Any, Any]
     http_status_code: int
+
+
+class EventStreamFormat(Enum):
+    """Enumeration of EventStream formats"""
+
+    JSON_STRING = 1
+    PROTOCOL_STRING = 2
 
 
 # The Account Server API URL environment variable,
@@ -237,6 +245,80 @@ class AsApi:
             "GET",
             "/version",
             error_message="Failed getting version",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_event_stream_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+        """Returns the AS-API Event Stream Service version.
+
+        :param timeout_s: The underlying request timeout
+        """
+
+        return AsApi.__request(
+            "GET",
+            "/event-stream/version",
+            error_message="Failed getting event stream version",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_event_stream(
+        cls,
+        access_token: str,
+        *,
+        event_format: EventStreamFormat,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Creates an Event Stream.
+
+        :param access_token: A valid AS API access token
+        :param format: The event format enumeration
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert event_format
+
+        data: Dict[str, Any] = {
+            "format": event_format.name,
+        }
+
+        return AsApi.__request(
+            "POST",
+            "/event-stream",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to create event stream",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_event_stream(
+        cls,
+        access_token: str,
+        *,
+        event_stream_id: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Creates an Event Stream.
+
+        :param access_token: A valid AS API access token
+        :param format: The event format enumeration
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert event_stream_id
+
+        return AsApi.__request(
+            "DELETE",
+            f"/event-stream/{event_stream_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete event stream",
             timeout=timeout_s,
         )[0]
 
@@ -514,6 +596,38 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def add_user_to_unit(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        username: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Adds a User to a Unit.
+
+        You will need admin privileges or be a member of the organisation or unit to do this.
+
+        :param access_token: A valid AS API access token
+        :param unit_id: The Unit ID
+        :param username: The user to add
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert unit_id
+        assert username
+
+        return AsApi.__request(
+            "PUT",
+            f"/unit/{unit_id}/user/{username}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed to add user to unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def create_organisation(
         cls,
         access_token: str,
@@ -548,6 +662,67 @@ class AsApi:
             data=data,
             expected_response_codes=[201],
             error_message="Failed to create organisation",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def add_user_to_organisation(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        username: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Adds a User to an Organisation.
+
+        You will need admin privileges or be a member of the organisation to do this.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The Organisation ID
+        :param username: The user to add
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_id
+        assert username
+
+        return AsApi.__request(
+            "PUT",
+            f"/organisation/{org_id}/user/{username}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed to add user to organisation",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_organisation(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Deletes an Organisation.
+
+        You will need admin privileges to do this.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The UUID of the organisation
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_id
+
+        return AsApi.__request(
+            "DELETE",
+            f"/organisation/{org_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete organisation",
             timeout=timeout_s,
         )[0]
 
@@ -811,6 +986,6 @@ class AsApi:
             f"/unit/{unit_id}",
             access_token=access_token,
             expected_response_codes=[204],
-            error_message="Failed to delete product",
+            error_message="Failed to delete unit",
             timeout=timeout_s,
         )[0]
