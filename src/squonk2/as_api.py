@@ -784,16 +784,16 @@ class AsApi:
 
     @classmethod
     @synchronized
-    def get_units(
+    def get_organisation_units(
         cls,
         access_token: str,
         *,
         org_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> AsApiRv:
-        """Gets Units in an Organisation.
+        """Gets all Units available to you for an organisation.
 
-        You will need to be a member of the Organisation to use this method.
+        You will need to be a member of the Organisation or Unit to use this method.
 
         :param access_token: A valid AS API access token
         :param org_id: The Organisation UUID for the Unit
@@ -812,23 +812,62 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_units(
+        cls,
+        access_token: str,
+        *,
+        unit_name: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets all Units available to you or by name.
+
+        You will need to be a member of the Organisation or Unit to use this method.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The Organisation UUID for the Unit
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if unit_name:
+            params["name"] = unit_name
+
+        return AsApi.__request(
+            "GET",
+            "/unit",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get organisation units",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_organisations(
         cls,
         access_token: str,
         *,
+        org_name: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> AsApiRv:
-        """Gets all the Organisations you can see.
+        """Gets all the Organisations you can see. if you provide a name
+        the Organisation you name will be returned (if you are a member of it).
 
         :param access_token: A valid AS API access token
         :param timeout_s: The underlying request timeout
         """
         assert access_token
 
+        params: Dict[str, Any] = {}
+        if org_name:
+            params["name"] = org_name
+
         return AsApi.__request(
             "GET",
             "/organisation",
             access_token=access_token,
+            params=params,
             error_message="Failed to get organisations",
             timeout=timeout_s,
         )[0]
