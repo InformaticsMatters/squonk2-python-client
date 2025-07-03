@@ -431,6 +431,32 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_merchant(
+        cls,
+        access_token: str,
+        merchant_id: int,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns the given Merchant.
+
+        :param access_token: A valid AS API access token
+        :param merchant_id: A merchant ID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert merchant_id
+
+        return AsApi.__request(
+            "GET",
+            f"/merchant/{merchant_id}",
+            access_token=access_token,
+            error_message="Failed getting merchant",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_product(
         cls,
         access_token: str,
@@ -452,6 +478,52 @@ class AsApi:
             f"/product/{product_id}",
             access_token=access_token,
             error_message="Failed getting product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_product_default_storage_cost(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns the default product storage.
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "GET",
+            "/product-default-storage-cost",
+            access_token=access_token,
+            error_message="Failed getting product default storage cost",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_product_types(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Returns known product types.
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "GET",
+            "/product-type",
+            access_token=access_token,
+            error_message="Failed getting product types",
             timeout=timeout_s,
         )[0]
 
