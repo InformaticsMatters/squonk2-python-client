@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
+from munch import DefaultMunch
 from wrapt import synchronized
 import requests
 
@@ -20,11 +21,13 @@ class UiApiRv:
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
+    :param munch_msg: A DefaultMunch object for the API request response content
     :param http_status_code: An HTTPS status code (0 if not available)
     """
 
     success: bool
     msg: Dict[Any, Any]
+    defaultmunch_msg: DefaultMunch
     http_status_code: int
 
 
@@ -63,6 +66,8 @@ class UiApi:
     __verify_ssl_cert: bool = (
         os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
     )
+    # An object to return in DefaultMunch objects
+    __undefined: object = object()
 
     @classmethod
     def __request(
@@ -88,11 +93,14 @@ class UiApi:
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
+        msg: Dict[Any, Any] = {}
         if not UiApi.__ui_api_url:
+            msg = {"error": "No API URL defined"}
             return (
                 UiApiRv(
                     success=False,
-                    msg={"error": "No API URL defined"},
+                    msg=msg,
+                    defaultmunch_msg=DefaultMunch(msg, UiApi.__undefined),
                     http_status_code=0,
                 ),
                 None,
@@ -137,7 +145,6 @@ class UiApi:
 
         # Try and decode the response,
         # replacing with empty dictionary on failure.
-        msg: Dict[Any, Any] = {}
         if resp:
             if expect_json:
                 with contextlib.suppress(Exception):
@@ -161,16 +168,26 @@ class UiApi:
             print(f"# request() duration={request_finish - request_start} seconds")
 
         if resp is None or resp.status_code not in expected_codes:
+            msg = {"error": f"{error_message} (resp={resp})"}
             return (
                 UiApiRv(
                     success=False,
-                    msg={"error": f"{error_message} (resp={resp})"},
+                    msg=msg,
+                    defaultmunch_msg=DefaultMunch(msg, UiApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
             )
 
-        return UiApiRv(success=True, msg=msg, http_status_code=http_status_code), resp
+        return (
+            UiApiRv(
+                success=True,
+                msg=msg,
+                defaultmunch_msg=DefaultMunch(msg, UiApi.__undefined),
+                http_status_code=http_status_code,
+            ),
+            resp,
+        )
 
     @classmethod
     @synchronized

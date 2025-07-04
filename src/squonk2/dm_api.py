@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
+from munch import DefaultMunch
 from wrapt import synchronized
 import requests
 
@@ -29,11 +30,13 @@ class DmApiRv:
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
+    :param munch_msg: A DefaultMunch object for the API request response content
     :param http_status_code: An HTTPS status code (0 if not available)
     """
 
     success: bool
     msg: Dict[Any, Any]
+    defaultmunch_msg: DefaultMunch
     http_status_code: int
 
 
@@ -84,6 +87,8 @@ class DmApi:
     __verify_ssl_cert: bool = (
         os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
     )
+    # An object to return in DefaultMunch objects
+    __undefined: object = object()
 
     @classmethod
     def __request(
@@ -112,11 +117,14 @@ class DmApi:
         assert endpoint
         assert isinstance(expected_response_codes, (type(None), list))
 
+        msg: Dict[Any, Any] = {}
         if not DmApi.__dm_api_url:
+            msg = {"error": "No API URL defined"}
             return (
                 DmApiRv(
                     success=False,
-                    msg={"error": "No API URL defined"},
+                    msg=msg,
+                    defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
                     http_status_code=0,
                 ),
                 None,
@@ -166,7 +174,6 @@ class DmApi:
 
         # Try and decode the response,
         # replacing with empty dictionary on failure.
-        msg: Dict[Any, Any] = {}
         if resp:
             with contextlib.suppress(Exception):
                 msg = resp.json()
@@ -186,16 +193,26 @@ class DmApi:
             print(f"# request() duration={request_finish - request_start} seconds")
 
         if resp is None or resp.status_code not in expected_codes:
+            msg = {"error": f"{error_message} (resp={resp})"}
             return (
                 DmApiRv(
                     success=False,
-                    msg={"error": f"{error_message} (resp={resp})"},
+                    msg=msg,
+                    defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
             )
 
-        return DmApiRv(success=True, msg=msg, http_status_code=http_status_code), resp
+        return (
+            DmApiRv(
+                success=True,
+                msg=msg,
+                defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
+                http_status_code=http_status_code,
+            ),
+            resp,
+        )
 
     @classmethod
     def __put_unmanaged_project_file(
@@ -635,8 +652,12 @@ class DmApi:
         )
 
         if not DmApi.__dm_api_url:
+            msg = {"error": "No API URL defined"}
             return DmApiRv(
-                success=False, msg={"error": "No API URL defined"}, http_status_code=0
+                success=False,
+                msg=msg,
+                defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
+                http_status_code=0,
             )
 
         # If we're not forcing the files collect the names
@@ -678,9 +699,11 @@ class DmApi:
             # Source file has to exist
             # whether we end up sending it or not.
             if not os.path.isfile(src_file):
+                msg = {"error": f"No such file ({src_file})"}
                 return DmApiRv(
                     success=False,
-                    msg={"error": f"No such file ({src_file})"},
+                    msg=msg,
+                    defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
                     http_status_code=http_status_code,
                 )
             if os.path.basename(src_file) not in existing_path_files:
@@ -696,7 +719,12 @@ class DmApi:
                     return ret_val
 
         # OK if we get here
-        return DmApiRv(success=True, msg={}, http_status_code=http_status_code)
+        return DmApiRv(
+            success=True,
+            msg={},
+            defaultmunch_msg=DefaultMunch({}, DmApi.__undefined),
+            http_status_code=http_status_code,
+        )
 
     @classmethod
     @synchronized
@@ -754,7 +782,12 @@ class DmApi:
                 return ret_val
 
         # OK if we get here
-        return DmApiRv(success=True, msg={}, http_status_code=0)
+        return DmApiRv(
+            success=True,
+            msg={},
+            defaultmunch_msg=DefaultMunch({}, DmApi.__undefined),
+            http_status_code=0,
+        )
 
     @classmethod
     @synchronized
@@ -1614,7 +1647,12 @@ class DmApi:
                 return ret_val
 
         # OK if we get here
-        return DmApiRv(success=True, msg={}, http_status_code=0)
+        return DmApiRv(
+            success=True,
+            msg={},
+            defaultmunch_msg=DefaultMunch({}, DmApi.__undefined),
+            http_status_code=0,
+        )
 
     @classmethod
     @synchronized
