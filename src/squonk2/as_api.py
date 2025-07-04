@@ -1071,6 +1071,62 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_organisation_users(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets users in an Organisation.
+
+        You will need admin rights on the Account Server to use this method.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The UUID of the Organisation
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_id
+
+        return AsApi.__request(
+            "GET",
+            f"/organisation/{org_id}/user",
+            access_token=access_token,
+            error_message="Failed getting users",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_unit_users(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets users in a Unit.
+
+        You will need admin rights on the Account Server to use this method.
+
+        :param access_token: A valid AS API access token
+        :param unit_id: The UUID of the Unit
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert unit_id
+
+        return AsApi.__request(
+            "GET",
+            f"/unit/{unit_id}/user",
+            access_token=access_token,
+            error_message="Failed getting users",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def create_product(
         cls,
         access_token: str,
