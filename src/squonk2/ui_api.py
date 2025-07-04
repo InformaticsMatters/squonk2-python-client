@@ -100,7 +100,7 @@ class UiApi:
                 UiApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch(msg, UiApi.__undefined),
+                    defaultmunch_msg=DefaultMunch.fromDict(msg, UiApi.__undefined),
                     http_status_code=0,
                 ),
                 None,
@@ -173,7 +173,7 @@ class UiApi:
                 UiApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch(msg, UiApi.__undefined),
+                    defaultmunch_msg=DefaultMunch.fromDict(msg, UiApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
@@ -183,7 +183,7 @@ class UiApi:
             UiApiRv(
                 success=True,
                 msg=msg,
-                defaultmunch_msg=DefaultMunch(msg, UiApi.__undefined),
+                defaultmunch_msg=DefaultMunch.fromDict(msg, UiApi.__undefined),
                 http_status_code=http_status_code,
             ),
             resp,

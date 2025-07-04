@@ -124,7 +124,7 @@ class DmApi:
                 DmApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
+                    defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                     http_status_code=0,
                 ),
                 None,
@@ -198,7 +198,7 @@ class DmApi:
                 DmApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
+                    defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
@@ -208,7 +208,7 @@ class DmApi:
             DmApiRv(
                 success=True,
                 msg=msg,
-                defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
+                defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                 http_status_code=http_status_code,
             ),
             resp,
@@ -656,7 +656,7 @@ class DmApi:
             return DmApiRv(
                 success=False,
                 msg=msg,
-                defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
+                defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                 http_status_code=0,
             )
 
@@ -703,7 +703,7 @@ class DmApi:
                 return DmApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch(msg, DmApi.__undefined),
+                    defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                     http_status_code=http_status_code,
                 )
             if os.path.basename(src_file) not in existing_path_files:
@@ -722,7 +722,7 @@ class DmApi:
         return DmApiRv(
             success=True,
             msg={},
-            defaultmunch_msg=DefaultMunch({}, DmApi.__undefined),
+            defaultmunch_msg=DefaultMunch.fromDict({}, DmApi.__undefined),
             http_status_code=http_status_code,
         )
 
@@ -785,7 +785,7 @@ class DmApi:
         return DmApiRv(
             success=True,
             msg={},
-            defaultmunch_msg=DefaultMunch({}, DmApi.__undefined),
+            defaultmunch_msg=DefaultMunch.fromDict({}, DmApi.__undefined),
             http_status_code=0,
         )
 
@@ -1650,7 +1650,7 @@ class DmApi:
         return DmApiRv(
             success=True,
             msg={},
-            defaultmunch_msg=DefaultMunch({}, DmApi.__undefined),
+            defaultmunch_msg=DefaultMunch.fromDict({}, DmApi.__undefined),
             http_status_code=0,
         )
 

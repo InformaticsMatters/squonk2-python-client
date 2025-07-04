@@ -126,7 +126,7 @@ class AsApi:
                 AsApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch(msg, AsApi.__undefined),
+                    defaultmunch_msg=DefaultMunch.fromDict(msg, AsApi.__undefined),
                     http_status_code=0,
                 ),
                 None,
@@ -200,7 +200,7 @@ class AsApi:
                 AsApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch(msg, AsApi.__undefined),
+                    defaultmunch_msg=DefaultMunch.fromDict(msg, AsApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
@@ -210,7 +210,7 @@ class AsApi:
             AsApiRv(
                 success=True,
                 msg=msg,
-                defaultmunch_msg=DefaultMunch(msg, AsApi.__undefined),
+                defaultmunch_msg=DefaultMunch.fromDict(msg, AsApi.__undefined),
                 http_status_code=http_status_code,
             ),
             resp,
