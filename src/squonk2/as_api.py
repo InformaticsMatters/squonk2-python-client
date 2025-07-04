@@ -710,7 +710,7 @@ class AsApi:
             "PUT",
             f"/unit/{unit_id}/user/{username}",
             access_token=access_token,
-            expected_response_codes=[201],
+            expected_response_codes=[200, 201],
             error_message="Failed to add user to unit",
             timeout=timeout_s,
         )[0]
@@ -813,7 +813,7 @@ class AsApi:
             "PUT",
             f"/organisation/{org_id}/user/{username}",
             access_token=access_token,
-            expected_response_codes=[201],
+            expected_response_codes=[200, 201],
             error_message="Failed to add user to organisation",
             timeout=timeout_s,
         )[0]
