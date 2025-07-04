@@ -742,7 +742,7 @@ class AsApi:
             "DELETE",
             f"/unit/{unit_id}/user/{username}",
             access_token=access_token,
-            expected_response_codes=[201],
+            expected_response_codes=[204],
             error_message="Failed to remove user from unit",
             timeout=timeout_s,
         )[0]
