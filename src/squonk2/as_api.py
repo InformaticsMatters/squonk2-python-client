@@ -717,6 +717,38 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def remove_user_from_unit(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        username: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Removes a User from a Unit.
+
+        You will need admin privileges or be a member of the organisation or unit to do this.
+
+        :param access_token: A valid AS API access token
+        :param unit_id: The Unit ID
+        :param username: The user to add
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert unit_id
+        assert username
+
+        return AsApi.__request(
+            "DELETE",
+            f"/unit/{unit_id}/user/{username}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed to remove user from unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def create_organisation(
         cls,
         access_token: str,
@@ -783,6 +815,38 @@ class AsApi:
             access_token=access_token,
             expected_response_codes=[201],
             error_message="Failed to add user to organisation",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def remove_user_from_organisation(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        username: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Removes a User from an Organisation.
+
+        You will need admin privileges or be a member of the organisation to do this.
+
+        :param access_token: A valid AS API access token
+        :param org_id: The Organisation ID
+        :param username: The user to add
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert org_id
+        assert username
+
+        return AsApi.__request(
+            "DELETE",
+            f"/organisation/{org_id}/user/{username}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to remove user from organisation",
             timeout=timeout_s,
         )[0]
 

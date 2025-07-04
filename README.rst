@@ -121,6 +121,8 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.get_units()``
 - ``AsApi.get_version()``
 - ``AsApi.get_event_stream_version()``
+- ``AsApi.remove_user_from_organisation()``
+- ``AsApi.remove_user_from_unit()``
 
 A ``dataclass`` is used as the return value for many of the methods: -
 
