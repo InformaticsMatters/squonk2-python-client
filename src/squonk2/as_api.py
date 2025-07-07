@@ -282,6 +282,25 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_event_stream(
+        cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
+    ) -> AsApiRv:
+        """Returns the AS-API Event Stream for a user (if there is one).
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+
+        return AsApi.__request(
+            "GET",
+            "/event-stream",
+            access_token=access_token,
+            error_message="Failed getting event stream",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def create_event_stream(
         cls,
         access_token: str,

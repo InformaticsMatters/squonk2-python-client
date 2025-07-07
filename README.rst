@@ -106,6 +106,8 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.get_available_assets()``
 - ``AsApi.get_available_units()``
 - ``AsApi.get_available_products()``
+- ``AsApi.get_event_stream_version()``
+- ``AsApi.get_event_stream()``
 - ``AsApi.get_merchant()``
 - ``AsApi.get_merchants()``
 - ``AsApi.get_organisation()``
@@ -122,7 +124,6 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.get_unit_users()``
 - ``AsApi.get_units()``
 - ``AsApi.get_version()``
-- ``AsApi.get_event_stream_version()``
 - ``AsApi.remove_user_from_organisation()``
 - ``AsApi.remove_user_from_unit()``
 
