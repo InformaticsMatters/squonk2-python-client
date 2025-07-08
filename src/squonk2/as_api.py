@@ -486,6 +486,7 @@ class AsApi:
         return AsApi.__request(
             "POST",
             "/asset",
+            headers={"Content-Type": "multipart/form-data"},
             access_token=access_token,
             data=data,
             files=files,
