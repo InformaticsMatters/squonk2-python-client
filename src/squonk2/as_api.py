@@ -497,6 +497,7 @@ class AsApi:
             "POST",
             "/asset",
             access_token=access_token,
+            expected_response_codes=[201],
             data=data,
             files=files,
             error_message="Failed creating asset",
