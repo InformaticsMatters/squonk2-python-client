@@ -161,6 +161,7 @@ class AsApi:
             print(f"# headers={use_headers}")
             print(f"# params={params}")
             print(f"# data={data}")
+            print(f"# files={files}")
             print(f"# timeout={timeout}")
             print(f"# verify={AsApi.__verify_ssl_cert}")
 
@@ -177,7 +178,7 @@ class AsApi:
                 url,
                 headers=use_headers,
                 params=params,
-                json=data,
+                data=data,
                 files=files,
                 timeout=timeout,
                 verify=AsApi.__verify_ssl_cert,
