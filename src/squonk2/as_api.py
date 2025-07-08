@@ -518,6 +518,51 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def alter_asset(
+        cls,
+        access_token: str,
+        *,
+        asset_id: str,
+        description: Optional[str] = None,
+        content_string: Optional[str] = None,
+        content_file: Optional[Path] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Alters an Asset. An asset's value can be changed along with its description."""
+
+        data = {}
+        if description:
+            data["description"] = description
+        if content_string:
+            data["content_string"] = content_string
+
+        files = {}
+        if content_file:
+            assert content_file.is_file()
+            files["content_file"] = (content_file.name, content_file.open(mode="rb"))
+        else:
+            # We are required to create RequestBody or connexion will barf!
+            # But the design prevents the providing of 'content_file' and 'content_string'
+            # so we 'trick' the test by providing a 'content_file' (which gives us a RequestBody)
+            # but we do not give it a name, which our handler recognizes as 'no file'.
+            files["content_file"] = (
+                "",
+                open(__file__, "rb"),  # pylint: disable=consider-using-with
+            )
+
+        return AsApi.__request(
+            "PATCH",
+            f"/asset/{asset_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            data=data,
+            files=files,
+            error_message="Failed altering asset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def delete_asset(
         cls,
         access_token: str,
