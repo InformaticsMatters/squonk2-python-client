@@ -554,7 +554,7 @@ class AsApi:
             "PATCH",
             f"/asset/{asset_id}",
             access_token=access_token,
-            expected_response_codes=[204],
+            expected_response_codes=[200],
             data=data,
             files=files,
             error_message="Failed altering asset",
