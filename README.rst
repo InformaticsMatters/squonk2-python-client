@@ -95,14 +95,21 @@ The following Squonk2 Account Server API functions are available: -
 
 - ``AsApi.add_user_to_organisation()``
 - ``AsApi.add_user_to_unit()``
+- ``AsApi.attach_asset()``
+- ``AsApi.create_asset()``
 - ``AsApi.create_event_stream()``
 - ``AsApi.create_organisation()``
 - ``AsApi.create_product()``
 - ``AsApi.create_unit()``
+- ``AsApi.delete_asset()``
 - ``AsApi.delete_event_stream()``
 - ``AsApi.delete_organisation()``
 - ``AsApi.delete_product()``
 - ``AsApi.delete_unit()``
+- ``AsApi.detach_asset()``
+- ``AsApi.disable_asset()``
+- ``AsApi.enable_asset()``
+- ``AsApi.get_asset()``
 - ``AsApi.get_available_assets()``
 - ``AsApi.get_available_units()``
 - ``AsApi.get_available_products()``

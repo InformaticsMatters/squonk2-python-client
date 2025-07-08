@@ -14,6 +14,7 @@ from datetime import date
 from enum import Enum
 import logging
 import os
+from pathlib import Path
 import time
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -46,6 +47,16 @@ class EventStreamFormat(Enum):
 
     JSON_STRING = 1
     PROTOCOL_STRING = 2
+
+
+class AssetScopeEnum(Enum):
+    """Enumeration of Asset scopes"""
+
+    USER = 1
+    PRODUCT = 2
+    UNIT = 3
+    ORGANISATION = 4
+    GLOBAL = 5
 
 
 # The Account Server API URL environment variable,
@@ -439,6 +450,158 @@ class AsApi:
             access_token=access_token,
             params=params,
             error_message="Failed getting assets",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_asset(
+        cls,
+        access_token: str,
+        *,
+        name: str,
+        description: str,
+        scope: AssetScopeEnum,
+        content_string: Optional[str] = None,
+        content_file: Optional[Path] = None,
+        scope_id: Optional[str] = None,
+        is_secret: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Create an Asset from a string or file (not both)."""
+
+        data = {"name": name, "scope": scope.name, "secret": is_secret}
+        if description:
+            data["description"] = description
+        if scope_id:
+            data["scope_id"] = scope_id
+        if content_string:
+            data["content_string"] = content_string
+
+        files = {}
+        if content_file:
+            assert content_file.is_file()
+            files["content_file"] = content_file.open(mode="rb")
+
+        return AsApi.__request(
+            "POST",
+            "/asset",
+            access_token=access_token,
+            data=data,
+            files=files,
+            error_message="Failed creating asset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_asset(
+        cls,
+        access_token: str,
+        *,
+        asset_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Disables an existing asset"""
+        assert asset_id
+
+        return AsApi.__request(
+            "GET",
+            f"/asset/{asset_id}",
+            access_token=access_token,
+            error_message="Failed getting asset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def attach_asset(
+        cls,
+        access_token: str,
+        *,
+        asset_id: str,
+        m_id: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Disables an existing asset"""
+        assert asset_id
+        assert isinstance(m_id, int)
+        assert m_id > 0
+
+        params = {"m_id": m_id}
+
+        return AsApi.__request(
+            "PATCH",
+            f"/asset/{asset_id}/attach",
+            access_token=access_token,
+            params=params,
+            error_message="Failed attaching asset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def detach_asset(
+        cls,
+        access_token: str,
+        *,
+        asset_id: str,
+        m_id: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Disables an existing asset"""
+        assert asset_id
+        assert isinstance(m_id, int)
+        assert m_id > 0
+
+        params = {"m_id": m_id}
+
+        return AsApi.__request(
+            "PATCH",
+            f"/asset/{asset_id}/detach",
+            access_token=access_token,
+            params=params,
+            error_message="Failed detaching asset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def enable_asset(
+        cls,
+        access_token: str,
+        *,
+        asset_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Disables an existing asset"""
+        assert asset_id
+
+        return AsApi.__request(
+            "PATCH",
+            f"/asset/{asset_id}/enable",
+            access_token=access_token,
+            error_message="Failed enabling asset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def disable_asset(
+        cls,
+        access_token: str,
+        *,
+        asset_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Disables an existing asset"""
+        assert asset_id
+
+        return AsApi.__request(
+            "PATCH",
+            f"/asset/{asset_id}/disable",
+            access_token=access_token,
+            error_message="Failed disabling asset",
             timeout=timeout_s,
         )[0]
 
