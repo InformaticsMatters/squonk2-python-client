@@ -519,6 +519,7 @@ class AsApi:
             "DELETE",
             f"/asset/{asset_id}",
             access_token=access_token,
+            expected_response_codes=[204],
             error_message="Failed deleting asset",
             timeout=timeout_s,
         )[0]
@@ -564,6 +565,7 @@ class AsApi:
             "PATCH",
             f"/asset/{asset_id}/attach",
             access_token=access_token,
+            expected_response_codes=[204],
             params=params,
             error_message="Failed attaching asset",
             timeout=timeout_s,
@@ -590,6 +592,7 @@ class AsApi:
             "PATCH",
             f"/asset/{asset_id}/detach",
             access_token=access_token,
+            expected_response_codes=[204],
             params=params,
             error_message="Failed detaching asset",
             timeout=timeout_s,
@@ -611,6 +614,7 @@ class AsApi:
             "PATCH",
             f"/asset/{asset_id}/enable",
             access_token=access_token,
+            expected_response_codes=[204],
             error_message="Failed enabling asset",
             timeout=timeout_s,
         )[0]
@@ -631,6 +635,7 @@ class AsApi:
             "PATCH",
             f"/asset/{asset_id}/disable",
             access_token=access_token,
+            expected_response_codes=[204],
             error_message="Failed disabling asset",
             timeout=timeout_s,
         )[0]
