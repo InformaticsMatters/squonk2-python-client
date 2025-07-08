@@ -495,6 +495,26 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def delete_asset(
+        cls,
+        access_token: str,
+        *,
+        asset_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Deletes an existing asset"""
+        assert asset_id
+
+        return AsApi.__request(
+            "DELETE",
+            f"/asset/{asset_id}",
+            access_token=access_token,
+            error_message="Failed deleting asset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_asset(
         cls,
         access_token: str,
