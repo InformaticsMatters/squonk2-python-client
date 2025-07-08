@@ -168,6 +168,17 @@ class AsApi:
         expected_codes = expected_response_codes or [200]
         resp: Optional[requests.Response] = None
 
+        # For the AS we rely on setting headers
+        # and that is achieved with 'json'.
+        # But when sending files requests ignores 'json'
+        # so if we're sending files we switch to 'data'.
+        if files:
+            data_payload = data
+            json_payload = None
+        else:
+            data_payload = None
+            json_payload = data
+
         if _DEBUG_REQUEST_TIME:
             request_start: float = time.perf_counter()
         try:
@@ -178,7 +189,8 @@ class AsApi:
                 url,
                 headers=use_headers,
                 params=params,
-                data=data,
+                data=data_payload,
+                json=json_payload,
                 files=files,
                 timeout=timeout,
                 verify=AsApi.__verify_ssl_cert,
