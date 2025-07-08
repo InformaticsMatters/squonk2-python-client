@@ -481,12 +481,20 @@ class AsApi:
         files = {}
         if content_file:
             assert content_file.is_file()
-            files["content_file"] = content_file.open(mode="rb")
+            files["content_file"] = (content_file.name, content_file.open(mode="rb"))
+        else:
+            # We are required to create RequestBody or connexion will barf!
+            # But the design prevents the providing of 'content_file' and 'content_string'
+            # so we 'trick' the test by providing a 'content_file' (which gives us a RequestBody)
+            # but we do not give it a name, which our handler recognizes as 'no file'.
+            files["content_file"] = (
+                "",
+                open(__file__, "rb"),  # pylint: disable=consider-using-with
+            )
 
         return AsApi.__request(
             "POST",
             "/asset",
-            headers={"Content-Type": "multipart/form-data"},
             access_token=access_token,
             data=data,
             files=files,
