@@ -1564,7 +1564,7 @@ class AsApi:
 
         return AsApi.__request(
             "GET",
-            "/unit/account",
+            "/user/account",
             access_token=access_token,
             error_message="Failed getting users",
             timeout=timeout_s,
