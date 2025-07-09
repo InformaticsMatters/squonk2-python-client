@@ -1457,6 +1457,38 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def alter_product(
+        cls,
+        access_token: str,
+        *,
+        product_id: str,
+        product_name: Optional[str] = None,
+        allowance: Optional[int] = None,
+        limit: Optional[int] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Alters an existing a Product."""
+
+        data: Dict[str, Any] = {}
+        if product_name is not None:
+            data["name"] = product_name
+        if allowance is not None:
+            data["allowance"] = allowance
+        if limit is not None:
+            data["limit"] = limit
+
+        return AsApi.__request(
+            "PATCH",
+            f"/product/{product_id}",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[200],
+            error_message="Failed to alter product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def delete_product(
         cls,
         access_token: str,
@@ -1510,5 +1542,30 @@ class AsApi:
             access_token=access_token,
             expected_response_codes=[204],
             error_message="Failed to delete unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_account(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets your User account.
+
+        You will need admin rights on the Account Server to use this method.
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "GET",
+            "/unit/account",
+            access_token=access_token,
+            error_message="Failed getting users",
             timeout=timeout_s,
         )[0]
