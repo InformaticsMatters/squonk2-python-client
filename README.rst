@@ -102,11 +102,13 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.create_asset()``
 - ``AsApi.create_event_stream()``
 - ``AsApi.create_organisation()``
+- ``AsApi.create_personal_unit()``
 - ``AsApi.create_product()``
 - ``AsApi.create_unit()``
 - ``AsApi.delete_asset()``
 - ``AsApi.delete_event_stream()``
 - ``AsApi.delete_organisation()``
+- ``AsApi.delete_personal_unit()``
 - ``AsApi.delete_product()``
 - ``AsApi.delete_unit()``
 - ``AsApi.detach_asset()``

@@ -960,6 +960,62 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def create_personal_unit(
+        cls,
+        access_token: str,
+        *,
+        billing_day: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Creates a Personal Unit
+
+        :param access_token: A valid AS API access token
+        :param billing_day: A billing day (1..28)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert billing_day
+
+        data: Dict[str, Any] = {
+            "billing_day": billing_day,
+        }
+
+        return AsApi.__request(
+            "PUT",
+            "/unit",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to create personal unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_personal_unit(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Deletes a Personal Unit
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "DELETE",
+            "/unit",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete personal unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def add_user_to_unit(
         cls,
         access_token: str,
