@@ -841,7 +841,7 @@ class AsApi:
             "GET",
             f"/product/unit/{unit_id}",
             access_token=access_token,
-            error_message="Failed getting products",
+            error_message="Failed getting products for unit",
             timeout=timeout_s,
         )[0]
 
@@ -867,7 +867,7 @@ class AsApi:
             "GET",
             f"/product/organisation/{org_id}",
             access_token=access_token,
-            error_message="Failed getting products",
+            error_message="Failed getting products for organisation",
             timeout=timeout_s,
         )[0]
 
@@ -911,7 +911,7 @@ class AsApi:
             f"/charges/product/{product_id}",
             access_token=access_token,
             params=params,
-            error_message="Failed getting product",
+            error_message="Failed getting product charges",
             timeout=timeout_s,
         )[0]
 
@@ -982,7 +982,7 @@ class AsApi:
 
         return AsApi.__request(
             "PUT",
-            "/unit",
+            "/personal-unit",
             access_token=access_token,
             data=data,
             expected_response_codes=[201],
@@ -1007,10 +1007,33 @@ class AsApi:
 
         return AsApi.__request(
             "DELETE",
-            "/unit",
+            "/personal-unit",
             access_token=access_token,
             expected_response_codes=[204],
             error_message="Failed to delete personal unit",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_personal_unit(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets a Personal Unit
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "GET",
+            "/personal-unit",
+            access_token=access_token,
+            error_message="Failed to get personal unit",
             timeout=timeout_s,
         )[0]
 
@@ -1322,7 +1345,7 @@ class AsApi:
             "/unit",
             access_token=access_token,
             params=params,
-            error_message="Failed to get organisation units",
+            error_message="Failed to get units",
             timeout=timeout_s,
         )[0]
 
@@ -1396,7 +1419,7 @@ class AsApi:
             f"/charges/organisation/{org_id}",
             access_token=access_token,
             params=params,
-            error_message="Failed getting product",
+            error_message="Failed getting organisation charges",
             timeout=timeout_s,
         )[0]
 
@@ -1424,7 +1447,7 @@ class AsApi:
             "GET",
             f"/organisation/{org_id}/user",
             access_token=access_token,
-            error_message="Failed getting users",
+            error_message="Failed getting organisation users",
             timeout=timeout_s,
         )[0]
 
@@ -1452,7 +1475,7 @@ class AsApi:
             "GET",
             f"/unit/{unit_id}/user",
             access_token=access_token,
-            error_message="Failed getting users",
+            error_message="Failed getting unit users",
             timeout=timeout_s,
         )[0]
 
@@ -1622,6 +1645,29 @@ class AsApi:
             "GET",
             "/user/account",
             access_token=access_token,
-            error_message="Failed getting users",
+            error_message="Failed getting account",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_default_organisation(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Gets the Default Organisation.
+
+        :param access_token: A valid AS API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return AsApi.__request(
+            "GET",
+            "/default/organisation",
+            access_token=access_token,
+            error_message="Failed getting default organisation",
             timeout=timeout_s,
         )[0]
