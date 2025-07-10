@@ -59,6 +59,15 @@ class AssetScopeEnum(Enum):
     GLOBAL = 5
 
 
+class DefaultProductPrivacyEnum(Enum):
+    """Enumeration of Default product Privacy"""
+
+    ALWAYS_PRIVATE = 1
+    ALWAYS_PUBLIC = 2
+    DEFAULT_PRIVATE = 3
+    DEFAULT_PUBLIC = 4
+
+
 # The Account Server API URL environment variable,
 # You can set the API manually with set_apu_url() if this is not defined.
 # The Account Server API URL environment variable,
@@ -554,7 +563,6 @@ class AsApi:
             "PATCH",
             f"/asset/{asset_id}",
             access_token=access_token,
-            expected_response_codes=[200],
             data=data,
             files=files,
             error_message="Failed altering asset",
@@ -1546,7 +1554,7 @@ class AsApi:
         limit: Optional[int] = None,
         timeout_s: int = _READ_TIMEOUT_S,
     ) -> AsApiRv:
-        """Alters an existing a Product."""
+        """Alters an existing Product."""
 
         data: Dict[str, Any] = {}
         if product_name is not None:
@@ -1561,7 +1569,62 @@ class AsApi:
             f"/product/{product_id}",
             access_token=access_token,
             data=data,
-            expected_response_codes=[200],
+            error_message="Failed to alter product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def alter_unit(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        name: Optional[str] = None,
+        default_product_privacy: Optional[DefaultProductPrivacyEnum] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Alters an existing Unit."""
+
+        data: Dict[str, Any] = {}
+        if name is not None:
+            data["name"] = name
+        if default_product_privacy is not None:
+            data["default_product_privacy"] = default_product_privacy.name
+
+        return AsApi.__request(
+            "PATCH",
+            f"/unit/{unit_id}",
+            access_token=access_token,
+            data=data,
+            error_message="Failed to alter product",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def alter_organisation(
+        cls,
+        access_token: str,
+        *,
+        org_id: str,
+        name: Optional[str] = None,
+        default_product_privacy: Optional[DefaultProductPrivacyEnum] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> AsApiRv:
+        """Alters an existing Organisation."""
+
+        data: Dict[str, Any] = {}
+        if name is not None:
+            data["name"] = name
+        if default_product_privacy is not None:
+            data["default_product_privacy"] = default_product_privacy.name
+
+        return AsApi.__request(
+            "PATCH",
+            f"/organisation/{org_id}",
+            access_token=access_token,
+            data=data,
             error_message="Failed to alter product",
             timeout=timeout_s,
         )[0]
