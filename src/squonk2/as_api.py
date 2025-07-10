@@ -897,6 +897,50 @@ class AsApi:
 
     @classmethod
     @synchronized
+    def get_unit_charges(
+        cls,
+        access_token: str,
+        *,
+        unit_id: str,
+        from_: Optional[date] = None,
+        until: Optional[date] = None,
+        pbp: Optional[int] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Returns charges for a given Product. If from and until are omitted
+        charges for the current billing period are returned.
+
+        You will need admin rights on the Account Server to use this method.
+
+        :param access_token: A valid AS API access token
+        :param product_id: The UUID of the Product
+        :param from_: An optional date where charges are to start (inclusive)
+        :param until: An optional date where charges are to end (exclusive)
+        :param pbp: An optional prior billing period
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert unit_id
+
+        params: Dict[str, Any] = {}
+        if from_:
+            params["from"] = str(from_)
+        if until:
+            params["until"] = str(until)
+        if pbp:
+            params["pbp"] = str(pbp)
+
+        return AsApi.__request(
+            "GET",
+            f"/charges/unit/{unit_id}",
+            access_token=access_token,
+            params=params,
+            error_message="Failed getting unit charges",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def create_unit(
         cls,
         access_token: str,
