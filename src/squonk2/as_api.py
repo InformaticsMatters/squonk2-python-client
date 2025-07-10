@@ -9,7 +9,6 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
 """
 
 import contextlib
-from dataclasses import dataclass
 from datetime import date
 from enum import Enum
 import logging
@@ -21,25 +20,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
-from munch import DefaultMunch
 from wrapt import synchronized
 import requests
 
-
-@dataclass
-class AsApiRv:
-    """The return value from most of the the AsApi class public methods.
-
-    :param success: True if the call was successful, False otherwise.
-    :param msg: API request response content
-    :param munch_msg: A DefaultMunch object for the API request response content
-    :param http_status_code: An HTTPS status code (0 if not available)
-    """
-
-    success: bool
-    msg: Dict[Any, Any]
-    defaultmunch_msg: DefaultMunch
-    http_status_code: int
+from .api import ApiRv
 
 
 class EventStreamFormat(Enum):
@@ -100,7 +84,7 @@ class AsApi:
     """The AsApi class provides high-level, simplified access to the AS REST API.
     You can use the request module directly for finer control. This module
     provides a wrapper around the handling of the request, returning a simplified
-    namedtuple response value ``AsApiRv``
+    namedtuple response value ``ApiRv``
     """
 
     # The default AS API is extracted from the environment,
@@ -111,8 +95,6 @@ class AsApi:
     __verify_ssl_cert: bool = (
         os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
     )
-    # An object to return in DefaultMunch objects
-    __undefined: object = object()
 
     @classmethod
     def __request(
@@ -128,7 +110,7 @@ class AsApi:
         files: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
         timeout: int = _READ_TIMEOUT_S,
-    ) -> Tuple[AsApiRv, Optional[requests.Response]]:
+    ) -> Tuple[ApiRv, Optional[requests.Response]]:
         """Sends a request to the AS API endpoint. The caller normally has to provide
         an oauth-like access token but this is not mandated.
 
@@ -142,15 +124,7 @@ class AsApi:
         msg: Dict[Any, Any] = {}
         if not AsApi.__as_api_url:
             msg = {"error": "No API URL defined"}
-            return (
-                AsApiRv(
-                    success=False,
-                    msg=msg,
-                    defaultmunch_msg=DefaultMunch.fromDict(msg, AsApi.__undefined),
-                    http_status_code=0,
-                ),
-                None,
-            )
+            return ApiRv(success=False, msg=msg), None
 
         url: str = AsApi.__as_api_url + endpoint
 
@@ -230,20 +204,18 @@ class AsApi:
         if resp is None or resp.status_code not in expected_codes:
             msg = {"error": f"{error_message} (resp={resp})"}
             return (
-                AsApiRv(
+                ApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch.fromDict(msg, AsApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
             )
 
         return (
-            AsApiRv(
+            ApiRv(
                 success=True,
                 msg=msg,
-                defaultmunch_msg=DefaultMunch.fromDict(msg, AsApi.__undefined),
                 http_status_code=http_status_code,
             ),
             resp,
@@ -274,7 +246,7 @@ class AsApi:
 
     @classmethod
     @synchronized
-    def ping(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+    def ping(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
         """A handy API method that calls the AS API to ensure the server is
         responding.
 
@@ -285,7 +257,7 @@ class AsApi:
 
     @classmethod
     @synchronized
-    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
         """Returns the AS-API service version.
 
         :param timeout_s: The underlying request timeout
@@ -300,7 +272,7 @@ class AsApi:
 
     @classmethod
     @synchronized
-    def get_event_stream_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> AsApiRv:
+    def get_event_stream_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
         """Returns the AS-API Event Stream Service version.
 
         :param timeout_s: The underlying request timeout
@@ -317,7 +289,7 @@ class AsApi:
     @synchronized
     def get_event_stream(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns the AS-API Event Stream for a user (if there is one).
 
         :param access_token: A valid AS API access token
@@ -340,7 +312,7 @@ class AsApi:
         *,
         event_format: EventStreamFormat,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Creates an Event Stream.
 
         :param access_token: A valid AS API access token
@@ -372,7 +344,7 @@ class AsApi:
         *,
         event_stream_id: int,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Creates an Event Stream.
 
         :param access_token: A valid AS API access token
@@ -395,7 +367,7 @@ class AsApi:
     @synchronized
     def get_available_products(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns Products you have access to.
 
         :param access_token: A valid AS API access token
@@ -415,7 +387,7 @@ class AsApi:
     @synchronized
     def get_available_units(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns Units (and their Organisations) you have access to.
 
         :param access_token: A valid AS API access token
@@ -439,7 +411,7 @@ class AsApi:
         *,
         scope_id: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns Assets you have access to. If you provide a scope ID
         (a username or a product, unit or org UUID) only assets available in that
         scope will be returned.
@@ -489,7 +461,7 @@ class AsApi:
         scope_id: Optional[str] = None,
         is_secret: bool = False,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Create an Asset from a string or file (not both)."""
 
         data = {"name": name, "scope": scope.name, "secret": is_secret}
@@ -536,7 +508,7 @@ class AsApi:
         content_string: Optional[str] = None,
         content_file: Optional[Path] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Alters an Asset. An asset's value can be changed along with its description."""
 
         data = {}
@@ -577,7 +549,7 @@ class AsApi:
         *,
         asset_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Deletes an existing asset"""
         assert asset_id
 
@@ -598,7 +570,7 @@ class AsApi:
         *,
         asset_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Disables an existing asset"""
         assert asset_id
 
@@ -619,7 +591,7 @@ class AsApi:
         asset_id: str,
         m_id: int,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Disables an existing asset"""
         assert asset_id
         assert isinstance(m_id, int)
@@ -646,7 +618,7 @@ class AsApi:
         asset_id: str,
         m_id: int,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Disables an existing asset"""
         assert asset_id
         assert isinstance(m_id, int)
@@ -672,7 +644,7 @@ class AsApi:
         *,
         asset_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Disables an existing asset"""
         assert asset_id
 
@@ -693,7 +665,7 @@ class AsApi:
         *,
         asset_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Disables an existing asset"""
         assert asset_id
 
@@ -713,7 +685,7 @@ class AsApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns Merchants known (registered) with the Account Server.
 
         :param access_token: A valid AS API access token
@@ -737,7 +709,7 @@ class AsApi:
         merchant_id: int,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns the given Merchant.
 
         :param access_token: A valid AS API access token
@@ -763,7 +735,7 @@ class AsApi:
         *,
         product_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns details for a given Product.
 
         :param access_token: A valid AS API access token
@@ -788,7 +760,7 @@ class AsApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns the default product storage.
 
         :param access_token: A valid AS API access token
@@ -811,7 +783,7 @@ class AsApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns known product types.
 
         :param access_token: A valid AS API access token
@@ -835,7 +807,7 @@ class AsApi:
         *,
         unit_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns Products for a given Unit.
 
         :param access_token: A valid AS API access token
@@ -861,7 +833,7 @@ class AsApi:
         *,
         org_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns Products for a given Organisation.
 
         :param access_token: A valid AS API access token
@@ -890,7 +862,7 @@ class AsApi:
         until: Optional[date] = None,
         pbp: Optional[int] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns charges for a given Product. If from and until are omitted
         charges for the current billing period are returned.
 
@@ -933,7 +905,7 @@ class AsApi:
         org_id: str,
         billing_day: int,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Creates a Unit for a given an Organisation. You need to provide a name
         and billing day - a day in the month to bill all the subscription-based
         products created for the Unit.
@@ -974,7 +946,7 @@ class AsApi:
         *,
         billing_day: int,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Creates a Personal Unit
 
         :param access_token: A valid AS API access token
@@ -1005,7 +977,7 @@ class AsApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Deletes a Personal Unit
 
         :param access_token: A valid AS API access token
@@ -1029,7 +1001,7 @@ class AsApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets a Personal Unit
 
         :param access_token: A valid AS API access token
@@ -1054,7 +1026,7 @@ class AsApi:
         unit_id: str,
         username: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Adds a User to a Unit.
 
         You will need admin privileges or be a member of the organisation or unit to do this.
@@ -1086,7 +1058,7 @@ class AsApi:
         unit_id: str,
         username: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Removes a User from a Unit.
 
         You will need admin privileges or be a member of the organisation or unit to do this.
@@ -1118,7 +1090,7 @@ class AsApi:
         org_name: str,
         org_owner: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Creates an Organisation. You need to provide a name and an owner.
 
         You will need admin privileges to do this.
@@ -1157,7 +1129,7 @@ class AsApi:
         org_id: str,
         username: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Adds a User to an Organisation.
 
         You will need admin privileges or be a member of the organisation to do this.
@@ -1189,7 +1161,7 @@ class AsApi:
         org_id: str,
         username: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Removes a User from an Organisation.
 
         You will need admin privileges or be a member of the organisation to do this.
@@ -1220,7 +1192,7 @@ class AsApi:
         *,
         org_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Deletes an Organisation.
 
         You will need admin privileges to do this.
@@ -1249,7 +1221,7 @@ class AsApi:
         *,
         org_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets an Organisation.
 
         You will need to be a member of the Organisation to use this method.
@@ -1277,7 +1249,7 @@ class AsApi:
         *,
         unit_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets a Unit.
 
         You will need to be a member of the Organisation or Unit to use this method.
@@ -1305,7 +1277,7 @@ class AsApi:
         *,
         org_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets all Units available to you for an organisation.
 
         You will need to be a member of the Organisation or Unit to use this method.
@@ -1333,7 +1305,7 @@ class AsApi:
         *,
         unit_name: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets all Units available to you or by name.
 
         You will need to be a member of the Organisation or Unit to use this method.
@@ -1365,7 +1337,7 @@ class AsApi:
         *,
         org_name: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets all the Organisations you can see. if you provide a name
         the Organisation you name will be returned (if you are a member of it).
 
@@ -1398,7 +1370,7 @@ class AsApi:
         until: Optional[date] = None,
         pbp: Optional[int] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Returns charges for a given Organisation. If from and until are omitted
         charges for the current billing period are returned.
 
@@ -1439,7 +1411,7 @@ class AsApi:
         *,
         org_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets users in an Organisation.
 
         You will need admin rights on the Account Server to use this method.
@@ -1467,7 +1439,7 @@ class AsApi:
         *,
         unit_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets users in a Unit.
 
         You will need admin rights on the Account Server to use this method.
@@ -1500,7 +1472,7 @@ class AsApi:
         limit: int = 0,
         flavour: str = "",
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Creates a Product in a Unit.
 
         You will need to be a member of the Organisation or Unit to use this method.
@@ -1553,7 +1525,7 @@ class AsApi:
         allowance: Optional[int] = None,
         limit: Optional[int] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Alters an existing Product."""
 
         data: Dict[str, Any] = {}
@@ -1583,7 +1555,7 @@ class AsApi:
         name: Optional[str] = None,
         default_product_privacy: Optional[DefaultProductPrivacyEnum] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Alters an existing Unit."""
 
         data: Dict[str, Any] = {}
@@ -1611,7 +1583,7 @@ class AsApi:
         name: Optional[str] = None,
         default_product_privacy: Optional[DefaultProductPrivacyEnum] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Alters an existing Organisation."""
 
         data: Dict[str, Any] = {}
@@ -1637,7 +1609,7 @@ class AsApi:
         *,
         product_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Deletes a Product in a Unit.
 
         You will need to be a member of the Organisation or Unit to use this method.
@@ -1666,7 +1638,7 @@ class AsApi:
         *,
         unit_id: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Deletes a Product in a Unit.
 
         You will need to be a member of the Organisation or Unit to use this method.
@@ -1694,7 +1666,7 @@ class AsApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets your User account.
 
         You will need admin rights on the Account Server to use this method.
@@ -1719,7 +1691,7 @@ class AsApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> AsApiRv:
+    ) -> ApiRv:
         """Gets the Default Organisation.
 
         :param access_token: A valid AS API access token

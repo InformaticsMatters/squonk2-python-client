@@ -7,7 +7,8 @@ import sys
 import time
 from typing import NoReturn, Optional
 
-from squonk2.dm_api import DmApi, DmApiRv, TEST_PRODUCT_ID
+from squonk2.api import ApiRv
+from squonk2.dm_api import DmApi, TEST_PRODUCT_ID
 from squonk2.auth import Auth
 
 # Get configuration from the environment.
@@ -28,7 +29,7 @@ API_URL_VALIDATION: bool = (
 #   export SSL_CERT_FILE=$(python -m certifi)
 
 
-def fail(msg: str, retval: Optional[DmApiRv] = None) -> NoReturn:
+def fail(msg: str, retval: Optional[ApiRv] = None) -> NoReturn:
     """Issues a failure message then sies a sys.exit(1)."""
     err_msg = f"FAILED {msg}"
     if retval:
@@ -89,7 +90,7 @@ def main():
     assert token == first_token
 
     # Basic ping/version
-    api_rv: DmApiRv = DmApi.ping(token)
+    api_rv: ApiRv = DmApi.ping(token)
     if not api_rv.success:
         fail("ping()", api_rv)
     print("DM-API ping() (SUCCESS)")

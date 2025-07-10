@@ -2,7 +2,6 @@
 """
 
 import contextlib
-from dataclasses import dataclass
 import logging
 import os
 import time
@@ -10,25 +9,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
-from munch import DefaultMunch
 from wrapt import synchronized
 import requests
 
-
-@dataclass
-class UiApiRv:
-    """The return value from most of the the UiApi class public methods.
-
-    :param success: True if the call was successful, False otherwise.
-    :param msg: API request response content
-    :param munch_msg: A DefaultMunch object for the API request response content
-    :param http_status_code: An HTTPS status code (0 if not available)
-    """
-
-    success: bool
-    msg: Dict[Any, Any]
-    defaultmunch_msg: DefaultMunch
-    http_status_code: int
+from .api import ApiRv
 
 
 # A common read timeout
@@ -55,7 +39,7 @@ class UiApi:
     """The UiAPI class provides high-level, simplified access to the UI's API.
     You can use the request module directly for finer control. This module
     provides a wrapper around the handling of the request, returning a simplified
-    namedtuple response value ``UiApiRv``
+    namedtuple response value ``ApiRv``
     """
 
     # The default DM API is extracted from the environment,
@@ -66,8 +50,6 @@ class UiApi:
     __verify_ssl_cert: bool = (
         os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
     )
-    # An object to return in DefaultMunch objects
-    __undefined: object = object()
 
     @classmethod
     def __request(
@@ -83,7 +65,7 @@ class UiApi:
         params: Optional[Dict[str, Any]] = None,
         expect_json: bool = False,
         timeout: int = _READ_TIMEOUT_S,
-    ) -> Tuple[UiApiRv, Optional[requests.Response]]:
+    ) -> Tuple[ApiRv, Optional[requests.Response]]:
         """Sends a request to the UI API endpoint.
 
         All the public API methods pass control to this method,
@@ -97,10 +79,9 @@ class UiApi:
         if not UiApi.__ui_api_url:
             msg = {"error": "No API URL defined"}
             return (
-                UiApiRv(
+                ApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch.fromDict(msg, UiApi.__undefined),
                     http_status_code=0,
                 ),
                 None,
@@ -170,20 +151,18 @@ class UiApi:
         if resp is None or resp.status_code not in expected_codes:
             msg = {"error": f"{error_message} (resp={resp})"}
             return (
-                UiApiRv(
+                ApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch.fromDict(msg, UiApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
             )
 
         return (
-            UiApiRv(
+            ApiRv(
                 success=True,
                 msg=msg,
-                defaultmunch_msg=DefaultMunch.fromDict(msg, UiApi.__undefined),
                 http_status_code=http_status_code,
             ),
             resp,
@@ -214,7 +193,7 @@ class UiApi:
 
     @classmethod
     @synchronized
-    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> UiApiRv:
+    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
         """Returns the UI service version.
 
         :param timeout_s: The underlying request timeout

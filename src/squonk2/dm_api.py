@@ -9,7 +9,6 @@ interact with **Projects**, **Instances** (**Jobs**) and **Files**.
 """
 
 import contextlib
-from dataclasses import dataclass
 import decimal
 import json
 import logging
@@ -19,25 +18,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib3.exceptions import InsecureRequestWarning
 from urllib3 import disable_warnings
 
-from munch import DefaultMunch
 from wrapt import synchronized
 import requests
 
-
-@dataclass
-class DmApiRv:
-    """The return value from most of the the DmApi class public methods.
-
-    :param success: True if the call was successful, False otherwise.
-    :param msg: API request response content
-    :param munch_msg: A DefaultMunch object for the API request response content
-    :param http_status_code: An HTTPS status code (0 if not available)
-    """
-
-    success: bool
-    msg: Dict[Any, Any]
-    defaultmunch_msg: DefaultMunch
-    http_status_code: int
+from .api import ApiRv
 
 
 TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
@@ -76,7 +60,7 @@ class DmApi:
     """The DmAPI class provides high-level, simplified access to the DM REST API.
     You can use the request module directly for finer control. This module
     provides a wrapper around the handling of the request, returning a simplified
-    namedtuple response value ``DmApiRv``
+    namedtuple response value ``ApiRv``
     """
 
     # The default DM API is extracted from the environment,
@@ -87,8 +71,6 @@ class DmApi:
     __verify_ssl_cert: bool = (
         os.environ.get(_API_VERIFY_SSL_CERT_ENV_NAME, "yes").lower() == "yes"
     )
-    # An object to return in DefaultMunch objects
-    __undefined: object = object()
 
     @classmethod
     def __request(
@@ -104,7 +86,7 @@ class DmApi:
         files: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, Any]] = None,
         timeout: int = _READ_TIMEOUT_S,
-    ) -> Tuple[DmApiRv, Optional[requests.Response]]:
+    ) -> Tuple[ApiRv, Optional[requests.Response]]:
         """Sends a request to the DM API endpoint. The caller normally has to provide
         an oauth-like access token but this is not mandated. Some DM API methods
         use DM-generated tokens rather than access tokens. If so the caller will pass
@@ -120,15 +102,7 @@ class DmApi:
         msg: Dict[Any, Any] = {}
         if not DmApi.__dm_api_url:
             msg = {"error": "No API URL defined"}
-            return (
-                DmApiRv(
-                    success=False,
-                    msg=msg,
-                    defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
-                    http_status_code=0,
-                ),
-                None,
-            )
+            return ApiRv(success=False, msg=msg), None
 
         url: str = DmApi.__dm_api_url + endpoint
 
@@ -195,20 +169,18 @@ class DmApi:
         if resp is None or resp.status_code not in expected_codes:
             msg = {"error": f"{error_message} (resp={resp})"}
             return (
-                DmApiRv(
+                ApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                     http_status_code=http_status_code,
                 ),
                 resp,
             )
 
         return (
-            DmApiRv(
+            ApiRv(
                 success=True,
                 msg=msg,
-                defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                 http_status_code=http_status_code,
             ),
             resp,
@@ -223,7 +195,7 @@ class DmApi:
         project_file: str,
         project_path: str = "/",
         timeout_s: int = 120,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Puts an individual file into a DM project."""
         data: Dict[str, Any] = {}
         if project_path:
@@ -260,7 +232,7 @@ class DmApi:
         *,
         rate: Dict[str, str],
         timeout_s: int = 120,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Sets a single Job exchange rate."""
         assert isinstance(rate, dict)
         assert "collection" in rate
@@ -350,7 +322,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def ping(cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S) -> DmApiRv:
+    def ping(cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
         """A handy API method that calls the DM API to ensure the server is
         responding.
 
@@ -371,7 +343,7 @@ class DmApi:
     @synchronized
     def get_version(
         cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Returns the DM-API service version.
 
         :param access_token: An optional valid DM API access token (deprecated)
@@ -390,7 +362,7 @@ class DmApi:
     @synchronized
     def get_job_definition_schema_version(
         cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Returns the DM-API Job Definition schema version.
 
         :param access_token: An optional valid DM API access token (deprecated)
@@ -409,7 +381,7 @@ class DmApi:
     @synchronized
     def get_workflow_engine_version(
         cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Returns the DM-API workflow engine version.
 
         :param access_token: An optional valid DM API access token (deprecated)
@@ -434,7 +406,7 @@ class DmApi:
         as_tier_product_id: str,
         private: bool = False,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Creates a Project, which requires a name and a Product ID
         (a Data Manger Project Tier Product) obtained from
         the Account Server.
@@ -473,7 +445,7 @@ class DmApi:
     @synchronized
     def delete_project(
         cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Deletes a project.
 
         :param access_token: A valid DM API access token
@@ -500,7 +472,7 @@ class DmApi:
         project_id: str,
         editor: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Adds a user to a Project as an Editor.
 
         :param access_token: A valid DM API access token.
@@ -530,7 +502,7 @@ class DmApi:
         project_id: str,
         editor: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Removes a user as an Editor from a Project.
 
         :param access_token: A valid DM API access token.
@@ -560,7 +532,7 @@ class DmApi:
         project_id: str,
         observer: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Adds a user to a Project as an Observer.
 
         :param access_token: A valid DM API access token.
@@ -590,7 +562,7 @@ class DmApi:
         project_id: str,
         observer: str,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Removes a user as an Observer from a Project.
 
         :param access_token: A valid DM API access token.
@@ -622,7 +594,7 @@ class DmApi:
         project_path: str = "/",
         force: bool = False,
         timeout_per_file_s: int = 120,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Puts a file, or list of files, into a DM Project
         using an optional path.
 
@@ -653,12 +625,7 @@ class DmApi:
 
         if not DmApi.__dm_api_url:
             msg = {"error": "No API URL defined"}
-            return DmApiRv(
-                success=False,
-                msg=msg,
-                defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
-                http_status_code=0,
-            )
+            return ApiRv(success=False, msg=msg)
 
         # If we're not forcing the files collect the names
         # of every file on the path - we use this to skip files that
@@ -700,10 +667,9 @@ class DmApi:
             # whether we end up sending it or not.
             if not os.path.isfile(src_file):
                 msg = {"error": f"No such file ({src_file})"}
-                return DmApiRv(
+                return ApiRv(
                     success=False,
                     msg=msg,
-                    defaultmunch_msg=DefaultMunch.fromDict(msg, DmApi.__undefined),
                     http_status_code=http_status_code,
                 )
             if os.path.basename(src_file) not in existing_path_files:
@@ -719,10 +685,9 @@ class DmApi:
                     return ret_val
 
         # OK if we get here
-        return DmApiRv(
+        return ApiRv(
             success=True,
             msg={},
-            defaultmunch_msg=DefaultMunch.fromDict({}, DmApi.__undefined),
             http_status_code=http_status_code,
         )
 
@@ -736,7 +701,7 @@ class DmApi:
         project_files: Union[str, List[str]],
         project_path: str = "/",
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Deletes an unmanaged project file, or list of files, on a project path.
 
         :param access_token: A valid DM API access token
@@ -782,10 +747,9 @@ class DmApi:
                 return ret_val
 
         # OK if we get here
-        return DmApiRv(
+        return ApiRv(
             success=True,
             msg={},
-            defaultmunch_msg=DefaultMunch.fromDict({}, DmApi.__undefined),
             http_status_code=0,
         )
 
@@ -799,7 +763,7 @@ class DmApi:
         project_path: str = "/",
         include_hidden: bool = False,
         timeout_s: int = _READ_LONG_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets a list of project files on a path.
 
         :param access_token: A valid DM API access token
@@ -842,7 +806,7 @@ class DmApi:
         local_file: str,
         project_path: str = "/",
         timeout_s: int = _READ_LONG_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Get a single unmanaged file from a project path, save it to
         the filename defined in local_file.
 
@@ -893,7 +857,7 @@ class DmApi:
         local_file: str,
         project_path: str = "/",
         timeout_s: int = _READ_LONG_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Like :py:meth:`~DmApi.get_unmanaged_project_file()`, this method
         gets a single unmanaged file from a project path. The method uses an
         Instance-generated callback token rather than a user-access token.
@@ -958,7 +922,7 @@ class DmApi:
         generate_callback_token: bool = False,
         debug: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Optionally used prior to starting a Job instance, this method
         checks that Job Instance can be started in a Project, returning the
         Job command.
@@ -1031,7 +995,7 @@ class DmApi:
         generate_callback_token: bool = False,
         debug: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Instantiates a Job Instance in a Project.
 
         :param access_token: A valid DM API access token
@@ -1095,7 +1059,7 @@ class DmApi:
         *,
         project_name: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets information about all projects available to you.
 
         :param access_token: A valid DM API access token
@@ -1120,7 +1084,7 @@ class DmApi:
     @synchronized
     def get_project(
         cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets detailed information about a specific project.
 
         :param access_token: A valid DM API access token
@@ -1142,7 +1106,7 @@ class DmApi:
     @synchronized
     def get_instance(
         cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets information about an instance (Application or Job).
 
         :param access_token: A valid DM API access token
@@ -1164,7 +1128,7 @@ class DmApi:
     @synchronized
     def get_project_instances(
         cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets information about all instances available to you.
 
         :param access_token: A valid DM API access token
@@ -1188,7 +1152,7 @@ class DmApi:
     @synchronized
     def get_available_instances(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets information about all instances available to you.
 
         :param access_token: A valid DM API access token
@@ -1214,7 +1178,7 @@ class DmApi:
         exclude_purpose: Optional[str] = None,
         project_id: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets information about all tasks available to you.
 
         :param access_token: A valid DM API access token
@@ -1246,7 +1210,7 @@ class DmApi:
     @synchronized
     def delete_instance(
         cls, access_token: str, *, instance_id: str, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Deletes an Instance (Application or Job).
 
         When instances are deleted the container is removed along with
@@ -1273,7 +1237,7 @@ class DmApi:
     @synchronized
     def delete_instance_token(
         cls, *, instance_id: str, token: str, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Deletes a DM API Instance **callback token**. This API method is not
         authenticated and therefore does not need an access token. Once the token is
         deleted no further calls to :py:meth:`DmApi.get_unmanaged_project_file_with_token()`
@@ -1303,7 +1267,7 @@ class DmApi:
         event_prior_ordinal: int = 0,
         event_limit: int = 0,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets information about a specific Task
 
         :param access_token: A valid DM API access token
@@ -1344,7 +1308,7 @@ class DmApi:
         project_id: Optional[str] = None,
         instance_callback_context: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets information about a range of Tasks
 
         :param access_token: A valid DM API access token
@@ -1383,7 +1347,7 @@ class DmApi:
     @synchronized
     def get_available_jobs(
         cls, access_token: str, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets a summary list of available Jobs.
 
         :param access_token: A valid DM API access token.
@@ -1407,7 +1371,7 @@ class DmApi:
         *,
         project_id: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets summary information about all Jobs.
 
         :param access_token: A valid DM API access token.
@@ -1441,7 +1405,7 @@ class DmApi:
         job_id: int,
         project_id: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets detailed information about a specific Job
         using the numeric Job record identity.
 
@@ -1480,7 +1444,7 @@ class DmApi:
         job_version: str,
         project_id: str = "",
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets detailed information about a specific Job
         using its ``collection``, ``job`` and ``version``, using an optional
         target ``project_id``.
@@ -1523,7 +1487,7 @@ class DmApi:
         admin: bool,
         impersonate: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Adds or removes the ``become-admin`` state of your account.
         Only users whose accounts offer administrative capabilities
         can use this method.
@@ -1557,7 +1521,7 @@ class DmApi:
         *,
         include_acknowledged: bool = False,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets service errors. You need admin rights to use this method.
 
         :param access_token: A valid DM API access token
@@ -1587,7 +1551,7 @@ class DmApi:
         *,
         only_undefined: bool = False,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets exchange rates for Jobs.
 
         :param access_token: A valid DM API access token
@@ -1617,7 +1581,7 @@ class DmApi:
         *,
         rates: Union[Dict[str, str], List[Dict[str, str]]],
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Sets exchange rates for Jobs, given one rate or a list of rates.
 
         A rate is a dictionary with keys 'collection', 'job', 'version', and 'rate'.
@@ -1647,10 +1611,9 @@ class DmApi:
                 return ret_val
 
         # OK if we get here
-        return DmApiRv(
+        return ApiRv(
             success=True,
             msg={},
-            defaultmunch_msg=DefaultMunch.fromDict({}, DmApi.__undefined),
             http_status_code=0,
         )
 
@@ -1664,7 +1627,7 @@ class DmApi:
         header: Optional[str] = None,
         params: Optional[str] = None,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Puts a Job Manifest onto server. The action requires the token to be
         that of an admin user.
 
@@ -1700,7 +1663,7 @@ class DmApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets Datasets available to the caller.
 
         :param access_token: A valid DM API access token
@@ -1723,7 +1686,7 @@ class DmApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets Datasets available to the caller.
 
         :param access_token: A valid DM API access token
@@ -1746,7 +1709,7 @@ class DmApi:
         access_token: str,
         *,
         timeout_s: int = _READ_TIMEOUT_S,
-    ) -> DmApiRv:
+    ) -> ApiRv:
         """Gets Datasets available to the caller.
 
         :param access_token: A valid DM API access token

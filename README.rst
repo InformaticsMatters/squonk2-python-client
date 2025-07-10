@@ -76,13 +76,15 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.set_job_exchange_rates()``
 - ``DmApi.start_job_instance()``
 
-A ``dataclass`` is used as the return value for many of the methods: -
+A ``dataclass`` defined in ``api`` is used as the return value for many of the methods: -
 
-- ``DmApiRv``
+- ``ApiRv``
 
 It contains a boolean ``success`` field and a dictionary ``msg`` field. The
 ``msg`` typically contains the underlying REST API response content
 (rendered as a Python dictionary), or an error message if the call failed.
+A `DefaultMunch`_ representation of the msg is also included (``defaultmunch_msg``)
+along with an ``http_status_code`` (or 0 if one is not available).
 
 Simplified Account Server API
 =============================
@@ -143,14 +145,6 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.remove_user_from_organisation()``
 - ``AsApi.remove_user_from_unit()``
 
-A ``dataclass`` is used as the return value for many of the methods: -
-
-- ``AsApiRv``
-
-It contains a boolean ``success`` field and a dictionary ``msg`` field. The
-``msg`` typically contains the underlying REST API response content
-(rendered as a Python dictionary), or an error message if the call failed.
-
 Simplified UI API
 =================
 The following Squonk2 UI API functions are available: -
@@ -158,14 +152,6 @@ The following Squonk2 UI API functions are available: -
 - ``UiApi.set_api_url()``
 
 - ``UiApi.get_version()``
-
-A ``dataclass`` is used as the return value for many of the methods: -
-
-- ``UiApiRv``
-
-It contains a boolean ``success`` field and a dictionary ``msg`` field. The
-``msg`` typically contains the underlying REST API response content
-(rendered as a Python dictionary), or an error message if the call failed.
 
 Examples
 ========
@@ -281,5 +267,6 @@ Get in touch
 
 .. _on GitHub: https://github.com/informaticsmatters/squonk2-python-client
 .. _backend: https://github.com/xchem/fragalysis-backend
+.. _defaultmunch: https://github.com/Infinidat/munch
 .. _squonk2-python-client: https://squonk2-python-client.readthedocs.io/en/latest/
 .. _PyPI: https://pypi.org/project/im-squonk2-client

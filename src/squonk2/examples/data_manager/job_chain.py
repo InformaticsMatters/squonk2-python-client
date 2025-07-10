@@ -60,13 +60,14 @@ from typing import Any, Dict, List, Optional, Tuple
 import yaml
 
 from squonk2.auth import Auth
-from squonk2.dm_api import DmApi, DmApiRv
+from squonk2.api import ApiRv
+from squonk2.dm_api import DmApi
 from squonk2.environment import Environment
 
 _PER_QUERY_SLEEP_S: float = 1.0
 
 
-def error(dm_rv: DmApiRv) -> None:
+def error(dm_rv: ApiRv) -> None:
     """Prints a simple error line using the DmApiRv message."""
     print(f"ERROR: API error {dm_rv.msg}")
 
@@ -89,7 +90,7 @@ def run_a_job(
     """
     # Start Job - in return we're given an Instance (and a Task)
     # ---------
-    job_dm_rv: DmApiRv = DmApi.start_job_instance(
+    job_dm_rv: ApiRv = DmApi.start_job_instance(
         token, project_id=project, name=name, specification=specification
     )
     if not job_dm_rv.success:
@@ -251,7 +252,7 @@ def run(
         print("Deleting Job instances...")
         for job_instance in job_instances:
             print(f' Deleting Job instance "{job_instance}"...')
-            dm_rv: DmApiRv = DmApi.delete_instance(api_token, instance_id=job_instance)
+            dm_rv: ApiRv = DmApi.delete_instance(api_token, instance_id=job_instance)
             if dm_rv.success:
                 print(f" Deleted instance {job_instance}")
             else:

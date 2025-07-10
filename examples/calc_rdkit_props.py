@@ -11,7 +11,8 @@ import os
 import sys
 import time
 
-from squonk2.dm_api import DmApi, DmApiRv
+from squonk2.api import ApiRv
+from squonk2.dm_api import DmApi
 
 # Squonk2 authentication token, project id and the job's input file
 # are taken from environment variables...
@@ -39,7 +40,7 @@ else:
 
 # The 'ping()' is a handy, simple, API method
 # to check the Data Manager is responding.
-rv: DmApiRv = DmApi.ping(token)
+rv: ApiRv = DmApi.ping(token)
 if rv.success:
     print("API OK")
 else:

@@ -13,8 +13,9 @@ Required environment: -
 import os
 import sys
 
-from squonk2.dm_api import DmApi, DmApiRv
-from squonk2.as_api import AsApi, AsApiRv
+from squonk2.api import ApiRv
+from squonk2.dm_api import DmApi
+from squonk2.as_api import AsApi
 
 # Squonk2 authentication token and the organisation id
 # are taken from environment variables...
@@ -41,7 +42,7 @@ else:
     sys.exit(1)
 
 # Create the unit.
-as_rv: AsApiRv = AsApi.create_unit(
+as_rv: ApiRv = AsApi.create_unit(
     as_token,
     org_id=org_id,
     billing_day=8,
@@ -85,7 +86,7 @@ dt_product_id = as_rv.msg["id"]
 print(f"Created DataTier Product '{dt_product_id}'")
 
 # Create a Data Manger Project using the AS DT Product.
-dm_rv: DmApiRv = DmApi.create_project(
+dm_rv: ApiRv = DmApi.create_project(
     dm_token,
     project_name="Example project",
     as_tier_product_id=dt_product_id,
