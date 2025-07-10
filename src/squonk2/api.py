@@ -24,10 +24,11 @@ class ApiRv:
     success: bool
     msg: dict[Any, Any]
     defaultmunch_msg: DefaultMunch
-    http_status_code: int
+    http_status_code: int = 0
 
     def __init__(self, success: bool, msg: dict[Any, Any], http_status_code: int = 0):
-        self.bool = success
+        assert isinstance(msg, dict)
+        self.success = success
         self.http_status_code = http_status_code
         self.msg = copy.deepcopy(msg)
         self.defaultmunch_msg = DefaultMunch.fromDict(msg, _UNDEFINED)
