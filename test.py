@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""A simple developer-centric test script."""
 
-import argparse
 import os
 import sys
 import time
-from typing import NoReturn, Optional
+from typing import Annotated, NoReturn
+
+import typer
 
 from squonk2.api import ApiRv
 from squonk2.dm_api import DmApi, TEST_PRODUCT_ID
@@ -34,9 +34,12 @@ API_URL_VALIDATION: bool = (
 #
 #   export SSL_CERT_FILE=$(python -m certifi)
 
+# Name we'll give to the Project we'll create
+TEST_PROJECT_NAME: str = "DmApi Test Project"
 
-def fail(msg: str, retval: Optional[ApiRv] = None) -> NoReturn:
-    """Issues a failure message then sies a sys.exit(1)."""
+
+def fail(msg: str, retval: ApiRv | None = None) -> NoReturn:
+    """Issues a failure message then issues a sys.exit(1)."""
     err_msg = f"FAILED {msg}"
     if retval:
         assert not retval.success
@@ -45,23 +48,13 @@ def fail(msg: str, retval: Optional[ApiRv] = None) -> NoReturn:
     sys.exit(1)
 
 
-def main():
-    """The test entrypoint."""
+def main(project: Annotated[str, typer.Option(help="An existing Project UUID")] = ""):
+    """A simple developer test script.
 
-    # Prepare arg-parser and parse the command-line...
-    arg_parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        description="Squonk2 Data Manager API Tester",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    arg_parser.add_argument(
-        "-p",
-        "--project-id",
-        help="An optional pre-existing DM Project."
-        " If one is not provided a new one is created"
-        " (and then deleted)",
-        type=str,
-    )
-    args: argparse.Namespace = arg_parser.parse_args()
+    It runs a number of API methods to create a project, upload files,
+    run some tests, an then delete the project
+
+    If you provide a Project it is used (and not deleted)"""
 
     # Configure the URL.
     # Depending on keycloak configuration
@@ -71,7 +64,7 @@ def main():
     assert url == DMAPI_URL
     print(f"DM-API url={url}")
 
-    first_token = Auth.get_access_token(
+    first_token: str | None = Auth.get_access_token(
         keycloak_url=KEYCLOAK_URL,
         keycloak_realm=KEYCLOAK_REALM,
         keycloak_client_id=KEYCLOAK_CLIENT_ID,
@@ -85,7 +78,7 @@ def main():
 
     # Get another token using the existing token.
     # Just tests that prior tokens are given back.
-    token = Auth.get_access_token(
+    token: str | None = Auth.get_access_token(
         keycloak_url=KEYCLOAK_URL,
         keycloak_realm=KEYCLOAK_REALM,
         keycloak_client_id=KEYCLOAK_CLIENT_ID,
@@ -115,30 +108,30 @@ def main():
     # If given a project ID find it,
     # otherwise create one using the '1111' codes,
     # assuming admin user (because we have no Product, Unit, Organisation atm)
-    project_id = ""
-    if args.project_id:
+    using_project_id: str = ""
+    if project:
         found = False
-        for project in rv_projects.msg["projects"]:
-            if project["project_id"] == args.project_id:
+        for existing_project in rv_projects.msg["projects"]:
+            if existing_project["project_id"] == project:
                 print(
-                    f"Found project (product_id={project['product_id']} size={project['size']})"
+                    f"Found project (product_id={project} size={existing_project['size']})"
                 )
                 found = True
                 break
         if not found:
-            fail(f"Project does not exist ({args.project_id})")
-        project_id = args.project_id
+            fail(f"Project does not exist ({project})")
+        using_project_id = project
     else:
-        # Crete a new project, using the one we're about to
-        # create if it already exists on the server.
-        new_project_name = "DmApi Test Project"
+        # Not given a project (ID).
+        # Crete a new project, unless one exists with the same name.
+        new_project_name: str = TEST_PROJECT_NAME
         project_exists = False
-        for project in rv_projects.msg["projects"]:
-            if project["name"] == new_project_name:
+        for existing_project in rv_projects.msg["projects"]:
+            if existing_project["name"] == new_project_name:
                 print(
-                    f"Found existing test project '{new_project_name}' ({project['project_id']})"
+                    f"Found existing test project '{new_project_name}' ({existing_project['project_id']})"
                 )
-                project_id = project["project_id"]
+                using_project_id = existing_project["project_id"]
                 project_exists = True
                 break
         if project_exists:
@@ -153,15 +146,19 @@ def main():
             )
             if not api_rv.success:
                 fail("create_project()", api_rv)
-            project_id = api_rv.msg["project_id"]
-            print(f"Created project_id={project_id}")
-    assert project_id
+            using_project_id = api_rv.msg["project_id"]
+            print(f"Created project_id={using_project_id}")
+    # Whether we created one (or the test project already existed)
+    # we must have set using_project_id
+    assert using_project_id
 
     # Get a list of project files on the root
     print("Listing project files")
-    api_rv = DmApi.list_project_files(token, project_id=project_id, project_path="/")
+    api_rv = DmApi.list_project_files(
+        token, project_id=using_project_id, project_path="/"
+    )
     if not api_rv.success:
-        fail(f"list_project_files({project_id}, '/')", api_rv)
+        fail(f"list_project_files({using_project_id}, '/')", api_rv)
     num_project_files = 0
     if api_rv.msg["files"]:
         for project_file in api_rv.msg["files"]:
@@ -176,31 +173,31 @@ def main():
     # Put a simple file into the project, get it back and delete it
     local_file = "LICENSE"
     project_path = "/license"
-    api_rv = DmApi.put_unmanaged_project_files(
+    api_rv: ApiRv = DmApi.put_unmanaged_project_files(
         token,
-        project_id=project_id,
+        project_id=using_project_id,
         project_files=local_file,
         project_path=project_path,
     )
     if not api_rv.success:
-        fail(f"put_unmanaged_project_files({project_id})", api_rv)
+        fail(f"put_unmanaged_project_files({using_project_id})", api_rv)
     api_rv = DmApi.get_unmanaged_project_file(
         token,
-        project_id=project_id,
+        project_id=using_project_id,
         project_file=local_file,
         project_path=project_path,
         local_file=local_file,
     )
     if not api_rv.success:
-        fail(f"get_unmanaged_project_file({project_id})", api_rv)
+        fail(f"get_unmanaged_project_file({using_project_id})", api_rv)
     api_rv = DmApi.delete_unmanaged_project_files(
         token,
-        project_id=project_id,
+        project_id=using_project_id,
         project_files=local_file,
         project_path=project_path,
     )
     if not api_rv.success:
-        fail(f"delete_unmanaged_project_files({project_id})", api_rv)
+        fail(f"delete_unmanaged_project_files({using_project_id})", api_rv)
 
     # Run a test job
     print("Starting Job...")
@@ -215,10 +212,10 @@ def main():
     spec = {"collection": job_collection, "job": job_job, "version": job_version}
     job_name: str = "DmApi Test Job"
     api_rv = DmApi.start_job_instance(
-        token, project_id=project_id, name=job_name, specification=spec
+        token, project_id=using_project_id, name=job_name, specification=spec
     )
     if not api_rv.success:
-        fail(f"start_job_instance({project_id})", api_rv)
+        fail(f"start_job_instance({using_project_id})", api_rv)
     job_task_id = api_rv.msg["task_id"]
     job_instance_id = api_rv.msg["instance_id"]
     print(f"Started (task_id={job_task_id} instance_id={job_instance_id})")
@@ -255,16 +252,16 @@ def main():
     print("Deleted")
 
     # Finally, if we created a project, delete it.
-    if not args.project_id:
+    if not project:
         print("Deleting project I created...")
-        print(f"Deleting project_id={project_id}...")
-        api_rv = DmApi.delete_project(token, project_id=project_id)
+        print(f"Deleting project_id={using_project_id}...")
+        api_rv = DmApi.delete_project(token, project_id=using_project_id)
         if not api_rv.success:
-            fail(f"delete_project({project_id})", api_rv)
+            fail(f"delete_project({using_project_id})", api_rv)
         print("Deleted")
 
     print("Done")
 
 
 if __name__ == "__main__":
-    main()
+    typer.run(main)
