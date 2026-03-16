@@ -162,7 +162,7 @@ class Environment:
             # User has named an environment,
             # use it
             self.__environment: str = environment
-            if not environment in Environment.__environment_names:
+            if environment not in Environment.__environment_names:
                 raise Exception(
                     f"{Environment.__environments_file} '{environment}'"
                     " environment does not exist"

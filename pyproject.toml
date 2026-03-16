@@ -43,9 +43,14 @@ Repository = "https://github.com/InformaticsMatters/squonk2-python-client.git"
 dev = [
     "black>=26.3.1",
     "pre-commit>=4.5.1",
-    "pylint>=4.0.5",
     "pyroma>=5.0.1",
+    "ruff>=0.15.6",
     "sphinx>=9.0.4",
     "sphinx-rtd-theme>=3.1.0",
     "sphinx-toolbox>=4.1.2",
+]
+
+[tool.ruff]
+exclude = [
+  "examples",
 ]
