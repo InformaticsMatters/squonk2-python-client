@@ -27,7 +27,7 @@ API compatibility matrix
 ------------------------
 The following table displays recent Python Client releases and the corresponding
 Squonk2 component API versions (Account Server, Data Manager, User Interface)
-that are compatible with them, starting with client `6.x`.
+that are compatible with them, starting with client ``6.x``.
 
 ======  ======  ======  ======  =========
 Client  AS      DM      UI      Supported
@@ -36,11 +36,11 @@ Client  AS      DM      UI      Supported
 6.x     4.x     4.x     6.x     ✖️
 ======  ======  ======  ======  =========
 
-As an example, the above table illustrates that full compatibility with DM `5.x`
-will require client version `7`. Client version `6`, although it remains published,
+As an example, the above table illustrates that full compatibility with DM ``5.x``
+will require client version ``7``. Client version ``6``, although it remains published,
 is no longer supported.
 
-The Python client is only supported for installation versions we manage.
+The Python client is only supported for component installation versions we manage.
 
 Simplified Authentication
 =========================
