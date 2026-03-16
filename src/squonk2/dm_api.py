@@ -650,7 +650,8 @@ class DmApi:
                 return ret_val
 
             assert resp is not None
-            http_status_code = resp.status_code
+            assert resp.status_code
+            http_status_code = int(resp.status_code)
             if resp.status_code in [200]:
                 existing_path_files.extend(
                     item["file_name"] for item in resp.json()["files"]

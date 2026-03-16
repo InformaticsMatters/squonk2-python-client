@@ -46,17 +46,12 @@ repos:
     - --fix
   - id: ruff-format
 
-# MyPy
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.19.1
+# Ty (Experimental)
+- repo: local
   hooks:
-  - id: mypy
-    files: ^src
-    args:
-    - --ignore-missing-imports
-    additional_dependencies:
-    - types-protobuf
-    - types-PyYAML
-    - types-python-dateutil
-    - types-pytz
-    - types-requests
+  - id: ty
+    name: ty check
+    entry: ty check .
+    language: system
+    pass_filenames: false
+    always_run: true
