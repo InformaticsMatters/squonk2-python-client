@@ -41,6 +41,7 @@ Repository = "https://github.com/InformaticsMatters/squonk2-python-client.git"
 
 [dependency-groups]
 dev = [
+    "packaging>=26.0",
     "pre-commit>=4.5.1",
     "pyroma>=5.0.1",
     "ruff>=0.15.6",

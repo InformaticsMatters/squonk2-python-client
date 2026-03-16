@@ -496,6 +496,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "packaging" },
     { name = "pre-commit" },
     { name = "pyroma" },
     { name = "ruff" },
@@ -518,6 +519,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "packaging", specifier = ">=26.0" },
     { name = "pre-commit", specifier = ">=4.5.1" },
     { name = "pyroma", specifier = ">=5.0.1" },
     { name = "ruff", specifier = ">=0.15.6" },

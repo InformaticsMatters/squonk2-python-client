@@ -1,15 +1,28 @@
 #!/usr/bin/env python
 
+from importlib.metadata import version
 import os
 import sys
 import time
 from typing import Annotated, NoReturn
 
+from packaging.version import Version
 import typer
 
 from squonk2.api import ApiRv
 from squonk2.dm_api import DmApi, TEST_PRODUCT_ID
 from squonk2.auth import Auth
+
+# Tests require a specific Squonk client version
+REQUIRED_CLIENT_MAJOR_VERSION: int = 7
+CLIENT_VERSION: str = version("im-squonk2-client")
+if CLIENT_VERSION != "0.0.0" and (
+    Version(CLIENT_VERSION) < Version(f"{REQUIRED_CLIENT_MAJOR_VERSION}.0.0")
+    or Version(CLIENT_VERSION) >= Version(f"{REQUIRED_CLIENT_MAJOR_VERSION + 1}.0.0")
+):
+    assert False, (
+        f"The client must be version {REQUIRED_CLIENT_MAJOR_VERSION}, not {CLIENT_VERSION}"
+    )
 
 # Get configuration from the environment.
 # All the expected variables must be defined...
@@ -56,6 +69,8 @@ def main(project: Annotated[str, typer.Option(help="An existing Project UUID")] 
 
     If you provide a Project it is used (and not deleted)"""
 
+    print(f"Client API version={CLIENT_VERSION}")
+
     # Configure the URL.
     # Depending on keycloak configuration
     # you may only have 5 minutes before the token expires.
@@ -99,6 +114,18 @@ def main(project: Annotated[str, typer.Option(help="An existing Project UUID")] 
     if not api_rv.success:
         fail("get_version()", api_rv)
     print(f"DM-API version='{api_rv.msg['version']}'")
+
+    # Some more simple methods
+
+    api_rv = DmApi.get_workflow_engine_version()
+    if not api_rv.success:
+        fail("get_workflow_engine_version()", api_rv)
+    print(f"DM-API workflow engine version='{api_rv.msg['version']}'")
+
+    api_rv = DmApi.get_mode()
+    if not api_rv.success:
+        fail("mode()", api_rv)
+    print(f"DM-API mode='{api_rv.msg['mode']}'")
 
     # Get existing projects
     rv_projects = DmApi.get_available_projects(token)
