@@ -1,3 +1,51 @@
 [build-system]
-requires = ["setuptools>=60"]
+requires = ["setuptools>=82"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "im-squonk2-client"
+version = "0.0.0"
+description = "Squonk2 Python Client"
+readme = "README.rst"
+keywords = ["api"]
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: System :: Installation/Setup",
+  "Operating System :: POSIX :: Linux",
+]
+authors = [
+  {name = "Alan Christie", email = "achristie@informaticsmatters.com"},
+]
+maintainers = [
+  {name = "Alan Christie", email = "achristie@informaticsmatters.com"},
+]
+requires-python = ">=3.11"
+dependencies = [
+  "authlib>=1.0.1,<2.0",
+  "munch>=4.0.0,<5.0",
+  "pyyaml>=5.2,<7.0",
+  "requests>=2.22.0",
+  "wrapt>=1.14.1,< 2.0",
+]
+
+[project.urls]
+Repository = "https://github.com/InformaticsMatters/squonk2-python-client.git"
+
+[dependency-groups]
+dev = [
+    "black>=26.3.1",
+    "pre-commit>=4.5.1",
+    "pylint>=4.0.5",
+    "pyroma>=5.0.1",
+    "sphinx>=9.0.4",
+    "sphinx-rtd-theme>=3.1.0",
+    "sphinx-toolbox>=4.1.2",
+]
