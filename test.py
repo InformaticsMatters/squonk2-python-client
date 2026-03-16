@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""A simple developer-centric test script.
-"""
+"""A simple developer-centric test script."""
+
 import argparse
 import os
 import sys
@@ -74,7 +74,7 @@ def main():
     )
     if not first_token:
         fail(f"Failed to get token from {KEYCLOAK_URL} for '{KEYCLOAK_USER}'")
-        sys.exit(1)
+
     print(f"DM-API authorised as '{KEYCLOAK_USER}' ({DMAPI_URL})")
 
     # Get another token using the existing token.

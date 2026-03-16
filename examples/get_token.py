@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-"""Get and print a Squonk2 access token.
-"""
+"""Get and print a Squonk2 access token."""
+
 import argparse
 import os
 

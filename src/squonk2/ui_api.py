@@ -1,5 +1,4 @@
-"""Python utilities to simplify calls to some parts of the Data Manager UI.
-"""
+"""Python utilities to simplify calls to some parts of the Data Manager UI."""
 
 import contextlib
 import logging
@@ -13,7 +12,6 @@ from wrapt import synchronized
 import requests
 
 from .api import ApiRv
-
 
 # A common read timeout
 _READ_TIMEOUT_S: int = 4

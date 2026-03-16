@@ -7,6 +7,7 @@ the Squonk2 Data Manager API URL, e.g.
 'https://data-manager.xchem-dev.diamond.ac.uk/data-manager-api' or set the
 API URL programmatically with a call to DmApi.set_api_url().
 """
+
 import os
 import sys
 import time
@@ -89,7 +90,7 @@ else:
 
 # We can now use the 'task_id' to query the state of the running Job
 # (an instance). When we receive 'done' the Job's finished.
-ITERATIONS = 0
+ITERATIONS = 0  # pylint: disable=invalid-name
 while True:
     if ITERATIONS > 10:
         print("TIMEOUT")

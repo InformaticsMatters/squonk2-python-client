@@ -10,6 +10,7 @@ Required environment: -
     KEYCLOAK_TOKEN_AS
     ORG_ID
 """
+
 import os
 import sys
 
