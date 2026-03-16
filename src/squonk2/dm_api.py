@@ -340,9 +340,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_version(
-        cls, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> ApiRv:
+    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
         """Returns the DM-API service version.
 
         :param timeout_s: The underlying request timeout
@@ -357,9 +355,7 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_mode(
-        cls, *, timeout_s: int = _READ_TIMEOUT_S
-    ) -> ApiRv:
+    def get_mode(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
         """Returns the DM-API service mode.
 
         :param timeout_s: The underlying request timeout
