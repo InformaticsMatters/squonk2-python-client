@@ -23,6 +23,22 @@ Data Manager, Account Server and UI REST interfaces. The functions provide
 access to some of the key API methods, implemented initially to support
 execution of Jobs from a Fragalysis stack `backend`_.
 
+API compatibility matrix
+------------------------
+The following table displays recent Python Client releases and the corresponding
+Squonk2 API versions that are compatible with them, starting with client `6.x`.
+
+======  ======  ======  ======  =========
+Client  AS      DM      UI      Supported
+======  ======  ======  ======  =========
+7.x     4.x     5.x     6.x     ✅
+6.x     4.x     4.x     6.x     ✖️
+======  ======  ======  ======  =========
+
+For full compatibility with DM `5.x` you will need client use client version `7`.
+
+The Python client is only supported for installation versions we manage.
+
 Simplified Authentication
 =========================
 The following Squonk2 Authentication functions are available: -
@@ -197,7 +213,7 @@ e.g. ``export SQUONK2_ENVIRONMENTS_FILE=~/my-env'``
 
     ---
 
-    # An example Squeck environments file.
+    # An example environments file.
     #
     # It provides all the connection details for one or more Squonk2 environments.
     # It is expected to be found in the user's home directory
