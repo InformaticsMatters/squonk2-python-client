@@ -26,7 +26,8 @@ execution of Jobs from a Fragalysis stack `backend`_.
 API compatibility matrix
 ------------------------
 The following table displays recent Python Client releases and the corresponding
-Squonk2 API versions that are compatible with them, starting with client `6.x`.
+Squonk2 component API versions (Account Server, Data Manager, User Interface)
+that are compatible with them, starting with client `6.x`.
 
 ======  ======  ======  ======  =========
 Client  AS      DM      UI      Supported
@@ -35,7 +36,9 @@ Client  AS      DM      UI      Supported
 6.x     4.x     4.x     6.x     ✖️
 ======  ======  ======  ======  =========
 
-For full compatibility with DM `5.x` you will need client use client version `7`.
+As an example, the above table illustrates that full compatibility with DM `5.x`
+will require client version `7`. Client version `6`, although it remains published,
+is no longer supported.
 
 The Python client is only supported for installation versions we manage.
 
