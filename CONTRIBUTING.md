@@ -4,7 +4,8 @@ The project uses: -
 - [pre-commit] to enforce linting of files prior to committing them to the
   repository
 - [Commitizen] to enforce a [Convention Commit] commit message format
-- [Black] as a code formatter
+- [ruff] as a code linter and formatter
+- [uv] for project management
 
 You **MUST** comply with these choices in order to  contribute to the project.
 
@@ -35,7 +36,8 @@ And then uninstall using pip: -
 
 ---
 
-[black]: https://black.readthedocs.io/en/stable
+[ruff]: https://docs.astral.sh/ruff
 [commitizen]: https://commitizen-tools.github.io/commitizen/
 [conventional commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [pre-commit]: https://pre-commit.com
+[uv]: https://docs.astral.sh/uv/

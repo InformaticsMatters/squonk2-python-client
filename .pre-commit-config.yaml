@@ -37,15 +37,6 @@ repos:
   hooks:
   - id: pyroma
 
-# Black (uncompromising) Python code formatter
-- repo: https://github.com/psf/black
-  rev: 26.3.1
-  hooks:
-  - id: black
-    args:
-    - --target-version
-    - py314
-
 # Ruff
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.15.6
@@ -53,6 +44,7 @@ repos:
   - id: ruff-check
     args:
     - --fix
+  - id: ruff-format
 
 # MyPy
 - repo: https://github.com/pre-commit/mirrors-mypy
