@@ -57,7 +57,9 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_job_definition_schema_version()``
 - ``DmApi.get_job_exchange_rates()``
 - ``DmApi.get_job_by_version()``
+- ``DmApi.get_input_handler()``
 - ``DmApi.get_instance()``
+- ``DmApi.get_mode()``
 - ``DmApi.get_project()``
 - ``DmApi.get_project_instances()``
 - ``DmApi.get_service_errors()``
@@ -119,6 +121,7 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.disable_asset()``
 - ``AsApi.enable_asset()``
 - ``AsApi.get_asset()``
+- ``AsApi.get_actions()``
 - ``AsApi.get_available_assets()``
 - ``AsApi.get_available_units()``
 - ``AsApi.get_available_products()``

@@ -1750,3 +1750,55 @@ class AsApi:
             error_message="Failed getting default organisation",
             timeout=timeout_s,
         )[0]
+
+    @classmethod
+    @synchronized
+    def get_actions(
+        cls,
+        access_token: str,
+        *,
+        from_: Optional[date] = None,
+        until: Optional[date] = None,
+        merchant_id: int = 0,
+        product_id: str = "",
+        unit_id: str = "",
+        org_id: str = "",
+        action_format: EventStreamFormat = EventStreamFormat.PROTOCOL_STRING,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the Action records (protocol buffers).
+
+        :param access_token: A valid AS API access token
+        :param action_format: The action format
+        :param from_: An optional start
+        :param until: An optional end
+        :param merchant_id: An optional merchant
+        :param product_id: An optional Product UUID
+        :param unit_id: An optional Unit UUID
+        :param org_id: An optional Organisation UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {"format": action_format.name}
+        if from_:
+            params["from"] = str(from_)
+        if until:
+            params["until"] = str(until)
+        if merchant_id:
+            params["m_id"] = merchant_id
+        if product_id:
+            params["product_id"] = product_id
+        if unit_id:
+            params["unit_id"] = unit_id
+        if org_id:
+            params["org_id"] = org_id
+
+        return AsApi.__request(
+            "GET",
+            "/action",
+            access_token=access_token,
+            params=params,
+            error_message="Failed getting actions",
+            timeout=timeout_s,
+        )[0]

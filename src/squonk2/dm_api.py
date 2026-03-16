@@ -340,10 +340,40 @@ class DmApi:
 
     @classmethod
     @synchronized
-    def get_version(
+    def get_version(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
+        """Returns the DM-API service version.
+
+        :param timeout_s: The underlying request timeout
+        """
+
+        return DmApi.__request(
+            "GET",
+            "/version",
+            error_message="Failed getting version",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_mode(cls, *, timeout_s: int = _READ_TIMEOUT_S) -> ApiRv:
+        """Returns the DM-API service mode.
+
+        :param timeout_s: The underlying request timeout
+        """
+
+        return DmApi.__request(
+            "GET",
+            "/mode",
+            error_message="Failed getting mode",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_input_handler(
         cls, access_token: Optional[str] = None, *, timeout_s: int = _READ_TIMEOUT_S
     ) -> ApiRv:
-        """Returns the DM-API service version.
+        """Returns the DM-API input handler response.
 
         :param access_token: An optional valid DM API access token (deprecated)
         :param timeout_s: The underlying request timeout
@@ -351,9 +381,9 @@ class DmApi:
 
         return DmApi.__request(
             "GET",
-            "/version",
+            "/input-handler",
             access_token=access_token,
-            error_message="Failed getting version",
+            error_message="Failed getting input-handler",
             timeout=timeout_s,
         )[0]
 
