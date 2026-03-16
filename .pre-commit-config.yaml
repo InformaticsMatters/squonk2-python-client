@@ -1,5 +1,5 @@
 ---
-minimum_pre_commit_version: 2.20.0
+minimum_pre_commit_version: 4.5.1
 exclude: ^(docs|tests)
 
 repos:
@@ -9,7 +9,7 @@ repos:
 
 # Conventional Commit message checker (commitizen)
 - repo: https://github.com/commitizen-tools/commitizen
-  rev: v2.28.1
+  rev: v4.13.9
   hooks:
   - id: commitizen
     stages:
@@ -20,7 +20,7 @@ repos:
 
 # Standard pre-commit rules
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
+  rev: v6.0.0
   hooks:
   - id: check-case-conflict
   - id: check-executables-have-shebangs
@@ -30,39 +30,28 @@ repos:
   - id: trailing-whitespace
     args:
     - --markdown-linebreak-ext=md
-# Black (uncompromising) Python code formatter
-- repo: https://github.com/psf/black
-  rev: 24.2.0
+
+# Checking packaging
+- repo: https://github.com/regebro/pyroma
+  rev: 5.0.1
   hooks:
-  - id: black
-    args:
-    - --target-version
-    - py310
-# MyPy
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.8.0
+  - id: pyroma
+
+# Ruff
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.15.6
   hooks:
-  - id: mypy
-    files: ^src
+  - id: ruff-check
     args:
-    - --ignore-missing-imports
-    additional_dependencies:
-    - types-protobuf
-    - types-PyYAML
-    - types-python-dateutil
-    - types-pytz
-    - types-requests
-# Pylint
-# To check import errors we need to install every package
-# used by the DM. This is often impractical on the client,
-# and so we disable import errors on pre-commit and rely
-# on this category of test in the CI stage. Consequently,
-# pylint may pass on pre-commit but fail in CI - but at least
-# the user has done 90% of the lint checks before the code
-# hits the server.
-- repo: https://github.com/pycqa/pylint
-  rev: v3.1.0
+    - --fix
+  - id: ruff-format
+
+# Ty (Experimental)
+- repo: local
   hooks:
-  - id: pylint
-    args:
-    - --disable=import-error
+  - id: ty
+    name: ty check
+    entry: ty check .
+    language: system
+    pass_filenames: false
+    always_run: true

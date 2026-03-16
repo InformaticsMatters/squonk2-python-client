@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import json
 import logging
 from typing import Any, Dict, Optional
-import urllib
+from urllib import request
 
 from authlib.jose import jwt
 from wrapt import synchronized
@@ -79,7 +79,7 @@ class Auth:
         if prior_token and Auth.__access_token_realm_url != realm_url:
             # New realm URL, remember and get the public key
             Auth.__access_token_realm_url = realm_url
-            with urllib.request.urlopen(realm_url) as realm_stream:
+            with request.urlopen(realm_url) as realm_stream:
                 response = realm_stream.read()
                 public_key = json.loads(response)["public_key"]
             assert public_key

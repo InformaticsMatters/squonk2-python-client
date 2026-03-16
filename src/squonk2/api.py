@@ -1,5 +1,4 @@
-"""Python utilities common to UI, DM and AS.
-"""
+"""Python utilities common to UI, DM and AS."""
 
 import copy
 from dataclasses import dataclass
