@@ -13,10 +13,16 @@ from squonk2.auth import Auth
 
 # Get configuration from the environment.
 # All the expected variables must be defined...
+#
+# - https://data-manager-test.example.com/data-manager-api
+# - https://keycloak.example.com/auth
+# - squonk
+# - data-manager-api-test
 DMAPI_URL: str = os.environ["SQUONK2_DMAPI_URL"]
 KEYCLOAK_URL: str = os.environ["SQUONK2_KEYCLOAK_URL"]
 KEYCLOAK_REALM: str = os.environ["SQUONK2_KEYCLOAK_REALM"]
 KEYCLOAK_CLIENT_ID: str = os.environ["SQUONK2_KEYCLOAK_DM_CLIENT_ID"]
+# And User credentials...
 KEYCLOAK_USER: str = os.environ["SQUONK2_KEYCLOAK_USER"]
 KEYCLOAK_USER_PASSWORD: str = os.environ["SQUONK2_KEYCLOAK_USER_PASSWORD"]
 # Optional
@@ -75,7 +81,7 @@ def main():
     if not first_token:
         fail(f"Failed to get token from {KEYCLOAK_URL} for '{KEYCLOAK_USER}'")
 
-    print(f"DM-API authorised as '{KEYCLOAK_USER}' ({DMAPI_URL})")
+    print(f"DM-API authorised as '{KEYCLOAK_USER}'")
 
     # Get another token using the existing token.
     # Just tests that prior tokens are given back.
@@ -88,6 +94,7 @@ def main():
         prior_token=first_token,
     )
     assert token == first_token
+    assert token
 
     # Basic ping/version
     api_rv: ApiRv = DmApi.ping(token)
@@ -95,7 +102,7 @@ def main():
         fail("ping()", api_rv)
     print("DM-API ping() (SUCCESS)")
 
-    api_rv = DmApi.get_version(token)
+    api_rv = DmApi.get_version()
     if not api_rv.success:
         fail("get_version()", api_rv)
     print(f"DM-API version='{api_rv.msg['version']}'")
