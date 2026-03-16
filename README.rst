@@ -119,6 +119,7 @@ The following Squonk2 Account Server API functions are available: -
 - ``AsApi.disable_asset()``
 - ``AsApi.enable_asset()``
 - ``AsApi.get_asset()``
+- ``AsApi.get_actions()``
 - ``AsApi.get_available_assets()``
 - ``AsApi.get_available_units()``
 - ``AsApi.get_available_products()``

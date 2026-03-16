@@ -12,7 +12,7 @@ _UNDEFINED: object = object()
 
 @dataclass
 class ApiRv:
-    """The return value from most of the the AsApi class public methods.
+    """The return value from most of the class public methods.
 
     :param success: True if the call was successful, False otherwise.
     :param msg: API request response content
