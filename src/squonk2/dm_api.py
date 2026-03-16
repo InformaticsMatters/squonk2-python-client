@@ -1575,6 +1575,56 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def acknowledge_service_error(
+        cls,
+        access_token: str,
+        *,
+        error_id: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Patches a service error. You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param error_id: The error identity
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "PATCH",
+            f"/admin/service-error/{error_id}",
+            access_token=access_token,
+            error_message="Failed to patch service error",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_service_error(
+        cls,
+        access_token: str,
+        *,
+        error_id: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deletes a service error. You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param error_id: The error identity
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "DELETE",
+            f"/admin/service-error/{error_id}",
+            access_token=access_token,
+            error_message="Failed to delete service error",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def get_job_exchange_rates(
         cls,
         access_token: str,
@@ -1597,6 +1647,36 @@ class DmApi:
         return DmApi.__request(
             "GET",
             "/job/exchange-rate",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get exchange rates",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_job_exchange_rate(
+        cls,
+        access_token: str,
+        *,
+        job_id: int,
+        current: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets exchange rates for a Job.
+
+        :param access_token: A valid DM API access token
+        :param job_id: The Job
+        :param current: True to only get the current rate
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {"current": current}
+
+        return DmApi.__request(
+            "GET",
+            f"/job/{job_id}/exchange-rate",
             access_token=access_token,
             params=params,
             error_message="Failed to get exchange rates",
@@ -1752,5 +1832,409 @@ class DmApi:
             "/account-server/namespace",
             access_token=access_token,
             error_message="Failed to get AS namespace",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_user_inventory(
+        cls,
+        access_token: str,
+        *,
+        org_id: str | None = None,
+        unit_id: str | None = None,
+        usernames: list[str] | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets user inventory.
+
+        :param access_token: A valid DM API access token
+        :param org_id: An Organisation UUID
+        :param unit_id: A Unit UUID
+        :param usernames: A list of usernames
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if org_id:
+            params["org_id"] = org_id
+        if unit_id:
+            params["unit_id"] = unit_id
+        if usernames:
+            params["usernames"] = ",".join(usernames)
+
+        return DmApi.__request(
+            "GET",
+            "/inventory/user",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get user inventory",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_supported_file_types(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the supported dataset file types.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/type",
+            access_token=access_token,
+            error_message="Failed to get types",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_dataset_for_digest(
+        cls,
+        access_token: str,
+        *,
+        digest: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Returns a dataset ID and version of a dataset that matches
+        the provided SHA256 digest.
+
+        :param access_token: A valid DM API access token
+        :param digest: A SHA256 digest, a 64-character hex string
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params = {"dataset_digest": digest}
+        return DmApi.__request(
+            "GET",
+            "/type",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get dataset digest",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_applications(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets known applications.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/application",
+            access_token=access_token,
+            error_message="Failed to get applications",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_application(
+        cls,
+        access_token: str,
+        *,
+        app_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets known applications.
+
+        :param access_token: A valid DM API access token
+        :param app_id: An application ID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            f"/application/{app_id}",
+            access_token=access_token,
+            error_message="Failed to get applications",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_project_path(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        project_path: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Creates a Project path.
+
+        :param access_token: A valid DM API access token
+        :param project_id: A Project ID
+        :param project_path: A path (a '/' prefix is added if not present)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        path_with_prefix = (
+            project_path if project_path.startswith("/") else f"/{project_path}"
+        )
+        data = {
+            "project_id": project_id,
+            "path": path_with_prefix,
+        }
+        return DmApi.__request(
+            "PUT",
+            "/path",
+            access_token=access_token,
+            data=data,
+            error_message="Failed to create project path",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_project_path(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        project_path: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deleted a Project path.
+
+        :param access_token: A valid DM API access token
+        :param project_id: A Project ID
+        :param project_path: A path (a '/' prefix is added if not present)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        path_with_prefix = (
+            project_path if project_path.startswith("/") else f"/{project_path}"
+        )
+        data = {
+            "project_id": project_id,
+            "path": path_with_prefix,
+        }
+        return DmApi.__request(
+            "DELETE",
+            "/path",
+            access_token=access_token,
+            data=data,
+            error_message="Failed to delete project path",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def move_project_path(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        project_src_path: str,
+        project_dst_path: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Moves a Project path.
+
+        :param access_token: A valid DM API access token
+        :param project_id: A Project ID
+        :param project_src_path: The path to rename (a '/' prefix is added if not present)
+        :param project_dst_path: The new path (a '/' prefix is added if not present)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        src_path_with_prefix = (
+            project_src_path
+            if project_src_path.startswith("/")
+            else f"/{project_src_path}"
+        )
+        dst_path_with_prefix = (
+            project_dst_path
+            if project_dst_path.startswith("/")
+            else f"/{project_dst_path}"
+        )
+        data = {
+            "project_id": project_id,
+            "src_path": src_path_with_prefix,
+            "dst_path": dst_path_with_prefix,
+        }
+        return DmApi.__request(
+            "PUT",
+            "/path/move",
+            access_token=access_token,
+            data=data,
+            error_message="Failed to move project path",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_workflows(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Get known Workflows.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/workflow",
+            access_token=access_token,
+            error_message="Failed to get workflows",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_workflow(
+        cls,
+        access_token: str,
+        *,
+        workflow_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets a specific Workflow.
+
+        :param access_token: A valid DM API access token
+        :param workflow_id: A Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            f"/workflow/{workflow_id}",
+            access_token=access_token,
+            error_message="Failed to get workflow",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_workflow_definition(
+        cls,
+        access_token: str,
+        *,
+        workflow_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the definition for a specific Workflow.
+
+        :param access_token: A valid DM API access token
+        :param workflow_id: A Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            f"/workflow/{workflow_id}/definition",
+            access_token=access_token,
+            error_message="Failed to get workflow definition",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def run_workflow(
+        cls,
+        access_token: str,
+        *,
+        workflow_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Runs a Workflow.
+
+        :param access_token: A valid DM API access token
+        :param workflow_id: A Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "POST",
+            f"/workflow/{workflow_id}/run",
+            access_token=access_token,
+            error_message="Failed to run the workflow",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def apply_workflow_version(
+        cls,
+        access_token: str,
+        *,
+        workflow_id: str,
+        version_str: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Applies a version number to a Workflow.
+
+        :param access_token: A valid DM API access token
+        :param workflow_id: A Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        data = {"version": version_str}
+
+        return DmApi.__request(
+            "PUT",
+            f"/workflow/{workflow_id}/version",
+            access_token=access_token,
+            data=data,
+            error_message="Failed to run the workflow",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_workflow(
+        cls,
+        access_token: str,
+        *,
+        workflow_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deletes a specific Workflow.
+
+        :param access_token: A valid DM API access token
+        :param workflow_id: A Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "DELETE",
+            f"/workflow/{workflow_id}",
+            access_token=access_token,
+            error_message="Failed to delete workflow",
             timeout=timeout_s,
         )[0]
