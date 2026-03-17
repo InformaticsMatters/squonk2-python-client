@@ -34,6 +34,21 @@ And then uninstall using pip: -
 
     pip uninstall im-squonk2-client -y
 
+With a suitable Squonk installation you should be able to run the basic test module,
+which exercises a number of API methods. You will need to define a number of variables,
+but one done the test is expected to work: -
+
+    export SQUONK2_DMAPI_URL=https://data-manager-test.example.com/data-manager-api
+    export SQUONK2_KEYCLOAK_URL=https://keycloak-test.example.com/auth
+    export SQUONK2_KEYCLOAK_REALM=squonk
+    export SQUONK2_KEYCLOAK_DM_CLIENT_ID=data-manager-api-test
+    export SQUONK2_KEYCLOAK_USER=dmit-user-admin
+    export SQUONK2_KEYCLOAK_USER_PASSWORD=password1234
+
+    uv run test.py
+
+Feel free to extend the test module as you add API methods.
+
 ---
 
 [ruff]: https://docs.astral.sh/ruff
