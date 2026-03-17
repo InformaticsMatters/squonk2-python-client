@@ -2117,13 +2117,13 @@ class DmApi:
         if definition:
             data["definition"] = definition
         # Has the user provided a file?
-        files = (
-            {
-                "file": open(definition_file, "rb")  # pylint: disable=consider-using-with
-            }
-            if definition_file
-            else None
-        )
+        # We have to provide a file to avoid connexion's expected "['multipart/form-data']""
+        # so we 'trick' the test by providing a 'content_file' (which gives us a RequestBody)
+        # but we do not give it a name, which our handler recognizes as 'no file'.
+        if definition_file:
+            files = {"definition_file": open(definition_file, "rb")}
+        else:
+            files = {"definition_file": ("", open(os.path.realpath(__file__), "rb"))}
 
         return DmApi.__request(
             "POST",
@@ -2131,6 +2131,7 @@ class DmApi:
             access_token=access_token,
             data=data,
             files=files,
+            expected_response_codes=[201],
             error_message="Failed to create workflow",
             timeout=timeout_s,
         )[0]
@@ -2160,7 +2161,13 @@ class DmApi:
         if definition:
             data["definition"] = definition
         # Has the user provided a file?
-        files = {"file": open(definition_file, "rb")} if definition_file else None
+        # We have to provide a file to avoid connexion's expected "['multipart/form-data']""
+        # so we 'trick' the test by providing a 'content_file' (which gives us a RequestBody)
+        # but we do not give it a name, which our handler recognizes as 'no file'.
+        if definition_file:
+            files = {"definition_file": open(definition_file, "rb")}
+        else:
+            files = {"definition_file": ("", open(os.path.realpath(__file__), "rb"))}
 
         return DmApi.__request(
             "PATCH",
@@ -2168,7 +2175,7 @@ class DmApi:
             access_token=access_token,
             data=data,
             files=files,
-            error_message="Failed to create workflow",
+            error_message="Failed to update workflow",
             timeout=timeout_s,
         )[0]
 
@@ -2266,6 +2273,7 @@ class DmApi:
             "POST",
             f"/workflow/{workflow_id}/run",
             access_token=access_token,
+            expected_response_codes=[201],
             error_message="Failed to run the workflow",
             timeout=timeout_s,
         )[0]
@@ -2295,6 +2303,7 @@ class DmApi:
             f"/workflow/{workflow_id}/version",
             access_token=access_token,
             data=data,
+            expected_response_codes=[201],
             error_message="Failed to run the workflow",
             timeout=timeout_s,
         )[0]
@@ -2320,6 +2329,7 @@ class DmApi:
             "DELETE",
             f"/workflow/{workflow_id}",
             access_token=access_token,
+            expected_response_codes=[204],
             error_message="Failed to delete workflow",
             timeout=timeout_s,
         )[0]
