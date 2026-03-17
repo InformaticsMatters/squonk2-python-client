@@ -36,7 +36,7 @@ Client  AS      DM      UI      Supported
 6.x     4.x     4.x     6.x     ✖️
 ======  ======  ======  ======  =========
 
-As an example, the above table illustrates that full compatibility with DM ``5.x``
+As an example, the above table illustrates th§at full compatibility with DM ``5.x``
 will require client version ``7``. Client version ``6``, although it remains published,
 is no longer supported.
 
@@ -71,6 +71,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.delete_service_error()``
 - ``DmApi.delete_unmanaged_project_files()``
 - ``DmApi.delete_workflow()``
+- ``DmApi.delete_running_workflow()``
 - ``DmApi.dry_run_job_instance()``
 - ``DmApi.get_account_server_namespace()``
 - ``DmApi.get_account_server_registration()``
@@ -92,6 +93,9 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_mode()``
 - ``DmApi.get_project()``
 - ``DmApi.get_project_instances()``
+- ``DmApi.get_running_workflow()``
+- ``DmApi.get_running_workflows()``
+- ``DmApi.get_running_workflow_steps()``
 - ``DmApi.get_service_errors()``
 - ``DmApi.get_task()``
 - ``DmApi.get_tasks()``
@@ -113,6 +117,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.set_admin_state()``
 - ``DmApi.set_job_exchange_rates()``
 - ``DmApi.start_job_instance()``
+- ``DmApi.stop_running_workflow()``
 - ``DmApi.update_workflow()``
 
 A ``dataclass`` defined in ``api`` is used as the return value for many of the methods: -

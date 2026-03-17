@@ -2333,3 +2333,139 @@ class DmApi:
             error_message="Failed to delete workflow",
             timeout=timeout_s,
         )[0]
+
+    @classmethod
+    @synchronized
+    def get_running_workflows(
+        cls,
+        access_token: str,
+        *,
+        workflow_id: str | None = None,
+        project_id: str | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Get known Workflows.
+
+        :param access_token: A valid DM API access token
+        :param workflow_id: A Workflow UUID
+        :param project_id: A project UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        data = {}
+        if workflow_id:
+            data["workflow_id"] = workflow_id
+        if project_id:
+            data["project_id"] = project_id
+
+        return DmApi.__request(
+            "GET",
+            "/running-workflow",
+            access_token=access_token,
+            data=data,
+            error_message="Failed to get the running workflows",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_running_workflow(
+        cls,
+        access_token: str,
+        *,
+        running_workflow_id: str | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets known Running Workflows.
+
+        :param access_token: A valid DM API access token
+        :param running_workflow_id: A Running Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            f"/running-workflow/{running_workflow_id}",
+            access_token=access_token,
+            error_message="Failed to get the workflow",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_running_workflow(
+        cls,
+        access_token: str,
+        *,
+        running_workflow_id: str | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Get a Running Workflow.
+
+        :param access_token: A valid DM API access token
+        :param running_workflow_id: A Running Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "DELETE",
+            f"/running-workflow/{running_workflow_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete running workflow",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def stop_running_workflow(
+        cls,
+        access_token: str,
+        *,
+        running_workflow_id: str | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Stops a Running Workflows.
+
+        :param access_token: A valid DM API access token
+        :param running_workflow_id: A Running Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "PUT",
+            f"/running-workflow/{running_workflow_id}/stop",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to stop running workflow",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_running_workflow_steps(
+        cls,
+        access_token: str,
+        *,
+        running_workflow_id: str | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Stops a Running Workflows.
+
+        :param access_token: A valid DM API access token
+        :param running_workflow_id: A Running Workflow UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            f"/running-workflow/{running_workflow_id}/steps",
+            access_token=access_token,
+            error_message="Failed to get running workflow steps",
+            timeout=timeout_s,
+        )[0]
