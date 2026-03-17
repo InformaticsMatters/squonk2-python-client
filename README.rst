@@ -63,6 +63,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.apply_workflow_version()``
 - ``DmApi.create_project()``
 - ``DmApi.create_project_path()``
+- ``DmApi.create_workflow()``
 - ``DmApi.delete_instance()``
 - ``DmApi.delete_instance_token()``
 - ``DmApi.delete_project()``
@@ -112,6 +113,7 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.set_admin_state()``
 - ``DmApi.set_job_exchange_rates()``
 - ``DmApi.start_job_instance()``
+- ``DmApi.update_workflow()``
 
 A ``dataclass`` defined in ``api`` is used as the return value for many of the methods: -
 

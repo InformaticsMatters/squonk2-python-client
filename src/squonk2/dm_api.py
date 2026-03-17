@@ -22,6 +22,7 @@ from wrapt import synchronized
 import requests
 
 from .api import ApiRv
+from .enumerations import ScopeEnum
 
 TEST_PRODUCT_ID: str = "product-11111111-1111-1111-1111-111111111111"
 """A test Account Server (AS) Product ID. This ID does not actually exist in the AS
@@ -2084,6 +2085,90 @@ class DmApi:
             access_token=access_token,
             data=data,
             error_message="Failed to move project path",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_workflow(
+        cls,
+        access_token: str,
+        *,
+        name: str,
+        scope: ScopeEnum,
+        scope_id: str | None = None,
+        definition: str | None = None,
+        definition_file: str | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Create a Workflow.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        data: Dict[str, Any] = {
+            "name": name,
+            "scope": scope.name,
+        }
+        if scope != ScopeEnum.GLOBAL:
+            data["scope_id"] = scope_id
+        if definition:
+            data["definition"] = definition
+        # Has the user provided a file?
+        files = (
+            {
+                "file": open(definition_file, "rb")  # pylint: disable=consider-using-with
+            }
+            if definition_file
+            else None
+        )
+
+        return DmApi.__request(
+            "POST",
+            "/workflow",
+            access_token=access_token,
+            data=data,
+            files=files,
+            error_message="Failed to create workflow",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def update_workflow(
+        cls,
+        access_token: str,
+        *,
+        workflow_id: str,
+        name: str | None = None,
+        definition: str | None = None,
+        definition_file: str | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Patch (update) a Workflow.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        data: Dict[str, Any] = {}
+        if name:
+            data["name"] = name
+        if definition:
+            data["definition"] = definition
+        # Has the user provided a file?
+        files = {"file": open(definition_file, "rb")} if definition_file else None
+
+        return DmApi.__request(
+            "PATCH",
+            f"/workflow/{workflow_id}",
+            access_token=access_token,
+            data=data,
+            files=files,
+            error_message="Failed to create workflow",
             timeout=timeout_s,
         )[0]
 
