@@ -12,6 +12,7 @@ import typer
 from squonk2.api import ApiRv
 from squonk2.dm_api import DmApi, TEST_PRODUCT_ID
 from squonk2.auth import Auth
+from squonk2.enumerations import ScopeEnum
 
 # Tests require a specific Squonk client version
 REQUIRED_CLIENT_MAJOR_VERSION: int = 7
@@ -49,6 +50,8 @@ API_URL_VALIDATION: bool = (
 
 # Name we'll give to the Project we'll create
 TEST_PROJECT_NAME: str = "DmApi Test Project"
+
+TEST_DEFINITION_FILE = "examples/test-workflow.yaml"
 
 
 def fail(msg: str, retval: ApiRv | None = None) -> NoReturn:
@@ -126,6 +129,58 @@ def main(project: Annotated[str, typer.Option(help="An existing Project UUID")] 
     if not api_rv.success:
         fail("mode()", api_rv)
     print(f"DM-API mode='{api_rv.msg['mode']}'")
+
+    # Use the workflow endpoints to create, update and delete a workflow.
+    # We create using a definition and a file
+
+    api_rv = DmApi.create_workflow(
+        token,
+        name="Test A",
+        scope=ScopeEnum.GLOBAL,
+        definition_file=TEST_DEFINITION_FILE,
+    )
+    if not api_rv.success:
+        fail("create_workflow()", api_rv)
+    workflow_id = api_rv.msg["id"]
+    validated = api_rv.msg["validated"]
+    print(f"DM-API create workflow (from file) (SUCCESS) (validated={validated})")
+
+    api_rv = DmApi.update_workflow(token, workflow_id=workflow_id, name="Test B")
+    if not api_rv.success:
+        fail("update_workflow()", api_rv)
+    print("DM-API updated workflow (SUCCESS)")
+
+    api_rv = DmApi.get_workflow_definition(token, workflow_id=workflow_id)
+    if not api_rv.success:
+        fail("get_workflow_definition()", api_rv)
+    print("DM-API got workflow definition (SUCCESS)")
+
+    api_rv = DmApi.delete_workflow(token, workflow_id=workflow_id)
+    if not api_rv.success:
+        fail("delete_workflow()", api_rv)
+    print("DM-API delete workflow (SUCCESS)")
+
+    # Create a workflow by content and delete it
+
+    with open(TEST_DEFINITION_FILE, "r", encoding="utf8") as file:
+        definition = file.read()
+
+    api_rv = DmApi.create_workflow(
+        token,
+        name="Test A",
+        scope=ScopeEnum.GLOBAL,
+        definition=definition,
+    )
+    if not api_rv.success:
+        fail("create_workflow()", api_rv)
+    workflow_id = api_rv.msg["id"]
+    validated = api_rv.msg["validated"]
+    print(f"DM-API create workflow (from definition) (SUCCESS) (validated={validated})")
+
+    api_rv = DmApi.delete_workflow(token, workflow_id=workflow_id)
+    if not api_rv.success:
+        fail("delete_workflow()", api_rv)
+    print("DM-API delete workflow (SUCCESS)")
 
     # Get existing projects
     rv_projects = DmApi.get_available_projects(token)

@@ -1,0 +1,12 @@
+---
+kind: DataManagerWorkflow
+kind-version: "2025.2"
+name: python-client-example
+description: >-
+  The simplest of workflow files used by the test framework in our Python client.
+steps:
+- name: coin
+  specification:
+    collection: im-test
+    job: coin-test
+    version: "1.0.0"
