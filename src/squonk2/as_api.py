@@ -10,7 +10,6 @@ interact with **Organisations**, **Units**, **Products** and **Assets**.
 
 import contextlib
 from datetime import date
-from enum import Enum
 import logging
 import os
 from pathlib import Path
@@ -24,32 +23,7 @@ from wrapt import synchronized
 import requests
 
 from .api import ApiRv
-
-
-class EventStreamFormat(Enum):
-    """Enumeration of EventStream formats"""
-
-    JSON_STRING = 1
-    PROTOCOL_STRING = 2
-
-
-class AssetScopeEnum(Enum):
-    """Enumeration of Asset scopes"""
-
-    USER = 1
-    PRODUCT = 2
-    UNIT = 3
-    ORGANISATION = 4
-    GLOBAL = 5
-
-
-class DefaultProductPrivacyEnum(Enum):
-    """Enumeration of Default product Privacy"""
-
-    ALWAYS_PRIVATE = 1
-    ALWAYS_PUBLIC = 2
-    DEFAULT_PRIVATE = 3
-    DEFAULT_PUBLIC = 4
+from .enumerations import DefaultProductPrivacyEnum, EventStreamFormat, ScopeEnum
 
 
 # The Account Server API URL environment variable,
@@ -455,7 +429,7 @@ class AsApi:
         *,
         name: str,
         description: str,
-        scope: AssetScopeEnum,
+        scope: ScopeEnum,
         content_string: Optional[str] = None,
         content_file: Optional[Path] = None,
         scope_id: Optional[str] = None,

@@ -199,9 +199,11 @@ def run(
         # This gives us many things, like the DM API URL
         _ = Environment.load()
         env: Environment = Environment(environment)
+        assert env.dm_api
         DmApi.set_api_url(env.dm_api)
 
         # Now get a DM API access token, using the environment material
+        assert env.keycloak_dm_client_id
         api_token = Auth.get_access_token(
             keycloak_url=env.keycloak_url,
             keycloak_realm=env.keycloak_realm,
@@ -212,6 +214,7 @@ def run(
     else:
         # Given a raw token (and DM API)
         api_token = token
+        assert dm_api_url
         DmApi.set_api_url(dm_api_url)
     assert api_token
 

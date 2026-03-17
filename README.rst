@@ -23,6 +23,25 @@ Data Manager, Account Server and UI REST interfaces. The functions provide
 access to some of the key API methods, implemented initially to support
 execution of Jobs from a Fragalysis stack `backend`_.
 
+API compatibility matrix
+------------------------
+The following table displays recent Python Client releases and the corresponding
+Squonk2 component API versions (Account Server, Data Manager, User Interface)
+that are compatible with them, starting with client ``6.x``.
+
+======  ======  ======  ======  =========
+Client  AS      DM      UI      Supported
+======  ======  ======  ======  =========
+7.x     4.x     5.x     6.x     ✅
+6.x     4.x     4.x     6.x     ✖️
+======  ======  ======  ======  =========
+
+As an example, the above table illustrates th§at full compatibility with DM ``5.x``
+will require client version ``7``. Client version ``6``, although it remains published,
+is no longer supported.
+
+The Python client is only supported for component installation versions we manage.
+
 Simplified Authentication
 =========================
 The following Squonk2 Authentication functions are available: -
@@ -38,23 +57,35 @@ The following Squonk2 Data Manager API functions are available: -
 
 - ``DmApi.ping()``
 
+- ``DmApi.acknowledge_service_error()``
 - ``DmApi.add_project_editor()``
 - ``DmApi.add_project_observer()``
+- ``DmApi.apply_workflow_version()``
 - ``DmApi.create_project()``
+- ``DmApi.create_project_path()``
+- ``DmApi.create_workflow()``
 - ``DmApi.delete_instance()``
 - ``DmApi.delete_instance_token()``
 - ``DmApi.delete_project()``
+- ``DmApi.delete_project_path()``
+- ``DmApi.delete_service_error()``
 - ``DmApi.delete_unmanaged_project_files()``
+- ``DmApi.delete_workflow()``
+- ``DmApi.delete_running_workflow()``
 - ``DmApi.dry_run_job_instance()``
 - ``DmApi.get_account_server_namespace()``
 - ``DmApi.get_account_server_registration()``
+- ``DmApi.get_application()``
+- ``DmApi.get_applications()``
 - ``DmApi.get_available_instances()``
 - ``DmApi.get_available_datasets()``
 - ``DmApi.get_available_jobs()``
 - ``DmApi.get_available_projects()``
 - ``DmApi.get_available_tasks()``
+- ``DmApi.get_dataset_for_digest()``
 - ``DmApi.get_job()``
 - ``DmApi.get_job_definition_schema_version()``
+- ``DmApi.get_job_exchange_rate()``
 - ``DmApi.get_job_exchange_rates()``
 - ``DmApi.get_job_by_version()``
 - ``DmApi.get_input_handler()``
@@ -62,21 +93,33 @@ The following Squonk2 Data Manager API functions are available: -
 - ``DmApi.get_mode()``
 - ``DmApi.get_project()``
 - ``DmApi.get_project_instances()``
+- ``DmApi.get_running_workflow()``
+- ``DmApi.get_running_workflows()``
+- ``DmApi.get_running_workflow_steps()``
 - ``DmApi.get_service_errors()``
 - ``DmApi.get_task()``
 - ``DmApi.get_tasks()``
 - ``DmApi.get_unmanaged_project_file()``
 - ``DmApi.get_unmanaged_project_file_with_token()``
+- ``DmApi.get_user_inventory()``
 - ``DmApi.get_version()``
+- ``DmApi.get_workflows()``
+- ``DmApi.get_workflow()``
+- ``DmApi.get_workflow_definition()``
 - ``DmApi.get_workflow_engine_version()``
 - ``DmApi.list_project_files()``
+- ``DmApi.move_project_path()``
 - ``DmApi.put_unmanaged_project_files()``
 - ``DmApi.put_job_manifest()``
 - ``DmApi.remove_project_editor()``
 - ``DmApi.remove_project_observer()``
+- ``DmApi.run_workflow()``
 - ``DmApi.set_admin_state()``
 - ``DmApi.set_job_exchange_rates()``
 - ``DmApi.start_job_instance()``
+- ``DmApi.stop_running_workflow()``
+- ``DmApi.update_project()``
+- ``DmApi.update_workflow()``
 
 A ``dataclass`` defined in ``api`` is used as the return value for many of the methods: -
 
@@ -197,7 +240,7 @@ e.g. ``export SQUONK2_ENVIRONMENTS_FILE=~/my-env'``
 
     ---
 
-    # An example Squeck environments file.
+    # An example environments file.
     #
     # It provides all the connection details for one or more Squonk2 environments.
     # It is expected to be found in the user's home directory

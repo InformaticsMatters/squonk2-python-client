@@ -10,6 +10,5 @@ build:
     python: "3.11"
   commands:
   - pip install --upgrade pip
-  - pip install -r requirements.txt
-  - pip install -r docs-requirements.txt
-  - sphinx-build -b html docs _readthedocs/html/
+  - pip install uv
+  - uv run sphinx-build -b html docs _readthedocs/html/
