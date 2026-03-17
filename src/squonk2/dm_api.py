@@ -473,6 +473,41 @@ class DmApi:
 
     @classmethod
     @synchronized
+    def update_project(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        project_name: str | None = None,
+        private: bool | None = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Updates a Project,.
+
+        :param access_token: A valid DM API access token.
+        :param project_name: A unique name.
+        :param private: True or False
+        :param timeout_s: The API request timeout
+        """
+        assert access_token
+
+        data: dict[str, Any] = {}
+        if project_name:
+            data["name"] = project_name
+        if private is not None:
+            data["private"] = private
+
+        return DmApi.__request(
+            "PATCH",
+            f"/project/{project_id}",
+            access_token=access_token,
+            data=data,
+            error_message="Failed creating project",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
     def delete_project(
         cls, access_token: str, *, project_id: str, timeout_s: int = _READ_TIMEOUT_S
     ) -> ApiRv:
@@ -1595,6 +1630,7 @@ class DmApi:
             "PATCH",
             f"/admin/service-error/{error_id}",
             access_token=access_token,
+            expected_response_codes=[204],
             error_message="Failed to patch service error",
             timeout=timeout_s,
         )[0]
