@@ -130,6 +130,18 @@ def main(project: Annotated[str, typer.Option(help="An existing Project UUID")] 
         fail("mode()", api_rv)
     print(f"DM-API mode='{api_rv.msg['mode']}'")
 
+    # Read-only account methods (safe to exercise on any account)
+
+    api_rv = DmApi.get_account(token)
+    if not api_rv.success:
+        fail("get_account()", api_rv)
+    print("DM-API get_account() (SUCCESS)")
+
+    api_rv = DmApi.get_api_token(token)
+    if not api_rv.success:
+        fail("get_api_token()", api_rv)
+    print("DM-API get_api_token() (SUCCESS)")
+
     # Use the workflow endpoints to create, update and delete a workflow.
     # We create using a definition and a file
 
