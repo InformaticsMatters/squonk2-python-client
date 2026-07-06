@@ -1683,7 +1683,7 @@ class DmApi:
 
         return DmApi.__request(
             "GET",
-            "/job/exchange-rate",
+            "/job-exchange-rates",
             access_token=access_token,
             params=params,
             error_message="Failed to get exchange rates",
