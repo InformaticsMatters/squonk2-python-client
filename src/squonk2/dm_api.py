@@ -1950,13 +1950,12 @@ class DmApi:
         :param timeout_s: The underlying request timeout
         """
         assert access_token
+        assert digest
 
-        params = {"dataset_digest": digest}
         return DmApi.__request(
             "GET",
-            "/type",
+            f"/digest/dataset/{digest}",
             access_token=access_token,
-            params=params,
             error_message="Failed to get dataset digest",
             timeout=timeout_s,
         )[0]
@@ -2503,5 +2502,1070 @@ class DmApi:
             f"/running-workflow/{running_workflow_id}/steps",
             access_token=access_token,
             error_message="Failed to get running workflow steps",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_dataset_from_project_file(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        path: str,
+        file_name: str,
+        dataset_type: str,
+        format_extra_variables: Optional[str] = None,
+        skip_molecule_load: bool = False,
+        dataset_id: Optional[str] = None,
+        unit_id: Optional[str] = None,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
+    ) -> ApiRv:
+        """Creates a Dataset from a file already present in a Project.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The Project the file belongs to
+        :param path: The Project path of the file (must begin ``/``)
+        :param file_name: The file name in the Project path to load
+        :param dataset_type: The MIME type of the Dataset
+        :param format_extra_variables: Optional extra variables (text) passed
+            to the Dataset format-support code
+        :param skip_molecule_load: True to skip the post-format database load
+        :param dataset_id: If provided the file becomes a new version of the
+            named Dataset
+        :param unit_id: The Organisational Unit the Dataset is to belong to
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert project_id
+        assert path
+        assert file_name
+        assert dataset_type
+
+        data: Dict[str, Any] = {
+            "project_id": project_id,
+            "path": path,
+            "file_name": file_name,
+            "dataset_type": dataset_type,
+        }
+        if format_extra_variables:
+            data["format_extra_variables"] = format_extra_variables
+        if skip_molecule_load:
+            data["skip_molecule_load"] = True
+        if dataset_id:
+            data["dataset_id"] = dataset_id
+        if unit_id:
+            data["unit_id"] = unit_id
+
+        return DmApi.__request(
+            "PUT",
+            "/dataset",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to create dataset from project file",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def upload_dataset(
+        cls,
+        access_token: str,
+        *,
+        dataset_file: str,
+        dataset_type: str,
+        unit_id: str,
+        format_extra_variables: Optional[str] = None,
+        skip_molecule_load: bool = False,
+        as_filename: Optional[str] = None,
+        dataset_id: Optional[str] = None,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
+    ) -> ApiRv:
+        """Uploads an external (local) file as a new Dataset.
+
+        :param access_token: A valid DM API access token
+        :param dataset_file: The local file to upload
+        :param dataset_type: The MIME type of the Dataset
+        :param unit_id: The Organisational Unit the Dataset is to belong to
+        :param format_extra_variables: Optional extra variables (text) passed
+            to the Dataset format-support code
+        :param skip_molecule_load: True to skip the post-format database load
+        :param as_filename: An optional new filename for the uploaded Dataset
+        :param dataset_id: If provided the upload becomes a new version of the
+            named Dataset
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_file
+        assert dataset_type
+        assert unit_id
+
+        data: Dict[str, Any] = {
+            "dataset_type": dataset_type,
+            "unit_id": unit_id,
+        }
+        if format_extra_variables:
+            data["format_extra_variables"] = format_extra_variables
+        if skip_molecule_load:
+            data["skip_molecule_load"] = True
+        if as_filename:
+            data["as_filename"] = as_filename
+        if dataset_id:
+            data["dataset_id"] = dataset_id
+        files = {
+            "dataset_file": open(  # pylint: disable=consider-using-with
+                dataset_file, "rb"
+            )
+        }
+
+        return DmApi.__request(
+            "POST",
+            "/dataset",
+            access_token=access_token,
+            data=data,
+            files=files,
+            expected_response_codes=[201],
+            error_message="Failed to upload dataset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_dataset_versions(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        include_deleted: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets all the Versions of a specific Dataset.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param include_deleted: True to include deleted records
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+
+        params: Dict[str, Any] = {}
+        if include_deleted:
+            params["include_deleted"] = True
+
+        return DmApi.__request(
+            "GET",
+            f"/dataset/{dataset_id}/versions",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get dataset versions",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_dataset(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        dataset_version: int,
+        local_file: str,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
+    ) -> ApiRv:
+        """Downloads a specific Dataset Version, saving it to the filename
+        defined in local_file.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param dataset_version: The Dataset version to download
+        :param local_file: The name to write the Dataset to on the client
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert dataset_version > 0
+        assert local_file
+
+        ret_val, resp = DmApi.__request(
+            "GET",
+            f"/dataset/{dataset_id}/{dataset_version}",
+            access_token=access_token,
+            error_message="Failed to get dataset",
+            timeout=timeout_s,
+        )
+        if not ret_val.success:
+            return ret_val
+
+        # OK if we get here
+        assert resp is not None
+        with open(local_file, "wb") as file_handle:
+            file_handle.write(resp.content)
+        return ret_val
+
+    @classmethod
+    @synchronized
+    def delete_dataset(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        dataset_version: int,
+        keep_project_files: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deletes a specific Dataset Version.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param dataset_version: The Dataset version to delete
+        :param keep_project_files: True to convert Project-managed file
+            instances to unmanaged files rather than deleting them
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert dataset_version > 0
+
+        params: Dict[str, Any] = {}
+        if keep_project_files:
+            params["keep_project_files"] = True
+
+        return DmApi.__request(
+            "DELETE",
+            f"/dataset/{dataset_id}/{dataset_version}",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to delete dataset",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_dataset_metadata(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the Metadata for a specific Dataset.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+
+        return DmApi.__request(
+            "GET",
+            f"/dataset/{dataset_id}/meta",
+            access_token=access_token,
+            error_message="Failed to get dataset metadata",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def update_dataset_metadata(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        meta_properties: Optional[str] = None,
+        labels: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Updates the Metadata for a specific Dataset.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param meta_properties: A JSON string containing a list of parameter
+            changes to the metadata
+        :param labels: A JSON string containing a list of labels
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+
+        data: Dict[str, Any] = {}
+        if meta_properties:
+            data["meta_properties"] = meta_properties
+        if labels:
+            data["labels"] = labels
+
+        return DmApi.__request(
+            "POST",
+            f"/dataset/{dataset_id}/meta",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to update dataset metadata",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_dataset_version_metadata(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        dataset_version: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the Metadata for a specific Dataset Version.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param dataset_version: The Dataset version
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert dataset_version > 0
+
+        return DmApi.__request(
+            "GET",
+            f"/dataset/{dataset_id}/meta/{dataset_version}",
+            access_token=access_token,
+            error_message="Failed to get dataset version metadata",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def update_dataset_version_metadata(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        dataset_version: int,
+        meta_properties: Optional[str] = None,
+        annotations: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Updates the Metadata for a specific Dataset Version.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param dataset_version: The Dataset version
+        :param meta_properties: A JSON string containing a list of parameter
+            changes to the metadata
+        :param annotations: A JSON string containing a list of annotations
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert dataset_version > 0
+
+        data: Dict[str, Any] = {}
+        if meta_properties:
+            data["meta_properties"] = meta_properties
+        if annotations:
+            data["annotations"] = annotations
+
+        return DmApi.__request(
+            "POST",
+            f"/dataset/{dataset_id}/meta/{dataset_version}",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to update dataset version metadata",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_dataset_schema(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        dataset_version: int,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the property schema for a specific Dataset Version.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param dataset_version: The Dataset version
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert dataset_version > 0
+
+        return DmApi.__request(
+            "GET",
+            f"/dataset/{dataset_id}/schema/{dataset_version}",
+            access_token=access_token,
+            error_message="Failed to get dataset schema",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def add_dataset_editor(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        editor: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gives a user edit permission for a Dataset.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param editor: The username to add
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert editor
+
+        return DmApi.__request(
+            "PUT",
+            f"/dataset/{dataset_id}/editor/{editor}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed adding dataset editor",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def remove_dataset_editor(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        editor: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Removes a user's edit permission for a Dataset.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID
+        :param editor: The username to remove
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert editor
+
+        return DmApi.__request(
+            "DELETE",
+            f"/dataset/{dataset_id}/editor/{editor}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed removing dataset editor",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def attach_dataset_to_project(
+        cls,
+        access_token: str,
+        *,
+        dataset_id: str,
+        dataset_version: int,
+        project_id: str,
+        as_type: str,
+        path: str = "/",
+        compress: bool = False,
+        immutable: bool = False,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
+    ) -> ApiRv:
+        """Attaches a Dataset, as a File, to a Project.
+
+        :param access_token: A valid DM API access token
+        :param dataset_id: The Dataset UUID to attach
+        :param dataset_version: The Dataset version to attach
+        :param project_id: The Project UUID you're attaching to
+        :param as_type: The desired Dataset file type (a MIME type)
+        :param path: A path within the Project to add the File
+            (must begin ``/``)
+        :param compress: True to compress the Dataset File as it's attached
+        :param immutable: True if the Dataset File cannot be modified while
+            in the Project
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert dataset_id
+        assert dataset_version > 0
+        assert project_id
+        assert as_type
+
+        data: Dict[str, Any] = {
+            "dataset_id": dataset_id,
+            "dataset_version": dataset_version,
+            "project_id": project_id,
+            "as_type": as_type,
+            "path": path,
+        }
+        if compress:
+            data["compress"] = True
+        if immutable:
+            data["immutable"] = True
+
+        return DmApi.__request(
+            "POST",
+            "/file",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[201],
+            error_message="Failed to attach dataset to project",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def move_project_file(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        file: str,
+        dst_file: Optional[str] = None,
+        src_path: Optional[str] = None,
+        dst_path: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Moves (or renames) an unmanaged file in a Project.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The Project UUID
+        :param file: The file to move
+        :param dst_file: An optional new file name
+        :param src_path: An optional source path (must begin ``/``)
+        :param dst_path: An optional destination path (must begin ``/``)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert project_id
+        assert file
+
+        params: Dict[str, Any] = {"project_id": project_id, "file": file}
+        if dst_file:
+            params["dst_file"] = dst_file
+        if src_path:
+            params["src_path"] = src_path
+        if dst_path:
+            params["dst_path"] = dst_path
+
+        return DmApi.__request(
+            "PUT",
+            "/file/move",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to move project file",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_project_file(
+        cls,
+        access_token: str,
+        *,
+        file_id: str,
+        local_file: str,
+        timeout_s: int = _READ_LONG_TIMEOUT_S,
+    ) -> ApiRv:
+        """Downloads a managed File from a Project, saving it to the filename
+        defined in local_file.
+
+        :param access_token: A valid DM API access token
+        :param file_id: The File UUID
+        :param local_file: The name to write the file to on the client
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert file_id
+        assert local_file
+
+        ret_val, resp = DmApi.__request(
+            "GET",
+            f"/file/{file_id}",
+            access_token=access_token,
+            error_message="Failed to get file",
+            timeout=timeout_s,
+        )
+        if not ret_val.success:
+            return ret_val
+
+        # OK if we get here
+        assert resp is not None
+        with open(local_file, "wb") as file_handle:
+            file_handle.write(resp.content)
+        return ret_val
+
+    @classmethod
+    @synchronized
+    def delete_project_file(
+        cls,
+        access_token: str,
+        *,
+        file_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deletes (detaches) a managed File from a Project.
+
+        :param access_token: A valid DM API access token
+        :param file_id: The File UUID
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert file_id
+
+        return DmApi.__request(
+            "DELETE",
+            f"/file/{file_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete file",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_users(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets information about all known Users.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/user",
+            access_token=access_token,
+            error_message="Failed to get users",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_admin_users(
+        cls,
+        access_token: str,
+        *,
+        idle_days: Optional[int] = None,
+        active_days: Optional[int] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets detailed information about all known Users. You need admin
+        rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param idle_days: Maximum days a user has been idle (not used the API)
+        :param active_days: Minimum days a user has been active (used the API)
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if idle_days is not None:
+            params["idle_days"] = idle_days
+        if active_days is not None:
+            params["active_days"] = active_days
+
+        return DmApi.__request(
+            "GET",
+            "/admin/user",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get admin users",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_account(
+        cls,
+        access_token: str,
+        *,
+        do_not_impersonate: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets information about your account.
+
+        :param access_token: A valid DM API access token
+        :param do_not_impersonate: Set, if you're an admin, to call the
+            endpoint without impersonation
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if do_not_impersonate:
+            params["do_not_impersonate"] = True
+
+        return DmApi.__request(
+            "GET",
+            "/user/account",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get account",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_api_log(
+        cls,
+        access_token: str,
+        *,
+        from_: Optional[str] = None,
+        until: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the API call log recorded against your account.
+
+        :param access_token: A valid DM API access token
+        :param from_: An optional from (inclusive) ISO-8601 date-time string
+        :param until: An optional until (exclusive) ISO-8601 date-time string
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        params: Dict[str, Any] = {}
+        if from_:
+            params["from"] = from_
+        if until:
+            params["until"] = until
+
+        return DmApi.__request(
+            "GET",
+            "/user/api-log",
+            access_token=access_token,
+            params=params,
+            error_message="Failed to get api log",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_api_token(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets your API token.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/user/token",
+            access_token=access_token,
+            error_message="Failed to get api token",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def create_user_account(
+        cls,
+        access_token: str,
+        *,
+        user_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Prepares (creates) a user account in the Data Manager service.
+        You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param user_id: The user identity
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert user_id
+
+        return DmApi.__request(
+            "PUT",
+            f"/admin/user/{user_id}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed to create user account",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_user_account(
+        cls,
+        access_token: str,
+        *,
+        user_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deletes a user account. You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param user_id: The user identity
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert user_id
+
+        return DmApi.__request(
+            "DELETE",
+            f"/admin/user/{user_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete user account",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def update_user_account(
+        cls,
+        access_token: str,
+        *,
+        user_id: str,
+        suspend_message: Optional[str] = None,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Patches a given user. You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param user_id: The user identity
+        :param suspend_message: If set to a message the user account is
+            suspended, with the given message
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert user_id
+
+        data: Dict[str, Any] = {}
+        if suspend_message is not None:
+            data["suspend_message"] = suspend_message
+
+        return DmApi.__request(
+            "PATCH",
+            f"/admin/user/{user_id}",
+            access_token=access_token,
+            data=data,
+            expected_response_codes=[200, 204],
+            error_message="Failed to update user account",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def add_project_administrator(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        administrator: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Adds a user to a Project as an Administrator.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The Project UUID
+        :param administrator: The username to add
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert project_id
+        assert administrator
+
+        return DmApi.__request(
+            "PUT",
+            f"/project/{project_id}/administrator/{administrator}",
+            access_token=access_token,
+            expected_response_codes=[201],
+            error_message="Failed adding project administrator",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def remove_project_administrator(
+        cls,
+        access_token: str,
+        *,
+        project_id: str,
+        administrator: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Removes a user as an Administrator from a Project.
+
+        :param access_token: A valid DM API access token
+        :param project_id: The Project UUID
+        :param administrator: The username to remove
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert project_id
+        assert administrator
+
+        return DmApi.__request(
+            "DELETE",
+            f"/project/{project_id}/administrator/{administrator}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed removing project administrator",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def update_instance(
+        cls,
+        access_token: str,
+        *,
+        instance_id: str,
+        archive: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Updates a Job or Application Instance.
+
+        :param access_token: A valid DM API access token
+        :param instance_id: The Application or Job instance identity
+        :param archive: True to archive the instance
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert instance_id
+
+        params: Dict[str, Any] = {}
+        if archive:
+            params["archive"] = True
+
+        return DmApi.__request(
+            "PATCH",
+            f"/instance/{instance_id}",
+            access_token=access_token,
+            params=params,
+            expected_response_codes=[204],
+            error_message="Failed to update instance",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_task(
+        cls,
+        access_token: str,
+        *,
+        task_id: str,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deletes a Task entry.
+
+        :param access_token: A valid DM API access token
+        :param task_id: The Task identity
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert task_id
+
+        return DmApi.__request(
+            "DELETE",
+            f"/task/{task_id}",
+            access_token=access_token,
+            expected_response_codes=[204],
+            error_message="Failed to delete task",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def get_job_manifests(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Gets the Job Manifests. You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "GET",
+            "/admin/job-manifest",
+            access_token=access_token,
+            error_message="Failed to get job manifests",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def load_job_manifests(
+        cls,
+        access_token: str,
+        *,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Triggers a download of Job Definitions using existing Job Manifests.
+        You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+
+        return DmApi.__request(
+            "PUT",
+            "/admin/job-manifest/load",
+            access_token=access_token,
+            error_message="Failed to load job manifests",
+            timeout=timeout_s,
+        )[0]
+
+    @classmethod
+    @synchronized
+    def delete_job_manifest(
+        cls,
+        access_token: str,
+        *,
+        job_manifest_id: int,
+        purge: bool = False,
+        timeout_s: int = _READ_TIMEOUT_S,
+    ) -> ApiRv:
+        """Deletes a Job Manifest. You need admin rights to use this method.
+
+        :param access_token: A valid DM API access token
+        :param job_manifest_id: The Job Manifest identity
+        :param purge: True to purge unreferenced Jobs
+        :param timeout_s: The underlying request timeout
+        """
+        assert access_token
+        assert job_manifest_id > 0
+
+        params: Dict[str, Any] = {}
+        if purge:
+            params["purge"] = True
+
+        return DmApi.__request(
+            "DELETE",
+            f"/admin/job-manifest/{job_manifest_id}",
+            access_token=access_token,
+            params=params,
+            expected_response_codes=[204],
+            error_message="Failed to delete job manifest",
             timeout=timeout_s,
         )[0]
